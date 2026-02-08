@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pratnya Astro Manager</title>
+    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <div id="licenseScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; box-sizing: border-box;">
+        <img src="logo.png" style="width: 130px; margin-bottom: 20px;">
+        <h2 style="margin: 0; font-size: 24px;">Pratnya Astro Manager</h2>
+        <p style="color: #aaa; margin: 5px 0 25px 0;">Premium Subscription Required</p>
+        <div style="margin-top: 25px; width: 90%; max-width: 450px;">
+            <input type="text" id="licenseKeyInput" placeholder="Enter License Key" style="width: 100%; padding: 15px; border: none; border-radius: 8px; text-align: center; margin-bottom: 12px; font-size: 16px; box-sizing: border-box;">
+            <button onclick="activateLicense()" style="width: 100%; padding: 15px; background: #2196F3; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">Activate App</button>
+        </div>
+        <p id="licenseError" style="color: #ff5252; font-size: 14px; margin-top: 15px; display: none;">Invalid License Key</p>
+    </div>
+
+    <header style="position: sticky; top: 0; z-index: 100; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 10px; display: flex; justify-content: center; align-items: center;">
+        <img src="logo.png" alt="Pratnya Astro" class="logo">
+        <div id="updateIcon" onclick="showUpdateInfo()" style="display: none; position: absolute; right: 20px; cursor: pointer;">
+            <span style="font-size: 24px;">🔔</span>
+            <span style="position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: red; border-radius: 50%;"></span>
+        </div>
+    </header>
+
+    <div class="container">
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button onclick="showForm()" class="btn-new" style="flex: 1; margin-bottom: 0;">+ New Client</button>
+            <button onclick="showPrescriptionForm()" class="btn-prescription" style="flex: 1; background: #FF9800; color: white;">Prescription</button>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Search Client by Name..." autocomplete="off">
+        </div>
+
+        <div id="clientList" class="client-list"></div>
+
+        <div id="clientFormModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="formTitle">Client Details</h3>
+                    <button onclick="closeForm()" class="btn-close">✖</button>
+                </div>
+                
+                <form id="clientForm">
+                    <input type="hidden" id="clientId">
+                    <div class="form-grid">
+                        <input type="text" id="name" placeholder="Name *" required>
+                        <input type="text" id="star" placeholder="Star (Nakshatram)">
+                        <div style="position: relative;">
+                            <label style="font-size: 12px; color: #666; position: absolute; top: -8px; left: 10px; background: white; padding: 0 4px;">Date of Birth</label>
+                            <input type="date" id="dob" onchange="calculateAge()">
+                        </div>
+                        <input type="number" id="age" placeholder="Age (Auto-calculated)">
+                        <div style="position: relative;">
+                            <label style="font-size: 12px; color: #666; position: absolute; top: -8px; left: 10px; background: white; padding: 0 4px;">Time of Birth</label>
+                            <input type="time" id="birthTime">
+                        </div>
+                        <input type="text" id="place" placeholder="Place">
+                        <input type="text" id="phone" placeholder="Phone">
+                        <input type="text" id="profession" placeholder="Profession">
+                    </div>
+
+                    <div id="historySection">
+                        <h4>Previous Consultations</h4>
+                        <div id="historyList" class="history-container"></div>
+                    </div>
+
+                    <div class="new-consultation">
+    <h4>➕ Add New Consultation</h4>
+    
+    <label>Case History (Problems):</label>
+    <textarea id="currentProblem" rows="3" placeholder="Enter problems here..."></textarea>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 5px;">
+        <label style="color: #2E7D32; font-weight: bold; margin: 0;">Astrological Solution:</label>
+        
+        <button type="button" onclick="transferToPrescription()" class="btn-ghost">
+        Open as Prescription
+        </button>
+    </div>
+
+    <textarea id="currentSolution" rows="5" placeholder="Write solution here..."></textarea>
+</div>
+
+                    <div class="form-actions">
+                        <button type="submit" style="flex: 1; background-color: #2E7D32; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold;">Save</button>
+                        <button type="button" onclick="generatePDF()" style="flex: 1; background-color: #1976D2; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold;">PDF</button>
+                        <button type="button" onclick="deleteCurrentClient()" style="flex: 1; background-color: #D32F2F; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold;">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="prescriptionModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header" style="background: #FFF3E0;">
+                    <h3 style="color: #E65100;">Write Prescription</h3>
+                    <button onclick="closePrescriptionForm()" class="btn-close">✖</button>
+                </div>
+                
+                <form id="prescriptionForm" style="padding: 20px; flex: 1; display: flex; flex-direction: column;">
+                    <div class="form-grid">
+                        <input type="text" id="prescName" placeholder="Name">
+                        <input type="text" id="prescStar" placeholder="Star">
+                        <input type="text" id="prescPlace" placeholder="Place">
+                        <input type="text" id="prescRasi" placeholder="Rasi">
+                        <input type="text" id="prescUbhaya" placeholder="Ubhaya Rasi">
+                    </div>
+
+                    <label style="margin-top: 15px; font-weight: bold; color: #555;">Prescription / Notes:</label>
+                    <textarea id="prescBody" style="flex: 1; margin-top: 5px; border: 1px solid #ccc; padding: 15px; font-size: 16px; line-height: 1.5;" placeholder="Write full prescription here..."></textarea>
+
+                    <div class="form-actions">
+                        <button type="button" onclick="generatePrescriptionPDF()" style="width: 100%; background-color: #E65100; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                            Download Letterhead PDF
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="pdfTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 40px; font-family: 'Arial', sans-serif; color: black;">
+        <div style="text-align: center; border-bottom: 2px solid #2E7D32; padding-bottom: 15px; margin-bottom: 20px;">
+            <img src="logo.png" style="height: 80px; width: auto;" alt="Logo">
+        </div>
+        <div id="pdfContent"></div>
+    </div>
+
+    <div id="prescriptionTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; font-family: 'Georgia', serif; color: black; box-sizing: border-box;">
+        
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.1; z-index: 0;">
+            <img src="logo.png" style="width: 400px; height: auto;">
+        </div>
+
+        <div style="text-align: center; border-bottom: 2px solid #2E7D32; padding-bottom: 15px; margin-bottom: 30px; position: relative; z-index: 10;">
+            <img src="logo.png" style="height: 70px; width: auto;">
+            <p style="margin: 5px 0 0 0; font-size: 12px; color: #555;">Astrological Solutions & Consultation</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 30px; position: relative; z-index: 10;">
+            <div><strong>Name:</strong> <span id="pdfPrescName"></span></div>
+            <div><strong>Date:</strong> <span id="pdfPrescDate"></span></div>
+            <div><strong>Star:</strong> <span id="pdfPrescStar"></span></div>
+            <div><strong>Place:</strong> <span id="pdfPrescPlace"></span></div>
+            <div><strong>Rasi:</strong> <span id="pdfPrescRasi"></span></div>
+            <div><strong>Ubhaya Rasi:</strong> <span id="pdfPrescUbhaya"></span></div>
+        </div>
+
+        <div id="pdfPrescBody" style="font-size: 16px; line-height: 1.8; min-height: 500px; white-space: pre-wrap; position: relative; z-index: 10;">
+            </div>
+
+        <div style="position: absolute; bottom: 40px; left: 40px; right: 40px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; padding-top: 10px;">
+            Fix your appointment through the call<br>
+            <strong>www.pratnya.com</strong>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        const LATEST_CHANGES = "Added Prescription Mode & Watermark PDF";
+        // Service Worker Update Logic
+        let newWorker;
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(registration => {
+                if (registration.waiting) { newWorker = registration.waiting; showNotificationIcon(); }
+                registration.onupdatefound = () => {
+                    const installingWorker = registration.installing;
+                    installingWorker.onstatechange = () => {
+                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            newWorker = installingWorker;
+                            showNotificationIcon();
+                        }
+                    };
+                };
+            });
+        }
+        function showNotificationIcon() { document.getElementById('updateIcon').style.display = 'block'; }
+        function showUpdateInfo() {
+            Swal.fire({
+                title: '🚀 Update Available!',
+                html: `What's New:<br><b>${LATEST_CHANGES}</b>`,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Update Now'
+            }).then((result) => { if (result.isConfirmed) performUpdate(); });
+        }
+        function performUpdate() {
+            if (!newWorker) { window.location.reload(); return; }
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>
