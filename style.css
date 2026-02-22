@@ -185,3 +185,14 @@ input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-rad
 .mini-toolbar span:active {
     background: #bdbdbd;
 }
+/* --- Hide arrows from the custom time picker --- */
+input[id^="btHour"]::-webkit-inner-spin-button,
+input[id^="btHour"]::-webkit-outer-spin-button,
+input[id^="btMin"]::-webkit-inner-spin-button,
+input[id^="btMin"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[id^="btHour"], input[id^="btMin"] {
+    -moz-appearance: textfield;
+}

@@ -99,12 +99,22 @@ function closePrescriptionForm() {
 form.onsubmit = async (event) => {
     event.preventDefault();
     const id = document.getElementById('clientId').value;
+    
+    // Formulate 12-hour time string
+    const bHour = document.getElementById('btHour').value;
+    const bMin = document.getElementById('btMin').value;
+    const bAmPm = document.getElementById('btAmPm').value;
+    let finalBirthTime = "";
+    if (bHour && bMin) {
+        finalBirthTime = `${bHour.padStart(2, '0')}:${bMin.padStart(2, '0')} ${bAmPm}`;
+    }
+
     const basicData = {
         name: document.getElementById('name').value,
         star: document.getElementById('star').value,
         dob: document.getElementById('dob').value,
         age: document.getElementById('age').value,
-        birthTime: document.getElementById('birthTime').value,
+        birthTime: finalBirthTime,
         location: document.getElementById('place').value,
         phone: document.getElementById('phone').value,
         profession: document.getElementById('profession').value,
@@ -190,10 +200,32 @@ window.loadClient = async (id) => {
     document.getElementById('star').value = client.star || "";
     document.getElementById('dob').value = client.dob || "";
     document.getElementById('age').value = client.age || "";
-    document.getElementById('birthTime').value = client.birthTime || "";
     document.getElementById('place').value = client.location || "";
     document.getElementById('phone').value = client.phone || "";
     document.getElementById('profession').value = client.profession || "";
+
+    // Smart Time Parsing (Supports newly saved 12hr format & migrates old 24hr data)
+    const bt = client.birthTime || "";
+    if(bt) {
+        if (bt.includes('AM') || bt.includes('PM')) {
+            const parts = bt.split(' ');
+            const timeParts = parts[0].split(':');
+            document.getElementById('btHour').value = timeParts[0];
+            document.getElementById('btMin').value = timeParts[1];
+            document.getElementById('btAmPm').value = parts[1];
+        } else if (bt.includes(':')) {
+            // Converts old 24hr format automatically
+            let [h, m] = bt.split(':');
+            let hInt = parseInt(h);
+            document.getElementById('btAmPm').value = hInt >= 12 ? 'PM' : 'AM';
+            document.getElementById('btHour').value = (hInt % 12 || 12).toString();
+            document.getElementById('btMin').value = m;
+        }
+    } else {
+        document.getElementById('btHour').value = "";
+        document.getElementById('btMin').value = "";
+        document.getElementById('btAmPm').value = "AM";
+    }
 
     const listDiv = document.getElementById('historyList');
     listDiv.innerHTML = "";
@@ -464,13 +496,14 @@ window.generatePDF = async () => {
     const name = document.getElementById('name').value;
     const star = document.getElementById('star').value;
     const dob = document.getElementById('dob').value;
-    const time = document.getElementById('birthTime').value;
-
-    let displayTime = time;
-    if(time) {
-        const [h, m] = time.split(':');
-        const hour = parseInt(h);
-        displayTime = `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`;
+    
+    // Read directly from the 12-hour fields
+    const hPDF = document.getElementById('btHour').value;
+    const mPDF = document.getElementById('btMin').value;
+    const ampmPDF = document.getElementById('btAmPm').value;
+    let displayTime = "";
+    if (hPDF && mPDF) {
+        displayTime = `${hPDF.padStart(2, '0')}:${mPDF.padStart(2, '0')} ${ampmPDF}`;
     }
 
     let htmlContent = `
