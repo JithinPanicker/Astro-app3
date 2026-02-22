@@ -286,15 +286,15 @@ window.editHist = (clientId, timestamp) => {
 
     probEl.innerHTML = `
         <div class="mini-toolbar">
-            <span onclick="undoText('edit-prob-${timestamp}')">↩️ Undo</span>
-            <span onclick="clearText('edit-prob-${timestamp}')">❌ Clear</span>
+            <span onclick="undoText('edit-prob-${timestamp}')">Undo</span>
+            <span onclick="clearText('edit-prob-${timestamp}')">Clear</span>
         </div>
         <textarea id="edit-prob-${timestamp}" rows="3" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${probText === '-' ? '' : probText}</textarea>`;
     
     solEl.innerHTML = `
         <div class="mini-toolbar">
-            <span onclick="undoText('edit-sol-${timestamp}')">↩️ Undo</span>
-            <span onclick="clearText('edit-sol-${timestamp}')">❌ Clear</span>
+            <span onclick="undoText('edit-sol-${timestamp}')">Undo</span>
+            <span onclick="clearText('edit-sol-${timestamp}')">Clear</span>
         </div>
         <textarea id="edit-sol-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${solText === '-' ? '' : solText}</textarea>`;
     
@@ -334,7 +334,7 @@ window.editPrescHist = (clientId, timestamp) => {
     
     notesEl.innerHTML = `
         <div class="mini-toolbar" style="margin-top: 8px;">
-            <span onclick="undoText('edit-p-notes-${timestamp}')">↩Undo</span>
+            <span onclick="undoText('edit-p-notes-${timestamp}')">Undo</span>
             <span onclick="clearText('edit-p-notes-${timestamp}')">Clear</span>
         </div>
         <textarea id="edit-p-notes-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${notesText}</textarea>

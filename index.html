@@ -102,29 +102,29 @@
                     </div>
 
                     <div class="new-consultation" style="display: flex; flex-direction: column; flex: 1; margin-top: 15px;">
-                        <h4>➕ Add New Consultation</h4>
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                            <label>Case History (Problems):</label>
-                            <div class="mini-toolbar">
-                                <span onclick="undoText('currentProblem')">Undo</span>
-                                <span onclick="clearText('currentProblem')">Clear</span>
-                            </div>
-                        </div>
-                        <textarea id="currentProblem" rows="3" placeholder="Enter problems here..."></textarea>
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 5px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <label style="color: #2E7D32; font-weight: bold; margin: 0;">Astrological Solution:</label>
-                                <div class="mini-toolbar">
-                                    <span onclick="undoText('currentSolution')">Undo</span>
-                                    <span onclick="clearText('currentSolution')">Clear</span>
-                                </div>
-                            </div>
-                            <button type="button" onclick="transferToPrescription()" class="btn-ghost">Open as Prescription</button>
-                        </div>
-                        <textarea id="currentSolution" style="flex: 1; min-height: 200px; border: 1px solid #ddd; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5; resize: vertical;" placeholder="Write solution here..."></textarea>
-                    </div>
+    <h4>➕ Add New Consultation</h4>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+        <label>Case History (Problems):</label>
+        <div class="mini-toolbar">
+            <span onclick="undoText('currentProblem')">Undo</span>
+            <span onclick="clearText('currentProblem')">Clear</span>
+        </div>
+    </div>
+    <textarea id="currentProblem" rows="3" placeholder="Enter problems here..."></textarea>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 5px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <label style="color: #2E7D32; font-weight: bold; margin: 0;">Astrological Solution:</label>
+            <div class="mini-toolbar">
+                <span onclick="undoText('currentSolution')">Undo</span>
+                <span onclick="clearText('currentSolution')">Clear</span>
+            </div>
+        </div>
+        <button type="button" onclick="transferToPrescription()" class="btn-ghost">Open as Prescription</button>
+    </div>
+    <textarea id="currentSolution" style="flex: 1; min-height: 200px; border: 1px solid #ddd; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5; resize: vertical;" placeholder="Write solution here..."></textarea>
+</div>
 
                     <div class="form-actions">
                         <button type="submit" style="background-color: #2E7D32; color: white; font-weight: bold;">Save</button>
@@ -159,14 +159,13 @@
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 5px;">
-                        <h4 style="margin: 0;">➕ Write New Prescription:</h4>
-                        <div class="mini-toolbar">
-                            <span onclick="undoText('prescBody')">Undo</span>
-                            <span onclick="clearText('prescBody')">Clear</span>
-                        </div>
-                    </div>
-                    <textarea id="prescBody" style="flex: 1; min-height: 250px; border: 1px solid #ccc; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5;" placeholder="Write full prescription here..."></textarea>
-
+    <h4 style="margin: 0;">➕ Write New Prescription:</h4>
+    <div class="mini-toolbar">
+        <span onclick="undoText('prescBody')">Undo</span>
+        <span onclick="clearText('prescBody')">Clear</span>
+    </div>
+</div>
+<textarea id="prescBody" style="flex: 1; min-height: 250px; border: 1px solid #ccc; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5;" placeholder="Write full prescription here..."></textarea>
                     <div class="form-actions" style="background: #FFF3E0;">
                         <button type="button" onclick="savePrescription()" style="background-color: #4CAF50; color: white; font-weight: bold;">Save</button>
                         <button type="button" onclick="generatePrescriptionPDF()" style="background-color: #FF9800; color: white; font-weight: bold;">PDF (Current)</button>
