@@ -142,3 +142,46 @@ input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-rad
         grid-template-columns: 1fr 1fr; /* Side by side on desktop */
     }
 }
+/* --- Twitter X Toast Styles --- */
+.x-toast {
+    border-radius: 30px !important; /* Pill shape */
+    padding: 10px 25px !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    margin-top: 15px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+}
+
+.x-toast-confirm {
+    border-radius: 12px !important; /* Slightly rounded box for warnings */
+    padding: 12px 20px !important;
+    font-size: 15px !important;
+    margin-top: 15px !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
+}
+
+/* --- Mini Toolbars for Textareas --- */
+.mini-toolbar {
+    display: inline-flex;
+    gap: 8px;
+    font-size: 11px;
+    color: #555;
+    font-weight: bold;
+}
+
+.mini-toolbar span {
+    cursor: pointer;
+    background: #e0e0e0;
+    padding: 3px 8px;
+    border-radius: 4px;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.mini-toolbar span:hover {
+    background: #d5d5d5;
+}
+
+.mini-toolbar span:active {
+    background: #bdbdbd;
+}
