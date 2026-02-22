@@ -42,39 +42,45 @@ button { border: none; border-radius: 6px; cursor: pointer; font-weight: 600; tr
     align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     z-index: 10; flex-shrink: 0;
 }
-/* Update this block */
+
+/* --- UPDATED CLIENT FORM (Flexbox for stretching) --- */
 #clientForm { 
     padding: 20px; 
     overflow-y: auto; 
     flex: 1; 
-    padding-bottom: 20px; 
-    display: flex;            /* Added for layout */
-    flex-direction: column;   /* Added for layout */
+    display: flex; 
+    flex-direction: column; 
+    padding-bottom: 0px; /* Removes double padding near footer */
 }
 
-/* Update History Styles */
-.history-item { 
-    background: white; 
-    border-left: 4px solid #4CAF50; 
-    padding: 12px; 
-    margin-bottom: 15px; 
-    border-radius: 6px; 
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+/* --- FIXED BUTTON ALIGNMENT (Floating at the bottom) --- */
+.form-actions { 
+    position: sticky; 
+    bottom: 0; 
+    background: #f0f2f5; /* Match modal content background */
+    padding: 15px 20px; 
+    margin: auto -20px 0 -20px; /* Forces it to the very bottom and stretches edges */
+    border-top: 1px solid #ddd;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    z-index: 20;
+    
+    /* Flexbox Magic for Perfect Center Alignment & Equal Widths */
+    display: flex; 
+    gap: 10px; 
+    justify-content: space-between;
 }
-/* You can safely REMOVE the old .history-date CSS rule, as it uses absolute positioning which we removed in app.js */
 
-/* Force all buttons to be equal width */
 .form-actions button {
-    flex: 1; /* Grow to fill space equally */
+    flex: 1;
     text-align: center;
-    padding: 12px 0; /* Uniform height */
-    margin: 0; /* Remove default margins */
+    padding: 12px 0;
+    margin: 0;
 }
 
-/* --- 2. NEW GHOST BUTTON (For Prescription) --- */
+/* --- GHOST BUTTON (For Prescription) --- */
 .btn-ghost {
     background: transparent;
-    border: 1px solid #FF9800; /* Orange Outline */
+    border: 1px solid #FF9800;
     color: #E65100;
     padding: 4px 10px;
     font-size: 12px;
@@ -87,6 +93,14 @@ button { border: none; border-radius: 6px; cursor: pointer; font-weight: 600; tr
 input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
 
 /* History & Popups */
+.history-item { 
+    background: white; 
+    border-left: 4px solid #4CAF50; 
+    padding: 12px; 
+    margin-bottom: 15px; 
+    border-radius: 6px; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+}
 .swal2-container { z-index: 3000 !important; }
 
 /* TABLET & DESKTOP */
@@ -103,9 +117,16 @@ input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-rad
 @media (min-width: 1024px) {
     .modal { align-items: center; justify-content: center; padding: 20px; background: rgba(0,0,0,0.5); }
     .modal-content { max-width: 900px; height: 85vh; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); background: white; overflow: hidden; }
-    #clientForm { padding: 30px; }
-    /* Fix sticky footer margin for larger padding */
-    .form-actions { margin: 0 -30px -30px -30px; padding: 20px 30px; }
+    
+    #clientForm { padding: 30px; padding-bottom: 0px; }
+    
+    /* Desktop specific fix for floating footer background color */
+    .form-actions { 
+        background: white; 
+        margin: auto -30px 0 -30px; 
+        padding: 20px 30px; 
+    }
+    
     .form-grid { grid-template-columns: 1fr 1fr 1fr; }
     #historySection, .new-consultation { grid-column: span 3; }
 }

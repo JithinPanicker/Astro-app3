@@ -110,8 +110,8 @@ window.loadClient = async (id) => {
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px;">
                         <span style="font-size: 12px; color: #555; font-weight: bold;">${item.date}</span>
                         <div class="history-actions">
-                            <button type="button" onclick="editHist(${client.id}, ${item.timestamp})" style="background: #FFC107; padding: 4px 10px; font-size: 12px; border-radius: 4px;">✏️ Edit</button>
-                            <button type="button" onclick="deleteHist(${client.id}, ${item.timestamp})" style="background: #F44336; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">🗑️ Delete</button>
+                            <button type="button" onclick="editHist(${client.id}, ${item.timestamp})" style="background: #FFC107; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Edit</button>
+                            <button type="button" onclick="deleteHist(${client.id}, ${item.timestamp})" style="background: #F44336; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Delete</button>
                         </div>
                     </div>
                     <div style="margin-bottom: 8px;">
@@ -141,8 +141,8 @@ window.editHist = (clientId, timestamp) => {
     
     const actionsDiv = document.querySelector(`#hist-${timestamp} .history-actions`);
     actionsDiv.innerHTML = `
-        <button type="button" onclick="saveHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">💾 Save</button>
-        <button type="button" onclick="loadClient(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">❌ Cancel</button>
+        <button type="button" onclick="saveHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Save</button>
+        <button type="button" onclick="loadClient(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Cancel</button>
     `;
 };
 
@@ -197,7 +197,7 @@ window.generatePrescriptionPDF = async () => {
     const star = document.getElementById('prescStar').value || "";
     const place = document.getElementById('prescPlace').value || "";
     const rasi = document.getElementById('prescRasi').value || "";
-    const ubhaya = document.getElementById('prescUbhaya').value || "";
+    const udhaya = document.getElementById('prescUdhaya').value || "";
     const body = document.getElementById('prescBody').value || "";
 
     // Fill Template
@@ -206,7 +206,7 @@ window.generatePrescriptionPDF = async () => {
     document.getElementById('pdfPrescStar').innerText = star;
     document.getElementById('pdfPrescPlace').innerText = place;
     document.getElementById('pdfPrescRasi').innerText = rasi;
-    document.getElementById('pdfPrescUbhaya').innerText = ubhaya;
+    document.getElementById('pdfPrescUdhaya').innerText = udhaya;
     document.getElementById('pdfPrescBody').innerText = body;
 
     await createAndDownloadPDF('prescriptionTemplate', `${name}_Prescription.pdf`);
@@ -283,9 +283,9 @@ window.generatePDF = async () => {
             document.getElementById('pdfPrescDate').innerText = new Date().toLocaleDateString('en-IN');
             document.getElementById('pdfPrescStar').innerText = star;
             document.getElementById('pdfPrescPlace').innerText = document.getElementById('place').value;
-            // Leave Rasi/Ubhaya blank for auto-gen, or add fields to main form if needed
+            // Leave Rasi/Udhaya blank for auto-gen, or add fields to main form if needed
             document.getElementById('pdfPrescRasi').innerText = ""; 
-            document.getElementById('pdfPrescUbhaya').innerText = "";
+            document.getElementById('pdfPrescUdhaya').innerText = "";
             document.getElementById('pdfPrescBody').innerText = currentSolution;
 
             const element2 = document.getElementById('prescriptionTemplate');
@@ -346,7 +346,6 @@ function transferToPrescription() {
     const name = document.getElementById('name').value;
     const star = document.getElementById('star').value;
     const place = document.getElementById('place').value;
-    // Note: Rasi/Ubhaya are not in main form, so we leave them blank or you can add them
     const solution = document.getElementById('currentSolution').value;
 
     if (!name) {
@@ -361,5 +360,5 @@ function transferToPrescription() {
     document.getElementById('prescName').value = name;
     document.getElementById('prescStar').value = star;
     document.getElementById('prescPlace').value = place;
-    document.getElementById('prescBody').value = solution; // Copy the solution text!
+    document.getElementById('prescBody').value = solution;
 }
