@@ -29,6 +29,14 @@
             text-align: left;
             color: #333;
         }
+        /* NEW: Light green, different font for Astrologer */
+        .astrologer-title {
+            color: #66BB6A; /* Light green */
+            font-family: 'Georgia', serif; 
+            font-style: italic;
+            font-size: 16px;
+            margin: 0 0 2px 0 !important;
+        }
         .letterhead-left h2 {
             margin: 0;
             color: #2E7D32;
@@ -46,8 +54,21 @@
             color: #555;
             line-height: 1.6;
         }
+        /* NEW: Styling for the Consultation heading */
+        .consultation-heading {
+            margin: 0 0 4px 0 !important;
+            font-size: 16px !important;
+            font-weight: bold;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .letterhead-right p {
+            margin: 2px 0;
+        }
         .letterhead-right strong {
             color: #333;
+            font-size: 15px;
         }
         .watermark {
             position: absolute;
@@ -210,16 +231,16 @@
 
         <div class="letterhead-header">
             <div class="letterhead-left">
-                <p>Astrologer</p>
+                <p class="astrologer-title">Astrologer</p>
                 <h2>C.K. Saji Panicker</h2>
                 <p>Chathangottupuram, Kalarikkal</p>
                 <p>Wandoor-Malappuram</p>
                 <p>Kerala : 679 328</p>
             </div>
             <div class="letterhead-right">
-                <p><strong>Online Consultation Number:</strong> 9207773880</p>
-                <p><strong>Booking :</strong> 7034 600 880</p>
-                <p>www.pratnya.in</p>
+                <p class="consultation-heading">Consultation</p>
+                <p>Online: <strong>9207 773 880</strong></p>
+                <p>Office: <strong>7034 600 880</strong></p>
             </div>
         </div>
 
@@ -239,16 +260,16 @@
 
         <div class="letterhead-header">
             <div class="letterhead-left">
-                <p>Astrologer</p>
+                <p class="astrologer-title">Astrologer</p>
                 <h2>C.K. Saji Panicker</h2>
                 <p>Chathangottupuram, Kalarikkal</p>
                 <p>Wandoor-Malappuram</p>
                 <p>Kerala : 679 328</p>
             </div>
             <div class="letterhead-right">
-                <p><strong>Online Consultation Number:</strong> 9207773880</p>
-                <p><strong>Booking :</strong> 7034 600 880</p>
-                <p>www.pratnya.in</p>
+                <p class="consultation-heading">Consultation</p>
+                <p>Online: <strong>9207 773 880</strong></p>
+                <p>Office: <strong>7034 600 880</strong></p>
             </div>
         </div>
 
@@ -273,7 +294,7 @@
 
     <script src="app.js"></script>
     <script>
-        const LATEST_CHANGES = "Updated Letterhead Design & Details";
+        const LATEST_CHANGES = "Updated Letterhead Font and Contact Details";
         // Service Worker Update Logic
         let newWorker;
         if ('serviceWorker' in navigator) {
