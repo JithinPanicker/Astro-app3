@@ -14,6 +14,73 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* Added specific styles for the letterhead to match the image */
+        .letterhead-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #2E7D32;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            font-family: 'Arial', sans-serif;
+        }
+        .letterhead-left {
+            text-align: left;
+            color: #333;
+        }
+        .letterhead-left h2 {
+            margin: 0;
+            color: #2E7D32;
+            font-size: 26px;
+            font-weight: bold;
+        }
+        .letterhead-left p {
+            margin: 4px 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .letterhead-right {
+            text-align: right;
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+        .letterhead-right strong {
+            color: #333;
+        }
+        .watermark {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.08;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .letterhead-footer {
+            position: absolute;
+            bottom: 30px;
+            left: 40px;
+            right: 40px;
+            text-align: center;
+            border-top: 1px solid #2E7D32;
+            padding-top: 15px;
+            color: #2E7D32;
+            font-size: 16px;
+        }
+        .footer-text {
+            font-family: 'Brush Script MT', cursive;
+            font-size: 22px;
+        }
+        .footer-url {
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            margin-top: 5px;
+            display: block;
+            color: #555;
+        }
+    </style>
 </head>
 <body>
 
@@ -79,27 +146,27 @@
                         <div id="historyList" class="history-container"></div>
                     </div>
 
-<div class="new-consultation" style="display: flex; flex-direction: column; flex: 1; margin-top: 15px;">
-    <h4>➕ Add New Consultation</h4>
-    
-    <label>Case History (Problems):</label>
-    <textarea id="currentProblem" rows="3" placeholder="Enter problems here..."></textarea>
-    
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 5px;">
-        <label style="color: #2E7D32; font-weight: bold; margin: 0;">Astrological Solution:</label>
-        
-        <button type="button" onclick="transferToPrescription()" class="btn-ghost">
-        Open as Prescription
-        </button>
-    </div>
+                    <div class="new-consultation" style="display: flex; flex-direction: column; flex: 1; margin-top: 15px;">
+                        <h4>➕ Add New Consultation</h4>
+                        
+                        <label>Case History (Problems):</label>
+                        <textarea id="currentProblem" rows="3" placeholder="Enter problems here..."></textarea>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 5px;">
+                            <label style="color: #2E7D32; font-weight: bold; margin: 0;">Astrological Solution:</label>
+                            
+                            <button type="button" onclick="transferToPrescription()" class="btn-ghost">
+                            Open as Prescription
+                            </button>
+                        </div>
 
-    <textarea id="currentSolution" style="flex: 1; min-height: 250px; border: 1px solid #ddd; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5; resize: vertical;" placeholder="Write solution here..."></textarea>
-</div>
+                        <textarea id="currentSolution" style="flex: 1; min-height: 250px; border: 1px solid #ddd; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5; resize: vertical;" placeholder="Write solution here..."></textarea>
+                    </div>
 
                     <div class="form-actions">
-                        <button type="submit" style="flex: 1; background-color: #2E7D32; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold;">Save</button>
-                        <button type="button" onclick="generatePDF()" style="flex: 1; background-color: #1976D2; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold;">PDF</button>
-                        <button type="button" onclick="deleteCurrentClient()" style="flex: 1; background-color: #D32F2F; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold;">Delete</button>
+                        <button type="submit" style="background-color: #2E7D32; color: white; font-weight: bold;">Save</button>
+                        <button type="button" onclick="generatePDF()" style="background-color: #1976D2; color: white; font-weight: bold;">PDF</button>
+                        <button type="button" onclick="deleteCurrentClient()" style="background-color: #D32F2F; color: white; font-weight: bold;">Delete</button>
                     </div>
                 </form>
             </div>
@@ -135,45 +202,78 @@
 
     </div>
 
-    <div id="pdfTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 40px; font-family: 'Arial', sans-serif; color: black;">
-        <div style="text-align: center; border-bottom: 2px solid #2E7D32; padding-bottom: 15px; margin-bottom: 20px;">
-            <img src="logo.png" style="height: 80px; width: auto;" alt="Logo">
+    <div id="pdfTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
+        
+        <div class="watermark">
+            <img src="logo.png" style="width: 350px; height: auto;">
         </div>
-        <div id="pdfContent"></div>
+
+        <div class="letterhead-header">
+            <div class="letterhead-left">
+                <p>Astrologer</p>
+                <h2>C.K. Saji Panicker</h2>
+                <p>Chathangottupuram, Kalarikkal</p>
+                <p>Wandoor-Malappuram</p>
+                <p>Kerala : 679 328</p>
+            </div>
+            <div class="letterhead-right">
+                <p><strong>Online Consultation Number:</strong> 9207773880</p>
+                <p><strong>Booking :</strong> 7034 600 880</p>
+                <p>www.pratnya.in</p>
+            </div>
+        </div>
+
+        <div id="pdfContent" style="position: relative; z-index: 1;"></div>
+
+        <div class="letterhead-footer">
+            <span class="footer-text">Fix your appointment through the call</span>
+            <span class="footer-url">www.pratnya.in</span>
+        </div>
     </div>
 
-    <div id="prescriptionTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; font-family: 'Georgia', serif; color: black; box-sizing: border-box;">
+    <div id="prescriptionTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
         
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.1; z-index: 0;">
-            <img src="logo.png" style="width: 400px; height: auto;">
+        <div class="watermark">
+            <img src="logo.png" style="width: 350px; height: auto;">
         </div>
 
-        <div style="text-align: center; border-bottom: 2px solid #2E7D32; padding-bottom: 15px; margin-bottom: 30px; position: relative; z-index: 10;">
-            <img src="logo.png" style="height: 70px; width: auto;">
-            <p style="margin: 5px 0 0 0; font-size: 12px; color: #555;">Astrological Solutions & Consultation</p>
+        <div class="letterhead-header">
+            <div class="letterhead-left">
+                <p>Astrologer</p>
+                <h2>C.K. Saji Panicker</h2>
+                <p>Chathangottupuram, Kalarikkal</p>
+                <p>Wandoor-Malappuram</p>
+                <p>Kerala : 679 328</p>
+            </div>
+            <div class="letterhead-right">
+                <p><strong>Online Consultation Number:</strong> 9207773880</p>
+                <p><strong>Booking :</strong> 7034 600 880</p>
+                <p>www.pratnya.in</p>
+            </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 30px; position: relative; z-index: 10;">
-            <div><strong>Name:</strong> <span id="pdfPrescName"></span></div>
-            <div><strong>Date:</strong> <span id="pdfPrescDate"></span></div>
-            <div><strong>Star:</strong> <span id="pdfPrescStar"></span></div>
-            <div><strong>Place:</strong> <span id="pdfPrescPlace"></span></div>
-            <div><strong>Rasi:</strong> <span id="pdfPrescRasi"></span></div>
-            <div><strong>Udhaya Rasi:</strong> <span id="pdfPrescUdhaya"></span></div>
-        </div>
-
-        <div id="pdfPrescBody" style="font-size: 16px; line-height: 1.8; min-height: 500px; white-space: pre-wrap; position: relative; z-index: 10;">
+        <div style="position: relative; z-index: 1; font-family: 'Georgia', serif; color: black;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 30px;">
+                <div><strong>Name:</strong> <span id="pdfPrescName"></span></div>
+                <div><strong>Date:</strong> <span id="pdfPrescDate"></span></div>
+                <div><strong>Star:</strong> <span id="pdfPrescStar"></span></div>
+                <div><strong>Place:</strong> <span id="pdfPrescPlace"></span></div>
+                <div><strong>Rasi:</strong> <span id="pdfPrescRasi"></span></div>
+                <div><strong>Udhaya Rasi:</strong> <span id="pdfPrescUdhaya"></span></div>
             </div>
 
-        <div style="position: absolute; bottom: 40px; left: 40px; right: 40px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; padding-top: 10px;">
-            Fix your appointment through the call<br>
-            <strong>www.pratnya.com</strong>
+            <div id="pdfPrescBody" style="font-size: 16px; line-height: 1.8; min-height: 400px; white-space: pre-wrap;"></div>
+        </div>
+
+        <div class="letterhead-footer">
+            <span class="footer-text">Fix your appointment through the call</span>
+            <span class="footer-url">www.pratnya.in</span>
         </div>
     </div>
 
     <script src="app.js"></script>
     <script>
-        const LATEST_CHANGES = "Added Prescription Mode & Watermark PDF";
+        const LATEST_CHANGES = "Updated Letterhead Design & Details";
         // Service Worker Update Logic
         let newWorker;
         if ('serviceWorker' in navigator) {
