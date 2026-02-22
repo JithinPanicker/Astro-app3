@@ -29,13 +29,15 @@
             text-align: left;
             color: #333;
         }
-        /* NEW: Light green, different font for Astrologer */
+        /* Light green, italic serif font for Astrologer and Consultation */
         .astrologer-title {
             color: #66BB6A; /* Light green */
             font-family: 'Georgia', serif; 
             font-style: italic;
             font-size: 16px;
             margin: 0 0 2px 0 !important;
+            font-weight: normal;
+            text-transform: none; /* Ensures it stays exactly as typed */
         }
         .letterhead-left h2 {
             margin: 0;
@@ -54,21 +56,18 @@
             color: #555;
             line-height: 1.6;
         }
-        /* NEW: Styling for the Consultation heading */
-        .consultation-heading {
-            margin: 0 0 4px 0 !important;
-            font-size: 16px !important;
-            font-weight: bold;
-            color: #333;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
         .letterhead-right p {
             margin: 2px 0;
         }
         .letterhead-right strong {
             color: #333;
             font-size: 15px;
+        }
+        /* Clickable links without underlines */
+        .contact-link {
+            text-decoration: none;
+            color: inherit; /* Keeps the text dark gray/black */
+            cursor: pointer;
         }
         .watermark {
             position: absolute;
@@ -238,9 +237,9 @@
                 <p>Kerala : 679 328</p>
             </div>
             <div class="letterhead-right">
-                <p class="consultation-heading">Consultation</p>
-                <p>Online: <strong>9207 773 880</strong></p>
-                <p>Office: <strong>7034 600 880</strong></p>
+                <p class="astrologer-title">Consultation</p>
+                <p>Online: <strong><a href="https://wa.me/919207773880" target="_blank" class="contact-link">9207 773 880</a></strong></p>
+                <p>Office: <strong><a href="tel:7034600880" class="contact-link">7034 600 880</a></strong></p>
             </div>
         </div>
 
@@ -267,9 +266,9 @@
                 <p>Kerala : 679 328</p>
             </div>
             <div class="letterhead-right">
-                <p class="consultation-heading">Consultation</p>
-                <p>Online: <strong>9207 773 880</strong></p>
-                <p>Office: <strong>7034 600 880</strong></p>
+                <p class="astrologer-title">Consultation</p>
+                <p>Online: <strong><a href="https://wa.me/919207773880" target="_blank" class="contact-link">9207 773 880</a></strong></p>
+                <p>Office: <strong><a href="tel:7034600880" class="contact-link">7034 600 880</a></strong></p>
             </div>
         </div>
 
@@ -294,7 +293,7 @@
 
     <script src="app.js"></script>
     <script>
-        const LATEST_CHANGES = "Updated Letterhead Font and Contact Details";
+        const LATEST_CHANGES = "Perfectly matched Consultation font style";
         // Service Worker Update Logic
         let newWorker;
         if ('serviceWorker' in navigator) {
