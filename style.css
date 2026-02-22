@@ -42,22 +42,26 @@ button { border: none; border-radius: 6px; cursor: pointer; font-weight: 600; tr
     align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     z-index: 10; flex-shrink: 0;
 }
-#clientForm { padding: 20px; overflow-y: auto; flex: 1; padding-bottom: 20px; }
-
-/* --- 1. FIXED BUTTON ALIGNMENT (Important) --- */
-.form-actions { 
-    position: sticky; bottom: 0; background: white;
-    padding: 15px 20px; /* Match form padding */
-    margin: 0 -20px -20px -20px; /* Stretch to edges */
-    border-top: 1px solid #ddd;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-    z-index: 20;
-    
-    /* Flexbox Magic for Perfect Alignment */
-    display: flex; 
-    gap: 10px; 
-    justify-content: space-between;
+/* Update this block */
+#clientForm { 
+    padding: 20px; 
+    overflow-y: auto; 
+    flex: 1; 
+    padding-bottom: 20px; 
+    display: flex;            /* Added for layout */
+    flex-direction: column;   /* Added for layout */
 }
+
+/* Update History Styles */
+.history-item { 
+    background: white; 
+    border-left: 4px solid #4CAF50; 
+    padding: 12px; 
+    margin-bottom: 15px; 
+    border-radius: 6px; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+}
+/* You can safely REMOVE the old .history-date CSS rule, as it uses absolute positioning which we removed in app.js */
 
 /* Force all buttons to be equal width */
 .form-actions button {
@@ -83,8 +87,6 @@ button { border: none; border-radius: 6px; cursor: pointer; font-weight: 600; tr
 input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
 
 /* History & Popups */
-.history-item { background: white; border-left: 4px solid #4CAF50; padding: 10px; margin-bottom: 10px; position: relative; }
-.history-date { font-size: 11px; color: #888; position: absolute; top: 10px; right: 10px; }
 .swal2-container { z-index: 3000 !important; }
 
 /* TABLET & DESKTOP */

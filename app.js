@@ -106,14 +106,77 @@ window.loadClient = async (id) => {
     if (client.consultations && client.consultations.length > 0) {
         client.consultations.forEach(item => {
             listDiv.innerHTML += `
-                <div class="history-item">
-                    <span class="history-date">${item.date}</span>
-                    <span class="history-label">Problem:</span><div class="history-text">${item.problem || '-'}</div>
-                    <span class="history-label" style="color:#1976D2">Solution:</span><div class="history-text">${item.solution || '-'}</div>
+                <div class="history-item" id="hist-${item.timestamp}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px;">
+                        <span style="font-size: 12px; color: #555; font-weight: bold;">${item.date}</span>
+                        <div class="history-actions">
+                            <button type="button" onclick="editHist(${client.id}, ${item.timestamp})" style="background: #FFC107; padding: 4px 10px; font-size: 12px; border-radius: 4px;">✏️ Edit</button>
+                            <button type="button" onclick="deleteHist(${client.id}, ${item.timestamp})" style="background: #F44336; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">🗑️ Delete</button>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <span class="history-label" style="font-weight: 600;">Problem:</span>
+                        <div class="history-text" id="prob-text-${item.timestamp}" style="white-space: pre-wrap; margin-top: 4px;">${item.problem || '-'}</div>
+                    </div>
+                    <div>
+                        <span class="history-label" style="color:#1976D2; font-weight: 600;">Solution:</span>
+                        <div class="history-text" id="sol-text-${item.timestamp}" style="white-space: pre-wrap; margin-top: 4px;">${item.solution || '-'}</div>
+                    </div>
                 </div>`;
         });
     } else { listDiv.innerHTML = "<p style='color:#888; text-align:center;'>No previous consultations.</p>"; }
     showForm();
+};
+
+// --- EDIT HISTORY ---
+window.editHist = (clientId, timestamp) => {
+    const probEl = document.getElementById(`prob-text-${timestamp}`);
+    const solEl = document.getElementById(`sol-text-${timestamp}`);
+    
+    const probText = probEl.innerText;
+    const solText = solEl.innerText;
+
+    probEl.innerHTML = `<textarea id="edit-prob-${timestamp}" rows="3" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${probText === '-' ? '' : probText}</textarea>`;
+    solEl.innerHTML = `<textarea id="edit-sol-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${solText === '-' ? '' : solText}</textarea>`;
+    
+    const actionsDiv = document.querySelector(`#hist-${timestamp} .history-actions`);
+    actionsDiv.innerHTML = `
+        <button type="button" onclick="saveHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">💾 Save</button>
+        <button type="button" onclick="loadClient(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">❌ Cancel</button>
+    `;
+};
+
+window.saveHist = async (clientId, timestamp) => {
+    const client = await db.clients.get(clientId);
+    const probVal = document.getElementById(`edit-prob-${timestamp}`).value;
+    const solVal = document.getElementById(`edit-sol-${timestamp}`).value;
+
+    const histIndex = client.consultations.findIndex(c => c.timestamp === timestamp);
+    if(histIndex !== -1) {
+        client.consultations[histIndex].problem = probVal;
+        client.consultations[histIndex].solution = solVal;
+        await db.clients.put(client);
+        loadClient(clientId);
+    }
+};
+
+window.deleteHist = async (clientId, timestamp) => {
+    Swal.fire({
+        title: 'Delete this consultation?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const client = await db.clients.get(clientId);
+            client.consultations = client.consultations.filter(c => c.timestamp !== timestamp);
+            await db.clients.put(client);
+            loadClient(clientId);
+        }
+    });
 };
 
 async function updateList() {
