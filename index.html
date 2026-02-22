@@ -15,91 +15,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        /* Added specific styles for the letterhead to match the image */
-        .letterhead-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-bottom: 2px solid #2E7D32;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-            font-family: 'Arial', sans-serif;
-        }
-        .letterhead-left {
-            text-align: left;
-            color: #333;
-        }
-        /* Light green, italic serif font for Astrologer and Consultation */
-        .astrologer-title {
-            color: #66BB6A; /* Light green */
-            font-family: 'Georgia', serif; 
-            font-style: italic;
-            font-size: 16px;
-            margin: 0 0 2px 0 !important;
-            font-weight: normal;
-            text-transform: none; /* Ensures it stays exactly as typed */
-        }
-        .letterhead-left h2 {
-            margin: 0;
-            color: #2E7D32;
-            font-size: 26px;
-            font-weight: bold;
-        }
-        .letterhead-left p {
-            margin: 4px 0;
-            font-size: 14px;
-            color: #555;
-        }
-        .letterhead-right {
-            text-align: right;
-            font-size: 14px;
-            color: #555;
-            line-height: 1.6;
-        }
-        .letterhead-right p {
-            margin: 2px 0;
-        }
-        .letterhead-right strong {
-            color: #333;
-            font-size: 15px;
-        }
-        /* Clickable links without underlines */
-        .contact-link {
-            text-decoration: none;
-            color: inherit; /* Keeps the text dark gray/black */
-            cursor: pointer;
-        }
-        .watermark {
-            position: absolute;
-            top: 55%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            opacity: 0.08;
-            z-index: 0;
-            pointer-events: none;
-        }
-        .letterhead-footer {
-            position: absolute;
-            bottom: 30px;
-            left: 40px;
-            right: 40px;
-            text-align: center;
-            border-top: 1px solid #2E7D32;
-            padding-top: 15px;
-            color: #2E7D32;
-            font-size: 16px;
-        }
-        .footer-text {
-            font-family: 'Brush Script MT', cursive;
-            font-size: 22px;
-        }
-        .footer-url {
-            font-family: 'Arial', sans-serif;
-            font-size: 14px;
-            margin-top: 5px;
-            display: block;
-            color: #555;
-        }
+        .letterhead-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px; font-family: 'Arial', sans-serif; }
+        .letterhead-left { text-align: left; color: #333; }
+        .astrologer-title { color: #66BB6A; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0 !important; font-weight: normal; text-transform: none; }
+        .letterhead-left h2 { margin: 0; color: #2E7D32; font-size: 26px; font-weight: bold; }
+        .letterhead-left p { margin: 4px 0; font-size: 14px; color: #555; }
+        .letterhead-right { text-align: right; font-size: 14px; color: #555; line-height: 1.6; }
+        .letterhead-right p { margin: 2px 0; }
+        .letterhead-right strong { color: #333; font-size: 15px; }
+        .contact-link { text-decoration: none; color: inherit; cursor: pointer; }
+        .watermark { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); opacity: 0.08; z-index: 0; pointer-events: none; }
+        .letterhead-footer { position: absolute; bottom: 30px; left: 40px; right: 40px; text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; font-size: 16px; }
+        .footer-text { font-family: 'Brush Script MT', cursive; font-size: 22px; }
+        .footer-url { font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #555; }
     </style>
 </head>
 <body>
@@ -130,7 +58,7 @@
         </div>
 
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="🔍 Search Client by Name..." autocomplete="off">
+            <input type="text" id="searchInput" placeholder="🔍 Search Client or Prescription..." autocomplete="off">
         </div>
 
         <div id="clientList" class="client-list"></div>
@@ -161,26 +89,27 @@
                         <input type="text" id="profession" placeholder="Profession">
                     </div>
 
-                    <div id="historySection">
-                        <h4>Previous Consultations</h4>
-                        <div id="historyList" class="history-container"></div>
+                    <div id="historySection" class="dual-history-grid" style="margin-top: 20px;">
+                        <div>
+                            <h4 style="color: #1976D2;">Consultations</h4>
+                            <div id="historyList" class="history-container"></div>
+                        </div>
+                        <div>
+                            <h4 style="color: #E65100;">Prescriptions</h4>
+                            <div id="clientPrescList" class="history-container"></div>
+                        </div>
                     </div>
 
                     <div class="new-consultation" style="display: flex; flex-direction: column; flex: 1; margin-top: 15px;">
                         <h4>➕ Add New Consultation</h4>
-                        
                         <label>Case History (Problems):</label>
                         <textarea id="currentProblem" rows="3" placeholder="Enter problems here..."></textarea>
                         
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 5px;">
                             <label style="color: #2E7D32; font-weight: bold; margin: 0;">Astrological Solution:</label>
-                            
-                            <button type="button" onclick="transferToPrescription()" class="btn-ghost">
-                            Open as Prescription
-                            </button>
+                            <button type="button" onclick="transferToPrescription()" class="btn-ghost">Open as Prescription</button>
                         </div>
-
-                        <textarea id="currentSolution" style="flex: 1; min-height: 250px; border: 1px solid #ddd; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5; resize: vertical;" placeholder="Write solution here..."></textarea>
+                        <textarea id="currentSolution" style="flex: 1; min-height: 200px; border: 1px solid #ddd; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5; resize: vertical;" placeholder="Write solution here..."></textarea>
                     </div>
 
                     <div class="form-actions">
@@ -195,26 +124,33 @@
         <div id="prescriptionModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header" style="background: #FFF3E0;">
-                    <h3 style="color: #E65100;">Write Prescription</h3>
+                    <h3 style="color: #E65100;">Prescription Details</h3>
                     <button onclick="closePrescriptionForm()" class="btn-close">✖</button>
                 </div>
                 
-                <form id="prescriptionForm" style="padding: 20px; flex: 1; display: flex; flex-direction: column;">
+                <form id="prescriptionForm" style="padding: 20px; flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding-bottom: 0;">
+                    <input type="hidden" id="prescClientId">
+                    
                     <div class="form-grid">
-                        <input type="text" id="prescName" placeholder="Name">
+                        <input type="text" id="prescName" placeholder="Name *" required>
                         <input type="text" id="prescStar" placeholder="Star">
                         <input type="text" id="prescPlace" placeholder="Place">
                         <input type="text" id="prescRasi" placeholder="Rasi">
                         <input type="text" id="prescUdhaya" placeholder="Udhaya Rasi">
                     </div>
 
-                    <label style="margin-top: 15px; font-weight: bold; color: #555;">Prescription / Notes:</label>
-                    <textarea id="prescBody" style="flex: 1; margin-top: 5px; border: 1px solid #ccc; padding: 15px; font-size: 16px; line-height: 1.5;" placeholder="Write full prescription here..."></textarea>
+                    <div id="prescHistorySection" style="margin-top: 20px;">
+                        <h4 style="color: #E65100;">Previous Prescriptions</h4>
+                        <div id="prescHistoryList" class="history-container"></div>
+                    </div>
 
-                    <div class="form-actions">
-                        <button type="button" onclick="generatePrescriptionPDF()" style="width: 100%; background-color: #E65100; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
-                            Download Letterhead PDF
-                        </button>
+                    <h4 style="margin-top: 15px; margin-bottom: 5px;">➕ Write New Prescription:</h4>
+                    <textarea id="prescBody" style="flex: 1; min-height: 250px; border: 1px solid #ccc; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5;" placeholder="Write full prescription here..."></textarea>
+
+                    <div class="form-actions" style="background: #FFF3E0;">
+                        <button type="button" onclick="savePrescription()" style="background-color: #4CAF50; color: white; font-weight: bold;">Save</button>
+                        <button type="button" onclick="generatePrescriptionPDF()" style="background-color: #FF9800; color: white; font-weight: bold;">PDF (Current)</button>
+                        <button type="button" onclick="deleteCurrentPrescClient()" style="background-color: #D32F2F; color: white; font-weight: bold;">Delete Client</button>
                     </div>
                 </form>
             </div>
@@ -223,11 +159,7 @@
     </div>
 
     <div id="pdfTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
-        
-        <div class="watermark">
-            <img src="logo.png" style="width: 350px; height: auto;">
-        </div>
-
+        <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
         <div class="letterhead-header">
             <div class="letterhead-left">
                 <p class="astrologer-title">Astrologer</p>
@@ -242,9 +174,7 @@
                 <p>Office: <strong><a href="tel:7034600880" class="contact-link">7034 600 880</a></strong></p>
             </div>
         </div>
-
         <div id="pdfContent" style="position: relative; z-index: 1;"></div>
-
         <div class="letterhead-footer">
             <span class="footer-text">Fix your appointment through the call</span>
             <span class="footer-url">www.pratnya.in</span>
@@ -252,11 +182,7 @@
     </div>
 
     <div id="prescriptionTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
-        
-        <div class="watermark">
-            <img src="logo.png" style="width: 350px; height: auto;">
-        </div>
-
+        <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
         <div class="letterhead-header">
             <div class="letterhead-left">
                 <p class="astrologer-title">Astrologer</p>
@@ -271,7 +197,6 @@
                 <p>Office: <strong><a href="tel:7034600880" class="contact-link">7034 600 880</a></strong></p>
             </div>
         </div>
-
         <div style="position: relative; z-index: 1; font-family: 'Georgia', serif; color: black;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 30px;">
                 <div><strong>Name:</strong> <span id="pdfPrescName"></span></div>
@@ -281,10 +206,8 @@
                 <div><strong>Rasi:</strong> <span id="pdfPrescRasi"></span></div>
                 <div><strong>Udhaya Rasi:</strong> <span id="pdfPrescUdhaya"></span></div>
             </div>
-
             <div id="pdfPrescBody" style="font-size: 16px; line-height: 1.8; min-height: 400px; white-space: pre-wrap;"></div>
         </div>
-
         <div class="letterhead-footer">
             <span class="footer-text">Fix your appointment through the call</span>
             <span class="footer-url">www.pratnya.in</span>
@@ -293,9 +216,7 @@
 
     <script src="app.js"></script>
     <script>
-        const LATEST_CHANGES = "Perfectly matched Consultation font style";
-        // Service Worker Update Logic
-        let newWorker;
+        const LATEST_CHANGES = "Unified Client & Prescription Database";
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(registration => {
                 if (registration.waiting) { newWorker = registration.waiting; showNotificationIcon(); }
@@ -313,11 +234,7 @@
         function showNotificationIcon() { document.getElementById('updateIcon').style.display = 'block'; }
         function showUpdateInfo() {
             Swal.fire({
-                title: '🚀 Update Available!',
-                html: `What's New:<br><b>${LATEST_CHANGES}</b>`,
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonText: 'Update Now'
+                title: '🚀 Update Available!', html: `What's New:<br><b>${LATEST_CHANGES}</b>`, icon: 'info', showCancelButton: true, confirmButtonText: 'Update Now'
             }).then((result) => { if (result.isConfirmed) performUpdate(); });
         }
         function performUpdate() {

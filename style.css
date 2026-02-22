@@ -130,3 +130,15 @@ input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-rad
     .form-grid { grid-template-columns: 1fr 1fr 1fr; }
     #historySection, .new-consultation { grid-column: span 3; }
 }
+
+/* --- History Grid layout for Client Modal --- */
+.dual-history-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+@media (min-width: 768px) {
+    .dual-history-grid {
+        grid-template-columns: 1fr 1fr; /* Side by side on desktop */
+    }
+}

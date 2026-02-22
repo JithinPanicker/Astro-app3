@@ -27,6 +27,7 @@ db.version(4).stores({ clients: '++id, name, star, phone, location, age, dob, bi
 const modal = document.getElementById('clientFormModal');
 const prescModal = document.getElementById('prescriptionModal');
 const form = document.getElementById('clientForm');
+const prescForm = document.getElementById('prescriptionForm');
 const searchInput = document.getElementById('searchInput');
 
 updateList();
@@ -37,15 +38,17 @@ function closeForm() {
     modal.classList.add('hidden'); document.body.style.overflow = 'auto'; 
     form.reset(); document.getElementById('clientId').value = ""; 
     document.getElementById('historyList').innerHTML = ""; 
+    document.getElementById('clientPrescList').innerHTML = ""; 
 }
 
 function showPrescriptionForm() { prescModal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
 function closePrescriptionForm() { 
     prescModal.classList.add('hidden'); document.body.style.overflow = 'auto'; 
-    document.getElementById('prescriptionForm').reset();
+    prescForm.reset(); document.getElementById('prescClientId').value = "";
+    document.getElementById('prescHistoryList').innerHTML = "";
 }
 
-// --- SAVE CLIENT ---
+// --- SAVE MAIN CLIENT ---
 form.onsubmit = async (event) => {
     event.preventDefault();
     const id = document.getElementById('clientId').value;
@@ -80,19 +83,63 @@ form.onsubmit = async (event) => {
         await db.clients.update(parseInt(id), { ...basicData, consultations: history });
     } else {
         const history = consultationEntry ? [consultationEntry] : [];
-        await db.clients.add({ ...basicData, consultations: history });
+        await db.clients.add({ ...basicData, consultations: history, prescriptions: [] });
     }
     closeForm();
     await updateList();
     Swal.fire({ title: 'Saved!', icon: 'success', timer: 1000, showConfirmButton: false, width: '200px' });
 };
 
-// --- LOAD CLIENT ---
+// --- SAVE PRESCRIPTION ---
+window.savePrescription = async () => {
+    const id = document.getElementById('prescClientId').value;
+    const name = document.getElementById('prescName').value.trim();
+    if(!name) { Swal.fire({title: 'Error', text: 'Name is required', icon: 'error'}); return; }
+
+    const prescData = {
+        name: name,
+        star: document.getElementById('prescStar').value,
+        location: document.getElementById('prescPlace').value,
+        updated: new Date()
+    };
+    
+    const rasi = document.getElementById('prescRasi').value.trim();
+    const udhaya = document.getElementById('prescUdhaya').value.trim();
+    const notes = document.getElementById('prescBody').value.trim();
+
+    let newPresc = null;
+    if(rasi || udhaya || notes) {
+        newPresc = {
+            date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            timestamp: Date.now(),
+            rasi: rasi,
+            udhaya: udhaya,
+            notes: notes
+        };
+    }
+
+    if (id) {
+        const client = await db.clients.get(parseInt(id));
+        let pHistory = client.prescriptions || [];
+        if(newPresc) pHistory.unshift(newPresc);
+        await db.clients.update(parseInt(id), { ...prescData, prescriptions: pHistory });
+    } else {
+        const pHistory = newPresc ? [newPresc] : [];
+        await db.clients.add({ ...prescData, consultations: [], prescriptions: pHistory });
+    }
+    
+    closePrescriptionForm();
+    await updateList();
+    Swal.fire({ title: 'Saved!', icon: 'success', timer: 1000, showConfirmButton: false, width: '200px' });
+};
+
+
+// --- LOAD CLIENT DETAILS ---
 window.loadClient = async (id) => {
     const client = await db.clients.get(id);
     if(!client) return;
     document.getElementById('clientId').value = client.id;
-    document.getElementById('name').value = client.name;
+    document.getElementById('name').value = client.name || "";
     document.getElementById('star').value = client.star || "";
     document.getElementById('dob').value = client.dob || "";
     document.getElementById('age').value = client.age || "";
@@ -101,6 +148,7 @@ window.loadClient = async (id) => {
     document.getElementById('phone').value = client.phone || "";
     document.getElementById('profession').value = client.profession || "";
 
+    // Load Consultations
     const listDiv = document.getElementById('historyList');
     listDiv.innerHTML = "";
     if (client.consultations && client.consultations.length > 0) {
@@ -125,14 +173,77 @@ window.loadClient = async (id) => {
                 </div>`;
         });
     } else { listDiv.innerHTML = "<p style='color:#888; text-align:center;'>No previous consultations.</p>"; }
+
+    // Load Prescriptions into Client Window
+    const prescDiv = document.getElementById('clientPrescList');
+    prescDiv.innerHTML = "";
+    if (client.prescriptions && client.prescriptions.length > 0) {
+        client.prescriptions.forEach(item => {
+            prescDiv.innerHTML += `
+                <div class="history-item" style="border-left-color: #FF9800;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px;">
+                        <span style="font-size: 12px; color: #E65100; font-weight: bold;">${item.date}</span>
+                    </div>
+                    <div style="font-size: 13px; margin-bottom: 4px;"><strong>Rasi:</strong> ${item.rasi || '-'} | <strong>Udhaya:</strong> ${item.udhaya || '-'}</div>
+                    <div style="white-space: pre-wrap; font-size: 14px; margin-top: 8px;">${item.notes || '-'}</div>
+                </div>`;
+        });
+    } else { prescDiv.innerHTML = "<p style='color:#888; text-align:center;'>No previous prescriptions.</p>"; }
+
     showForm();
 };
 
-// --- EDIT HISTORY ---
+// --- LOAD PRESCRIPTION DETAILS ---
+window.loadPrescription = async (id) => {
+    const client = await db.clients.get(id);
+    if(!client) return;
+    
+    document.getElementById('prescClientId').value = client.id;
+    document.getElementById('prescName').value = client.name || "";
+    document.getElementById('prescStar').value = client.star || "";
+    document.getElementById('prescPlace').value = client.location || "";
+    
+    // Clear current typing area
+    document.getElementById('prescRasi').value = "";
+    document.getElementById('prescUdhaya').value = "";
+    document.getElementById('prescBody').value = "";
+
+    const listDiv = document.getElementById('prescHistoryList');
+    listDiv.innerHTML = "";
+    if (client.prescriptions && client.prescriptions.length > 0) {
+        client.prescriptions.forEach(item => {
+            listDiv.innerHTML += `
+                <div class="history-item" id="p-hist-${item.timestamp}" style="border-left-color: #FF9800;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px;">
+                        <span style="font-size: 12px; color: #E65100; font-weight: bold;">${item.date}</span>
+                        <div class="history-actions">
+                            <button type="button" onclick="loadOldPrescText(${item.timestamp})" style="background: #1976D2; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Load to Editor</button>
+                            <button type="button" onclick="deletePrescHist(${client.id}, ${item.timestamp})" style="background: #F44336; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Delete</button>
+                        </div>
+                    </div>
+                    <div style="font-size: 13px; margin-bottom: 4px;">
+                        <strong>Rasi:</strong> <span id="p-rasi-${item.timestamp}">${item.rasi || ''}</span> | 
+                        <strong>Udhaya:</strong> <span id="p-udhaya-${item.timestamp}">${item.udhaya || ''}</span>
+                    </div>
+                    <div id="p-notes-${item.timestamp}" style="white-space: pre-wrap; font-size: 14px; margin-top: 8px;">${item.notes || ''}</div>
+                </div>`;
+        });
+    } else { listDiv.innerHTML = "<p style='color:#888; text-align:center;'>No previous history.</p>"; }
+    
+    showPrescriptionForm();
+};
+
+window.loadOldPrescText = (timestamp) => {
+    document.getElementById('prescRasi').value = document.getElementById(`p-rasi-${timestamp}`).innerText;
+    document.getElementById('prescUdhaya').value = document.getElementById(`p-udhaya-${timestamp}`).innerText;
+    document.getElementById('prescBody').value = document.getElementById(`p-notes-${timestamp}`).innerText;
+};
+
+
+// --- HISTORY EDIT & DELETE LOGIC ---
 window.editHist = (clientId, timestamp) => {
     const probEl = document.getElementById(`prob-text-${timestamp}`);
     const solEl = document.getElementById(`sol-text-${timestamp}`);
-    
     const probText = probEl.innerText;
     const solText = solEl.innerText;
 
@@ -161,15 +272,7 @@ window.saveHist = async (clientId, timestamp) => {
 };
 
 window.deleteHist = async (clientId, timestamp) => {
-    Swal.fire({
-        title: 'Delete this consultation?',
-        text: "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete it!'
-    }).then(async (result) => {
+    Swal.fire({ title: 'Delete consultation?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Yes' }).then(async (result) => {
         if (result.isConfirmed) {
             const client = await db.clients.get(clientId);
             client.consultations = client.consultations.filter(c => c.timestamp !== timestamp);
@@ -179,19 +282,58 @@ window.deleteHist = async (clientId, timestamp) => {
     });
 };
 
+window.deletePrescHist = async (clientId, timestamp) => {
+    Swal.fire({ title: 'Delete prescription?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Yes' }).then(async (result) => {
+        if (result.isConfirmed) {
+            const client = await db.clients.get(clientId);
+            client.prescriptions = client.prescriptions.filter(c => c.timestamp !== timestamp);
+            await db.clients.put(client);
+            loadPrescription(clientId);
+        }
+    });
+};
+
 async function updateList() {
     const query = searchInput.value.toLowerCase();
     let clients = await db.clients.toArray();
     if (query) clients = clients.filter(c => c.name.toLowerCase().includes(query));
     clients.reverse();
-    document.getElementById('clientList').innerHTML = clients.map(client => `
-        <div class="client-item" onclick="loadClient(${client.id})">
-            <div class="client-info"><h4>${client.name}</h4><p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p></div>
-            <div class="actions"><button class="btn-view">View</button></div>
-        </div>`).join('');
+    
+    let html = "";
+    clients.forEach(client => {
+        const hasConsults = client.consultations && client.consultations.length > 0;
+        const hasPresc = client.prescriptions && client.prescriptions.length > 0;
+        const noHistory = !hasConsults && !hasPresc; // Purely basic details
+
+        // 1. Show Client Profile Card
+        if (hasConsults || noHistory || client.dob) {
+            html += `
+            <div class="client-item" onclick="loadClient(${client.id})">
+                <div class="client-info">
+                    <h4>${client.name} <span style="background: #e3f2fd; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle;">Client</span></h4>
+                    <p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p>
+                </div>
+                <div class="actions"><button class="btn-view">View</button></div>
+            </div>`;
+        }
+
+        // 2. Show Prescription Profile Card
+        if (hasPresc) {
+            html += `
+            <div class="client-item" style="border-left: 4px solid #FF9800;" onclick="loadPrescription(${client.id})">
+                <div class="client-info">
+                    <h4>${client.name} <span style="background: #FFF3E0; color: #E65100; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle;">Prescription</span></h4>
+                    <p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p>
+                </div>
+                <div class="actions"><button class="btn-view" style="background: #FFF3E0; color: #E65100;">View</button></div>
+            </div>`;
+        }
+    });
+
+    document.getElementById('clientList').innerHTML = html;
 }
 
-// --- 1. STANDALONE PRESCRIPTION PDF (Watermark Style) ---
+// --- GENERATE PRESCRIPTION PDF ---
 window.generatePrescriptionPDF = async () => {
     const name = document.getElementById('prescName').value || "";
     const star = document.getElementById('prescStar').value || "";
@@ -200,7 +342,8 @@ window.generatePrescriptionPDF = async () => {
     const udhaya = document.getElementById('prescUdhaya').value || "";
     const body = document.getElementById('prescBody').value || "";
 
-    // Fill Template
+    if(!name && !body) { Swal.fire('Error', 'Form is empty!', 'error'); return; }
+
     document.getElementById('pdfPrescName').innerText = name;
     document.getElementById('pdfPrescDate').innerText = new Date().toLocaleDateString('en-IN');
     document.getElementById('pdfPrescStar').innerText = star;
@@ -209,17 +352,28 @@ window.generatePrescriptionPDF = async () => {
     document.getElementById('pdfPrescUdhaya').innerText = udhaya;
     document.getElementById('pdfPrescBody').innerText = body;
 
-    await createAndDownloadPDF('prescriptionTemplate', `${name}_Prescription.pdf`);
+    Swal.fire({ title: 'Generating...', didOpen: () => Swal.showLoading() });
+    try {
+        const { jsPDF } = window.jspdf;
+        const element = document.getElementById('prescriptionTemplate');
+        const canvas = await html2canvas(element, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const width = pdf.internal.pageSize.getWidth();
+        const height = (canvas.height * width) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        pdf.save(`${name}_Prescription.pdf`);
+        Swal.fire({ title: 'Downloaded!', icon: 'success', timer: 1500, showConfirmButton: false });
+    } catch(e) { console.error(e); }
 };
 
-// --- 2. MAIN CLIENT PDF (With Intelligent Page 2) ---
+// --- GENERATE CLIENT MAIN PDF ---
 window.generatePDF = async () => {
-    // A. Generate Page 1 (Standard Details)
     const name = document.getElementById('name').value;
     const star = document.getElementById('star').value;
     const dob = document.getElementById('dob').value;
     const time = document.getElementById('birthTime').value;
-    const currentSolution = document.getElementById('currentSolution').value;
 
     let displayTime = time;
     if(time) {
@@ -259,70 +413,26 @@ window.generatePDF = async () => {
     htmlContent += `</table>`;
     document.getElementById('pdfContent').innerHTML = htmlContent;
 
-    // B. Start Generation
     Swal.fire({ title: 'Generating PDF...', didOpen: () => Swal.showLoading() });
-    
     try {
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
         const width = pdf.internal.pageSize.getWidth();
 
-        // -- PAGE 1: CLIENT HISTORY --
         const element1 = document.getElementById('pdfTemplate');
         const canvas1 = await html2canvas(element1, { scale: 2 });
         const imgData1 = canvas1.toDataURL('image/png');
         const height1 = (canvas1.height * width) / canvas1.width;
         pdf.addImage(imgData1, 'PNG', 0, 0, width, height1);
 
-        // -- PAGE 2: PRESCRIPTION (If Solution Exists) --
-        if(currentSolution.trim()) {
-            pdf.addPage(); // Add Page 2
-            
-            // Fill Prescription Template with Client Data + Solution
-            document.getElementById('pdfPrescName').innerText = name;
-            document.getElementById('pdfPrescDate').innerText = new Date().toLocaleDateString('en-IN');
-            document.getElementById('pdfPrescStar').innerText = star;
-            document.getElementById('pdfPrescPlace').innerText = document.getElementById('place').value;
-            // Leave Rasi/Udhaya blank for auto-gen, or add fields to main form if needed
-            document.getElementById('pdfPrescRasi').innerText = ""; 
-            document.getElementById('pdfPrescUdhaya').innerText = "";
-            document.getElementById('pdfPrescBody').innerText = currentSolution;
-
-            const element2 = document.getElementById('prescriptionTemplate');
-            const canvas2 = await html2canvas(element2, { scale: 2 });
-            const imgData2 = canvas2.toDataURL('image/png');
-            const height2 = (canvas2.height * width) / canvas2.width;
-            pdf.addImage(imgData2, 'PNG', 0, 0, width, height2);
-        }
-
         pdf.save(`${name}_Full_Report.pdf`);
         Swal.fire({ title: 'Downloaded!', icon: 'success', timer: 1500, showConfirmButton: false });
 
-    } catch (error) {
-        console.error(error);
-        Swal.fire({ title: 'Error', text: 'PDF Failed', icon: 'error' });
-    }
+    } catch (error) { Swal.fire({ title: 'Error', text: 'PDF Failed', icon: 'error' }); }
 };
 
-// Helper for Standalone Prescription PDF
-async function createAndDownloadPDF(templateId, filename) {
-    Swal.fire({ title: 'Generating...', didOpen: () => Swal.showLoading() });
-    try {
-        const { jsPDF } = window.jspdf;
-        const element = document.getElementById(templateId);
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
-        const height = (canvas.height * width) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-        pdf.save(filename);
-        Swal.fire({ title: 'Downloaded!', icon: 'success', timer: 1500, showConfirmButton: false });
-    } catch(e) { console.error(e); }
-}
 
-// Listeners
+// Listeners & Utilities
 searchInput.oninput = () => updateList();
 function calculateAge() {
     const dobInput = document.getElementById('dob').value;
@@ -333,30 +443,35 @@ function calculateAge() {
     if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) age--;
     document.getElementById('age').value = age;
 }
+
+// Delete Entire Client
 async function deleteCurrentClient() {
     const id = document.getElementById('clientId').value;
     if (!id) return;
-    Swal.fire({ title: 'Delete?', text: "Cannot undo!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Yes' }).then(async (result) => {
+    Swal.fire({ title: 'Delete Entire Client?', text: "This deletes all their info, consults, AND prescriptions!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Yes' }).then(async (result) => {
         if (result.isConfirmed) { await db.clients.delete(parseInt(id)); closeForm(); await updateList(); }
     });
 }
-// --- NEW FEATURE: TRANSFER TO PRESCRIPTION ---
+async function deleteCurrentPrescClient() {
+    const id = document.getElementById('prescClientId').value;
+    if (!id) return;
+    Swal.fire({ title: 'Delete Entire Client?', text: "This deletes all their info, consults, AND prescriptions!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Yes' }).then(async (result) => {
+        if (result.isConfirmed) { await db.clients.delete(parseInt(id)); closePrescriptionForm(); await updateList(); }
+    });
+}
+
+// Transfer to Prescription
 function transferToPrescription() {
-    // 1. Get data from the Main Form
+    const id = document.getElementById('clientId').value; // Get ID to link them!
     const name = document.getElementById('name').value;
     const star = document.getElementById('star').value;
     const place = document.getElementById('place').value;
     const solution = document.getElementById('currentSolution').value;
 
-    if (!name) {
-        Swal.fire({ title: 'Error', text: 'Please enter a Name first', icon: 'warning', width: '250px' });
-        return;
-    }
+    if (!name) { Swal.fire('Error', 'Please enter a Name first', 'warning'); return; }
 
-    // 2. Open the Prescription Modal
     showPrescriptionForm();
-
-    // 3. Fill the data automatically
+    document.getElementById('prescClientId').value = id; // Link DB entry
     document.getElementById('prescName').value = name;
     document.getElementById('prescStar').value = star;
     document.getElementById('prescPlace').value = place;
