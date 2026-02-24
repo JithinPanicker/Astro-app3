@@ -1,4 +1,4 @@
-const CACHE_NAME = "astro-manager-v12"; // INCREMENT THIS EVERY TIME YOU CHANGE CODE
+const CACHE_NAME = "astro-manager-v13"; // INCREMENT THIS EVERY TIME YOU CHANGE CODE
 const ASSETS_TO_CACHE = [
     "./",
     "./index.html",

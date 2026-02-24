@@ -62,7 +62,7 @@ button {
     margin-left: 10px;
 }
 
-.actions { display: flex; gap: 8px; }
+.actions { display: flex; gap: 8px; align-items: center; }
 
 .btn-view { 
     background: #e3f2fd; 
@@ -70,6 +70,17 @@ button {
     padding: 6px 12px; 
     border-radius: 4px; 
     font-size: 13px; 
+}
+
+.btn-wa {
+    background: #e8f5e9;
+    color: #2E7D32;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: bold;
 }
 
 /* =========================================
@@ -163,18 +174,6 @@ input, textarea {
     border-radius: 5px; 
     box-sizing: border-box; 
     font-family: inherit; 
-}
-
-/* Hide arrows from custom 12-hour time picker */
-input[id^="btHour"]::-webkit-inner-spin-button,
-input[id^="btHour"]::-webkit-outer-spin-button,
-input[id^="btMin"]::-webkit-inner-spin-button,
-input[id^="btMin"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-input[id^="btHour"], input[id^="btMin"] {
-    -moz-appearance: textfield;
 }
 
 /* =========================================
