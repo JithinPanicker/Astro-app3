@@ -9,6 +9,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -170,7 +172,7 @@
                     <div class="form-actions" style="background: #FFF3E0;">
                         <button type="button" onclick="savePrescription()" style="background-color: #4CAF50; color: white; font-weight: bold;">Save</button>
                         <button type="button" onclick="generatePrescriptionPDF()" style="background-color: #FF9800; color: white; font-weight: bold;">PDF</button>
-                        <button type="button" onclick="sharePrescriptionPDF()" style="background-color: #25D366; color: white; font-weight: bold;">Share WA</button>
+                        <button type="button" onclick="sharePrescriptionPDF()" style="background-color: #25D366; color: white; font-weight: bold;"><i class="fab fa-whatsapp"></i> Share</button>
                         <button type="button" onclick="deleteCurrentPrescClient()" style="background-color: #D32F2F; color: white; font-weight: bold;">Delete</button>
                     </div>
                 </form>
@@ -237,7 +239,7 @@
 
     <script src="app.js"></script>
     <script>
-        const LATEST_CHANGES = "Added WhatsApp Integration & PDF Sharing";
+        const LATEST_CHANGES = "Added Official WhatsApp Icons";
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(registration => {
                 if (registration.waiting) { newWorker = registration.waiting; showNotificationIcon(); }

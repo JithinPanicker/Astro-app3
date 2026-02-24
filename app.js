@@ -402,12 +402,12 @@ async function updateList() {
         const hasPresc = client.prescriptions && client.prescriptions.length > 0;
         const noHistory = !hasConsults && !hasPresc;
 
-        // Generate WA button if phone exists
+        // Generate WA button with Font Awesome icon if phone exists
         let waBtn = '';
         if (client.phone) {
             let waPhone = client.phone.replace(/\D/g, '');
             if(waPhone.length === 10) waPhone = '91' + waPhone;
-            waBtn = `<a href="https://wa.me/${waPhone}" target="_blank" class="btn-wa" onclick="event.stopPropagation();" title="Contact on WhatsApp">💬 WA</a>`;
+            waBtn = `<a href="https://wa.me/${waPhone}" target="_blank" class="btn-wa" onclick="event.stopPropagation();" title="Contact on WhatsApp"><i class="fab fa-whatsapp"></i></a>`;
         }
 
         if (hasConsults || noHistory || client.dob) {

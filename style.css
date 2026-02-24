@@ -72,15 +72,17 @@ button {
     font-size: 13px; 
 }
 
+/* Updated for Font Awesome WhatsApp Icon */
 .btn-wa {
-    background: #e8f5e9;
-    color: #2E7D32;
-    padding: 6px 12px;
+    background: #25D366;
+    color: white;
+    padding: 6px 10px;
     border-radius: 4px;
-    font-size: 13px;
+    font-size: 15px;
     text-decoration: none;
-    display: inline-block;
-    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* =========================================
