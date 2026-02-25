@@ -17,12 +17,15 @@
     <style>
         .letterhead-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px; font-family: 'Arial', sans-serif; }
         .letterhead-left { text-align: left; color: #333; }
-        .astrologer-title { color: #66BB6A; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0 !important; font-weight: normal; text-transform: none; }
+        /* Updated Astrologer/Consultation color to match address green */
+        .astrologer-title { color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0 !important; font-weight: normal; text-transform: none; }
         .letterhead-left h2 { margin: 0; color: #2E7D32; font-size: 26px; font-weight: bold; }
         .letterhead-left p { margin: 4px 0; font-size: 14px; color: #555; }
-        .letterhead-right { text-align: right; font-size: 14px; color: #555; line-height: 1.6; }
+        /* Updated right side text to match address green */
+        .letterhead-right { text-align: right; font-size: 14px; color: #2E7D32; line-height: 1.6; }
         .letterhead-right p { margin: 2px 0; }
-        .letterhead-right strong { color: #333; font-size: 15px; }
+        /* Updated phone numbers to match address green and set to italic */
+        .letterhead-right strong { color: #2E7D32; font-size: 15px; font-style: italic; }
         .contact-link { text-decoration: none; color: inherit; cursor: pointer; }
         .watermark { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); opacity: 0.08; z-index: 0; pointer-events: none; }
         .letterhead-footer { position: absolute; bottom: 30px; left: 40px; right: 40px; text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; font-size: 16px; }
@@ -177,7 +180,7 @@
 
     </div>
 
-    <div id="pdfTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden; border: 4px solid #2E7D32;">
+    <div id="pdfTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
         <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
         <div class="letterhead-header">
             <div class="letterhead-left">
@@ -204,7 +207,7 @@
         </div>
     </div>
 
-    <div id="prescriptionTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden; border: 4px solid #2E7D32;">
+    <div id="prescriptionTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
         <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
         <div class="letterhead-header">
             <div class="letterhead-left">
@@ -243,7 +246,7 @@
 
     <script src="app.js"></script>
     <script>
-        const LATEST_CHANGES = "Fixed Italic and Green Font in PDF";
+        const LATEST_CHANGES = "Removed PDF outline, updated colors and italics for contact info";
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(registration => {
                 if (registration.waiting) { newWorker = registration.waiting; showNotificationIcon(); }
