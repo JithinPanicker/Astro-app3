@@ -49,7 +49,7 @@ window.textHistory = {};
 window.clearText = (id) => {
     const el = document.getElementById(id);
     if(el) {
-        window.textHistory[id] = el.value; // Save before clearing
+        window.textHistory[id] = el.value;
         el.value = '';
         el.focus();
     }
@@ -61,7 +61,7 @@ window.undoText = (id) => {
             el.value = window.textHistory[id];
             delete window.textHistory[id];
         } else {
-            document.execCommand('undo'); // Native browser undo fallback
+            document.execCommand('undo'); 
         }
         el.focus();
     }
@@ -146,6 +146,7 @@ window.savePrescription = async () => {
 
     const prescData = {
         name: name,
+        phone: document.getElementById('prescPhone').value,
         star: document.getElementById('prescStar').value,
         location: document.getElementById('prescPlace').value,
         updated: new Date()
@@ -245,6 +246,7 @@ window.loadPrescription = async (id) => {
     
     document.getElementById('prescClientId').value = client.id;
     document.getElementById('prescName').value = client.name || "";
+    document.getElementById('prescPhone').value = client.phone || "";
     document.getElementById('prescStar').value = client.star || "";
     document.getElementById('prescPlace').value = client.location || "";
     
@@ -400,6 +402,14 @@ async function updateList() {
         const hasPresc = client.prescriptions && client.prescriptions.length > 0;
         const noHistory = !hasConsults && !hasPresc;
 
+        // Generate WA button with Font Awesome icon if phone exists
+        let waBtn = '';
+        if (client.phone) {
+            let waPhone = client.phone.replace(/\D/g, '');
+            if(waPhone.length === 10) waPhone = '91' + waPhone;
+            waBtn = `<a href="https://wa.me/${waPhone}" target="_blank" class="btn-wa" onclick="event.stopPropagation();" title="Contact on WhatsApp"><i class="fab fa-whatsapp"></i></a>`;
+        }
+
         if (hasConsults || noHistory || client.dob) {
             html += `
             <div class="client-item" onclick="loadClient(${client.id})">
@@ -407,7 +417,7 @@ async function updateList() {
                     <h4>${client.name} <span style="background: #e3f2fd; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle;">Client</span></h4>
                     <p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p>
                 </div>
-                <div class="actions"><button class="btn-view">View</button></div>
+                <div class="actions">${waBtn}<button class="btn-view">View</button></div>
             </div>`;
         }
         if (hasPresc) {
@@ -417,7 +427,7 @@ async function updateList() {
                     <h4>${client.name} <span style="background: #FFF3E0; color: #E65100; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle;">Prescription</span></h4>
                     <p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p>
                 </div>
-                <div class="actions"><button class="btn-view" style="background: #FFF3E0; color: #E65100;">View</button></div>
+                <div class="actions">${waBtn}<button class="btn-view" style="background: #FFF3E0; color: #E65100;">View</button></div>
             </div>`;
         }
     });
@@ -425,7 +435,8 @@ async function updateList() {
     document.getElementById('clientList').innerHTML = html;
 }
 
-window.generatePrescriptionPDF = async () => {
+// Helper to fill the PDF template
+function fillPrescriptionTemplate() {
     const name = document.getElementById('prescName').value || "";
     const star = document.getElementById('prescStar').value || "";
     const place = document.getElementById('prescPlace').value || "";
@@ -433,7 +444,7 @@ window.generatePrescriptionPDF = async () => {
     const udhaya = document.getElementById('prescUdhaya').value || "";
     const body = document.getElementById('prescBody').value || "";
 
-    if(!name && !body) { topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); return; }
+    if(!name && !body) return false;
 
     document.getElementById('pdfPrescName').innerText = name;
     document.getElementById('pdfPrescDate').innerText = new Date().toLocaleDateString('en-IN');
@@ -442,6 +453,12 @@ window.generatePrescriptionPDF = async () => {
     document.getElementById('pdfPrescRasi').innerText = rasi;
     document.getElementById('pdfPrescUdhaya').innerText = udhaya;
     document.getElementById('pdfPrescBody').innerText = body;
+    return true;
+}
+
+window.generatePrescriptionPDF = async () => {
+    if (!fillPrescriptionTemplate()) { topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); return; }
+    const name = document.getElementById('prescName').value || "Client";
 
     topToast.fire({ text: 'Generating PDF...' });
     try {
@@ -458,6 +475,49 @@ window.generatePrescriptionPDF = async () => {
         topToast.fire({ text: 'Downloaded successfully!' });
     } catch(e) { console.error(e); }
 };
+
+// --- SHARE WA BUTTON LOGIC ---
+window.sharePrescriptionPDF = async () => {
+    if (!fillPrescriptionTemplate()) { topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); return; }
+    const name = document.getElementById('prescName').value || "Client";
+
+    topToast.fire({ text: 'Preparing file for sharing...' });
+    try {
+        const { jsPDF } = window.jspdf;
+        const element = document.getElementById('prescriptionTemplate');
+        const canvas = await html2canvas(element, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const width = pdf.internal.pageSize.getWidth();
+        const height = (canvas.height * width) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        
+        // Convert to a File object for sharing
+        const pdfBlob = pdf.output('blob');
+        const file = new File([pdfBlob], `${name}_Prescription.pdf`, { type: 'application/pdf' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: 'Prescription',
+                text: 'Here is your prescription from Pratnya Astro.'
+            });
+            topToast.fire({ text: 'Opened share menu!' });
+        } else {
+            // Fallback for desktop browsers that don't support file sharing
+            Swal.fire({
+                title: 'Unsupported Browser',
+                text: 'Your device/browser does not support direct file sharing. Please click "PDF" to download it, then attach it in WhatsApp manually.',
+                icon: 'info'
+            });
+        }
+    } catch(e) { 
+        console.error(e); 
+        topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' }); 
+    }
+};
+
 
 window.generatePDF = async () => {
     const name = document.getElementById('name').value;
@@ -549,6 +609,7 @@ async function deleteCurrentPrescClient() {
 function transferToPrescription() {
     const id = document.getElementById('clientId').value; 
     const name = document.getElementById('name').value;
+    const phone = document.getElementById('phone').value;
     const star = document.getElementById('star').value;
     const place = document.getElementById('place').value;
     const solution = document.getElementById('currentSolution').value;
@@ -558,6 +619,7 @@ function transferToPrescription() {
     showPrescriptionForm();
     document.getElementById('prescClientId').value = id;
     document.getElementById('prescName').value = name;
+    document.getElementById('prescPhone').value = phone;
     document.getElementById('prescStar').value = star;
     document.getElementById('prescPlace').value = place;
     document.getElementById('prescBody').value = solution;

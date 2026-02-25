@@ -9,6 +9,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -17,15 +19,17 @@
     <style>
         .letterhead-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px; font-family: 'Arial', sans-serif; }
         .letterhead-left { text-align: left; color: #333; }
+        .astrologer-title { color: #66BB6A; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0 !important; font-weight: normal; text-transform: none; }
         .letterhead-left h2 { margin: 0; color: #2E7D32; font-size: 26px; font-weight: bold; }
         .letterhead-left p { margin: 4px 0; font-size: 14px; color: #555; }
-        .letterhead-right { text-align: right; font-size: 14px; color: #2E7D32; line-height: 1.6; }
+        .letterhead-right { text-align: right; font-size: 14px; color: #555; line-height: 1.6; }
         .letterhead-right p { margin: 2px 0; }
-        .letterhead-right strong { color: #2E7D32; font-size: 15px; font-style: italic; }
+        .letterhead-right strong { color: #333; font-size: 15px; }
         .contact-link { text-decoration: none; color: inherit; cursor: pointer; }
         .watermark { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); opacity: 0.08; z-index: 0; pointer-events: none; }
         .letterhead-footer { position: absolute; bottom: 30px; left: 40px; right: 40px; text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; font-size: 16px; }
         .footer-text { font-family: 'Brush Script MT', cursive; font-size: 22px; }
+        .footer-url { font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #555; }
     </style>
 </head>
 <body>
@@ -144,6 +148,7 @@
                     
                     <div class="form-grid">
                         <input type="text" id="prescName" placeholder="Name *" required>
+                        <input type="text" id="prescPhone" placeholder="Phone (for WA)">
                         <input type="text" id="prescStar" placeholder="Star">
                         <input type="text" id="prescPlace" placeholder="Place">
                         <input type="text" id="prescRasi" placeholder="Rasi">
@@ -167,6 +172,7 @@
                     <div class="form-actions" style="background: #FFF3E0;">
                         <button type="button" onclick="savePrescription()" style="background-color: #4CAF50; color: white; font-weight: bold;">Save</button>
                         <button type="button" onclick="generatePrescriptionPDF()" style="background-color: #FF9800; color: white; font-weight: bold;">PDF</button>
+                        <button type="button" onclick="sharePrescriptionPDF()" style="background-color: #25D366; color: white; font-weight: bold;"><i class="fab fa-whatsapp"></i> Share</button>
                         <button type="button" onclick="deleteCurrentPrescClient()" style="background-color: #D32F2F; color: white; font-weight: bold;">Delete</button>
                     </div>
                 </form>
@@ -179,18 +185,14 @@
         <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
         <div class="letterhead-header">
             <div class="letterhead-left">
-                <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Astrologer</p>
+                <p class="astrologer-title">Astrologer</p>
                 <h2>C.K. Saji Panicker</h2>
-                
-                <div style="font-family: 'Georgia', serif; font-style: italic; color: #2E7D32; font-size: 14px; line-height: 1.6; margin-top: 6px;">
-                    Chathangottupuram, Kalarikkal<br>
-                    Wandoor-Malappuram<br>
-                    Kerala : 679 328
-                </div>
-                
+                <p>Chathangottupuram, Kalarikkal</p>
+                <p>Wandoor-Malappuram</p>
+                <p>Kerala : 679 328</p>
             </div>
             <div class="letterhead-right">
-                <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Consultation</p>
+                <p class="astrologer-title">Consultation</p>
                 <p>Online: <strong><a href="https://wa.me/919207773880" target="_blank" class="contact-link">9207 773 880</a></strong></p>
                 <p>Office: <strong><a href="tel:7034600880" class="contact-link">7034 600 880</a></strong></p>
             </div>
@@ -198,7 +200,7 @@
         <div id="pdfContent" style="position: relative; z-index: 1;"></div>
         <div class="letterhead-footer">
             <span class="footer-text">Fix your appointment through the call</span>
-            <span style="font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #2E7D32; font-weight: bold;">www.pratnya.in</span>
+            <span class="footer-url">www.pratnya.in</span>
         </div>
     </div>
 
@@ -206,18 +208,14 @@
         <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
         <div class="letterhead-header">
             <div class="letterhead-left">
-                <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Astrologer</p>
+                <p class="astrologer-title">Astrologer</p>
                 <h2>C.K. Saji Panicker</h2>
-                
-                <div style="font-family: 'Georgia', serif; font-style: italic; color: #2E7D32; font-size: 14px; line-height: 1.6; margin-top: 6px;">
-                    Chathangottupuram, Kalarikkal<br>
-                    Wandoor-Malappuram<br>
-                    Kerala : 679 328
-                </div>
-
+                <p>Chathangottupuram, Kalarikkal</p>
+                <p>Wandoor-Malappuram</p>
+                <p>Kerala : 679 328</p>
             </div>
             <div class="letterhead-right">
-                <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Consultation</p>
+                <p class="astrologer-title">Consultation</p>
                 <p>Online: <strong><a href="https://wa.me/919207773880" target="_blank" class="contact-link">9207 773 880</a></strong></p>
                 <p>Office: <strong><a href="tel:7034600880" class="contact-link">7034 600 880</a></strong></p>
             </div>
@@ -235,13 +233,13 @@
         </div>
         <div class="letterhead-footer">
             <span class="footer-text">Fix your appointment through the call</span>
-            <span style="font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #2E7D32; font-weight: bold;">www.pratnya.in</span>
+            <span class="footer-url">www.pratnya.in</span>
         </div>
     </div>
 
     <script src="app.js"></script>
     <script>
-        const LATEST_CHANGES = "Forced Inline Colors for Astrologer and Footer";
+        const LATEST_CHANGES = "Added Official WhatsApp Icons";
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(registration => {
                 if (registration.waiting) { newWorker = registration.waiting; showNotificationIcon(); }
