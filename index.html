@@ -17,20 +17,21 @@
     <style>
         .letterhead-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px; font-family: 'Arial', sans-serif; }
         .letterhead-left { text-align: left; color: #333; }
-        /* Updated Astrologer/Consultation color to match address green */
-        .astrologer-title { color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0 !important; font-weight: normal; text-transform: none; }
+        /* Astrologer/Consultation color matching address green */
+        .astrologer-title { color: #2E7D32 !important; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0 !important; font-weight: normal; text-transform: none; }
         .letterhead-left h2 { margin: 0; color: #2E7D32; font-size: 26px; font-weight: bold; }
         .letterhead-left p { margin: 4px 0; font-size: 14px; color: #555; }
-        /* Updated right side text to match address green */
+        /* Right side text matching address green */
         .letterhead-right { text-align: right; font-size: 14px; color: #2E7D32; line-height: 1.6; }
         .letterhead-right p { margin: 2px 0; }
-        /* Updated phone numbers to match address green and set to italic */
+        /* Phone numbers matching address green and set to italic */
         .letterhead-right strong { color: #2E7D32; font-size: 15px; font-style: italic; }
         .contact-link { text-decoration: none; color: inherit; cursor: pointer; }
         .watermark { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); opacity: 0.08; z-index: 0; pointer-events: none; }
         .letterhead-footer { position: absolute; bottom: 30px; left: 40px; right: 40px; text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; font-size: 16px; }
         .footer-text { font-family: 'Brush Script MT', cursive; font-size: 22px; }
-        .footer-url { font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #555; }
+        /* URL color matched to the green address color */
+        .footer-url { font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #2E7D32; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -246,7 +247,7 @@
 
     <script src="app.js"></script>
     <script>
-        const LATEST_CHANGES = "Removed PDF outline, updated colors and italics for contact info";
+        const LATEST_CHANGES = "Matched Astrologer and Footer URL colors";
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(registration => {
                 if (registration.waiting) { newWorker = registration.waiting; showNotificationIcon(); }
