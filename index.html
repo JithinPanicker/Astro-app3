@@ -19,6 +19,7 @@
         .letterhead-left { text-align: left; color: #333; }
         .astrologer-title { color: #66BB6A; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0 !important; font-weight: normal; text-transform: none; }
         .letterhead-left h2 { margin: 0; color: #2E7D32; font-size: 26px; font-weight: bold; }
+        .letterhead-left p { margin: 4px 0; font-size: 14px; color: #555; }
         .letterhead-right { text-align: right; font-size: 14px; color: #555; line-height: 1.6; }
         .letterhead-right p { margin: 2px 0; }
         .letterhead-right strong { color: #333; font-size: 15px; }
@@ -183,10 +184,10 @@
                 <p class="astrologer-title">Astrologer</p>
                 <h2>C.K. Saji Panicker</h2>
                 
-                <div style="font-family: 'Georgia', serif; font-style: italic; color: #2E7D32; margin-top: 5px;">
-                    <p style="margin: 2px 0;">Chathangottupuram, Kalarikkal</p>
-                    <p style="margin: 2px 0;">Wandoor-Malappuram</p>
-                    <p style="margin: 2px 0;">Kerala : 679 328</p>
+                <div style="font-family: 'Georgia', serif; font-style: italic; color: #2E7D32; font-size: 14px; line-height: 1.6; margin-top: 6px;">
+                    Chathangottupuram, Kalarikkal<br>
+                    Wandoor-Malappuram<br>
+                    Kerala : 679 328
                 </div>
                 
             </div>
@@ -210,10 +211,10 @@
                 <p class="astrologer-title">Astrologer</p>
                 <h2>C.K. Saji Panicker</h2>
                 
-                <div style="font-family: 'Georgia', serif; font-style: italic; color: #2E7D32; margin-top: 5px;">
-                    <p style="margin: 2px 0;">Chathangottupuram, Kalarikkal</p>
-                    <p style="margin: 2px 0;">Wandoor-Malappuram</p>
-                    <p style="margin: 2px 0;">Kerala : 679 328</p>
+                <div style="font-family: 'Georgia', serif; font-style: italic; color: #2E7D32; font-size: 14px; line-height: 1.6; margin-top: 6px;">
+                    Chathangottupuram, Kalarikkal<br>
+                    Wandoor-Malappuram<br>
+                    Kerala : 679 328
                 </div>
 
             </div>
@@ -242,7 +243,7 @@
 
     <script src="app.js"></script>
     <script>
-        const LATEST_CHANGES = "Added Green Outline and Italic Address";
+        const LATEST_CHANGES = "Fixed Italic and Green Font in PDF";
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(registration => {
                 if (registration.waiting) { newWorker = registration.waiting; showNotificationIcon(); }
