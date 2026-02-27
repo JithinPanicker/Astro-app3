@@ -12,18 +12,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        .letterhead-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px; font-family: 'Arial', sans-serif; }
-        .letterhead-left { text-align: left; color: #333; }
-        .contact-link { text-decoration: none; color: inherit; cursor: pointer; }
-        .watermark { position: absolute; top: 420px; left: 50%; transform: translate(-50%, -50%); opacity: 0.08; z-index: 0; pointer-events: none; }
-        .letterhead-footer { position: relative; margin-top: 40px; text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; font-size: 16px; }
-        .footer-text { font-family: 'Brush Script MT', cursive; font-size: 22px; }
-    </style>
 </head>
 <body>
 
@@ -33,16 +23,16 @@
         <p style="color: #aaa; margin: 5px 0 25px 0;">Premium Subscription Required</p>
         <div style="margin-top: 25px; width: 90%; max-width: 450px;">
             <input type="text" id="licenseKeyInput" placeholder="Enter License Key" style="width: 100%; padding: 15px; border: none; border-radius: 8px; text-align: center; margin-bottom: 12px; font-size: 16px; box-sizing: border-box;">
-            <button onclick="activateLicense()" style="width: 100%; padding: 15px; background: #2196F3; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">Activate App</button>
+            <button onclick="activateLicense()" style="width: 100%; padding: 15px; background: #1d9bf0; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">Activate App</button>
         </div>
         <p id="licenseError" style="color: #ff5252; font-size: 14px; margin-top: 15px; display: none;">Invalid License Key</p>
     </div>
 
-    <header style="position: sticky; top: 0; z-index: 100; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 10px; display: flex; justify-content: center; align-items: center;">
+    <header style="position: sticky; top: 0; z-index: 100; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 12px; display: flex; justify-content: center; align-items: center;">
         <img src="logo.png" alt="Pratnya Astro" class="logo">
         <div id="updateIcon" onclick="showUpdateInfo()" style="display: none; position: absolute; right: 20px; cursor: pointer;">
             <span style="font-size: 24px;">🔔</span>
-            <span style="position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: red; border-radius: 50%;"></span>
+            <span style="position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: #E0245E; border-radius: 50%;"></span>
         </div>
     </header>
 
@@ -119,25 +109,27 @@
                         </div>
                         <textarea id="currentSolution" style="min-height: 150px; border: 1px solid #ddd; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5; resize: vertical;" placeholder="Write solution here..."></textarea>
                         
-                        <div class="options-toolbar">
-                            <div style="display: flex; gap: 15px; align-items: center;">
-                                <div class="counter-group">
-                                    <label>SLR:</label>
+                        <div class="pro-toolbar">
+                            <div class="pro-counters">
+                                <div class="pro-counter">
+                                    <span>SLR</span>
                                     <button type="button" onclick="adjCount('slrCount', -1)">-</button>
                                     <input type="number" id="slrCount" value="0" readonly>
                                     <button type="button" onclick="adjCount('slrCount', 1)">+</button>
                                 </div>
-                                <div class="counter-group">
-                                    <label>DHR:</label>
+                                <div class="pro-counter">
+                                    <span>DHR</span>
                                     <button type="button" onclick="adjCount('dhrCount', -1)">-</button>
                                     <input type="number" id="dhrCount" value="0" readonly>
                                     <button type="button" onclick="adjCount('dhrCount', 1)">+</button>
                                 </div>
                             </div>
-                            <div class="print-options">
-                                <strong style="color: #1976D2;"><i class="fas fa-print"></i> Export:</strong>
-                                <label><input type="radio" name="mainExport" value="current" checked> Current Only</label>
-                                <label><input type="radio" name="mainExport" value="all"> All History</label>
+
+                            <div class="pro-segmented-control">
+                                <input type="radio" id="expCurrent" name="mainExport" value="current" checked>
+                                <label for="expCurrent">Current Only</label>
+                                <input type="radio" id="expAll" name="mainExport" value="all">
+                                <label for="expAll">All History</label>
                             </div>
                         </div>
                     </div>
@@ -185,25 +177,27 @@
                     </div>
                     <textarea id="prescBody" style="min-height: 200px; border: 1px solid #ccc; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5;" placeholder="Write full prescription here..."></textarea>
 
-                    <div class="options-toolbar">
-                        <div style="display: flex; gap: 15px; align-items: center;">
-                            <div class="counter-group">
-                                <label>SLR:</label>
+                    <div class="pro-toolbar">
+                        <div class="pro-counters">
+                            <div class="pro-counter">
+                                <span>SLR</span>
                                 <button type="button" onclick="adjCount('prescSlrCount', -1)">-</button>
                                 <input type="number" id="prescSlrCount" value="0" readonly>
                                 <button type="button" onclick="adjCount('prescSlrCount', 1)">+</button>
                             </div>
-                            <div class="counter-group">
-                                <label>DHR:</label>
+                            <div class="pro-counter">
+                                <span>DHR</span>
                                 <button type="button" onclick="adjCount('prescDhrCount', -1)">-</button>
                                 <input type="number" id="prescDhrCount" value="0" readonly>
                                 <button type="button" onclick="adjCount('prescDhrCount', 1)">+</button>
                             </div>
                         </div>
-                        <div class="print-options">
-                            <strong style="color: #E65100;"><i class="fas fa-print"></i> Export:</strong>
-                            <label><input type="radio" name="prescExport" value="current" checked> Current Only</label>
-                            <label><input type="radio" name="prescExport" value="all"> All History</label>
+
+                        <div class="pro-segmented-control">
+                            <input type="radio" id="pExpCurrent" name="prescExport" value="current" checked>
+                            <label for="pExpCurrent">Current Only</label>
+                            <input type="radio" id="pExpAll" name="prescExport" value="all">
+                            <label for="pExpAll">All History</label>
                         </div>
                     </div>
 
@@ -219,61 +213,65 @@
 
     </div>
 
-    <div id="pdfTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; min-height: 842px; background: white; padding: 40px; box-sizing: border-box;">
-        <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
-        <div class="letterhead-header">
-            <div class="letterhead-left">
+    <div id="pdfTemplate" style="position: absolute; left: -9999px; top: 0; width: 800px; background: white; padding: 40px; box-sizing: border-box; font-family: Arial, sans-serif;">
+        <div style="position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); opacity: 0.06; pointer-events: none;">
+            <img src="logo.png" style="width: 450px; height: auto;">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 25px;">
+            <div>
                 <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Astrologer</p>
                 <h2 style="color: #2E7D32; font-size: 26px; font-weight: bold; margin: 0;">C.K. Saji Panicker</h2>
-                
                 <div style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; line-height: 1.6; margin-top: 6px;">
-                    Chathangottupuram, Kalarikkal<br>
-                    Wandoor-Malappuram<br>
-                    Kerala : 679 328
+                    Chathangottupuram, Kalarikkal<br>Wandoor-Malappuram<br>Kerala : 679 328
                 </div>
             </div>
-            <div class="letterhead-right" style="text-align: right;">
+            <div style="text-align: right;">
                 <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Consultation</p>
                 <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Online: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">9207 773 880</strong></p>
                 <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Office: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">7034 600 880</strong></p>
             </div>
         </div>
+
         <div id="pdfContent" style="position: relative; z-index: 1;"></div>
-        <div class="letterhead-footer">
-            <span class="footer-text">Fix your appointment through the call</span><br>
+        
+        <div style="margin-top: 40px; text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; position: relative; z-index: 1;">
+            <span style="font-family: 'Brush Script MT', cursive; font-size: 24px;">Fix your appointment through the call</span><br>
             <span style="font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #2E7D32; font-weight: bold;">www.pratnya.in</span>
         </div>
     </div>
 
-    <div id="prescriptionTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; min-height: 842px; background: white; padding: 40px; box-sizing: border-box;">
-        <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
-        <div class="letterhead-header">
-            <div class="letterhead-left">
+    <div id="prescriptionTemplate" style="position: absolute; left: -9999px; top: 0; width: 800px; background: white; padding: 40px; box-sizing: border-box; font-family: Arial, sans-serif;">
+        <div style="position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); opacity: 0.06; pointer-events: none;">
+            <img src="logo.png" style="width: 450px; height: auto;">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 25px;">
+            <div>
                 <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Astrologer</p>
                 <h2 style="color: #2E7D32; font-size: 26px; font-weight: bold; margin: 0;">C.K. Saji Panicker</h2>
-                
                 <div style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; line-height: 1.6; margin-top: 6px;">
-                    Chathangottupuram, Kalarikkal<br>
-                    Wandoor-Malappuram<br>
-                    Kerala : 679 328
+                    Chathangottupuram, Kalarikkal<br>Wandoor-Malappuram<br>Kerala : 679 328
                 </div>
             </div>
-            <div class="letterhead-right" style="text-align: right;">
+            <div style="text-align: right;">
                 <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Consultation</p>
                 <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Online: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">9207 773 880</strong></p>
                 <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Office: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">7034 600 880</strong></p>
             </div>
         </div>
+
         <div id="pdfPrescContent" style="position: relative; z-index: 1;"></div>
-        <div class="letterhead-footer">
-            <span class="footer-text">Fix your appointment through the call</span><br>
+        
+        <div style="margin-top: 40px; text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; position: relative; z-index: 1;">
+            <span style="font-family: 'Brush Script MT', cursive; font-size: 24px;">Fix your appointment through the call</span><br>
             <span style="font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #2E7D32; font-weight: bold;">www.pratnya.in</span>
         </div>
     </div>
 
     <script src="app.js"></script>
     <script>
-        const LATEST_CHANGES = "Auto-pagination (no messy text on footer), Lighter PDF Headings, Professional UI layout";
+        const LATEST_CHANGES = "Major PDF Engine Update! Clean Multi-page PDFs with no overlapping text. Professional UI Toolbar for Exports/Counters added.";
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(registration => {
                 if (registration.waiting) { newWorker = registration.waiting; showNotificationIcon(); }

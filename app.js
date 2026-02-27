@@ -466,7 +466,6 @@ async function getEntriesToPrint(clientId, isPresc) {
     let entries = [];
     const exportOpt = isPresc ? document.querySelector('input[name="prescExport"]:checked').value : document.querySelector('input[name="mainExport"]:checked').value;
 
-    // Check for "Pending/Live" form data
     if (!isPresc) {
         const prob = document.getElementById('currentProblem').value.trim();
         const sol = document.getElementById('currentSolution').value.trim();
@@ -488,44 +487,55 @@ async function getEntriesToPrint(clientId, isPresc) {
             const history = isPresc ? client.prescriptions : client.consultations;
             if (history && history.length > 0) {
                 if (exportOpt === 'all') { entries = entries.concat(history); } 
-                else if (entries.length === 0) { entries.push(history[0]); } // If Current checked but no live data, grab latest saved
+                else if (entries.length === 0) { entries.push(history[0]); }
             }
         }
     }
     return entries;
 }
 
-// --- MULTI-PAGE PDF GENERATOR ENGINE ---
-async function generateMultiPagePDFFromCanvas(elementId, fileName) {
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 297; // A4 height in mm
-
+// --- HTML2PDF ENGINE ---
+async function executePDF(elementId, fileName, action) {
     const element = document.getElementById(elementId);
-    const canvas = await html2canvas(element, { scale: 2 });
-    const imgData = canvas.toDataURL('image/png');
     
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
+    // Temporarily bring the element onto screen so html2pdf can calculate its DOM accurately 
+    // without CSS cutting it off improperly.
+    element.style.left = '0px';
+    element.style.zIndex = '-9999';
 
-    // Add first page
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+    const opt = {
+        margin:       [10, 10, 15, 10], // Top, Left, Bottom, Right
+        filename:     fileName,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['css', 'legacy'] }
+    };
 
-    // Add subsequent pages if text was too long
-    while (heightLeft > 0) {
-        position = position - pageHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+    try {
+        if (action === 'save') {
+            await html2pdf().set(opt).from(element).save();
+            topToast.fire({ text: 'Downloaded successfully!' });
+        } else if (action === 'share') {
+            const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+            const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: 'Consultation Report', text: 'Here is your document from Pratnya Astro.' });
+                topToast.fire({ text: 'Opened share menu!' });
+            } else {
+                Swal.fire({ title: 'Unsupported Browser', text: 'Please download the PDF manually.', icon: 'info' });
+            }
+        }
+    } catch(e) {
+        console.error(e);
+        topToast.fire({ text: 'Failed to generate PDF', background: '#E0245E' });
+    } finally {
+        element.style.left = '-9999px'; // Hide it again
     }
-
-    return { pdf, fileName };
 }
 
-// --- MAIN PDF GENERATION & SHARE ---
+
+// --- MAIN PDF GENERATION ---
 async function prepareMainPDF() {
     const name = document.getElementById('name').value || "Client";
     const star = document.getElementById('star').value;
@@ -559,13 +569,22 @@ async function prepareMainPDF() {
         if (e.slr > 0) counts += `<span style="margin-right: 15px;"><strong>SLR:</strong> ${e.slr}</span>`;
         if (e.dhr > 0) counts += `<span><strong>DHR:</strong> ${e.dhr}</span>`;
         
+        // Wrap lines in a div that resists page breaking inside
+        let safeProblem = (e.problem || '-').split('\n').map(line => `<div style="min-height: 20px;">${line}</div>`).join('');
+        let safeSolution = (e.solution || '-').split('\n').map(line => `<div style="min-height: 20px;">${line}</div>`).join('');
+
         htmlContent += `
-        <div style="margin-bottom: 20px; font-family: 'Arial', sans-serif;">
-            <div style="font-weight: bold; color: #1976D2; font-size: 15px; margin-bottom: 8px;">Date: ${e.date}</div>
-            <div style="margin-bottom: 8px;"><strong style="color: #777777; font-weight: 500;">Problem:</strong><br><span style="white-space: pre-wrap; color: #111;">${e.problem || '-'}</span></div>
-            <div style="margin-bottom: 8px;"><strong style="color: #4CAF50; font-weight: 500;">Solution:</strong><br><span style="white-space: pre-wrap; color: #111;">${e.solution || '-'}</span></div>
-            ${counts ? `<div style="color: #E65100; font-size: 13px; font-weight: bold; margin-top: 5px;">${counts}</div>` : ''}
-            <div style="border-bottom: 1px dashed #ccc; margin-top: 15px;"></div>
+        <div style="page-break-inside: avoid; margin-bottom: 25px; font-family: 'Arial', sans-serif;">
+            <div style="font-weight: bold; color: #1976D2; font-size: 15px; margin-bottom: 12px;">Date: ${e.date}</div>
+            <div style="margin-bottom: 15px;">
+                <strong style="color: #6c757d; font-weight: 600; font-size: 15px;">Problem:</strong>
+                <div style="color: #222; margin-top: 4px;">${safeProblem}</div>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <strong style="color: #6c757d; font-weight: 600; font-size: 15px;">Solution:</strong>
+                <div style="color: #222; margin-top: 4px;">${safeSolution}</div>
+            </div>
+            ${counts ? `<div style="color: #E65100; font-size: 13px; font-weight: bold; margin-top: 8px;">${counts}</div>` : ''}
         </div>`;
     });
     
@@ -577,32 +596,18 @@ window.generatePDF = async () => {
     const fileName = await prepareMainPDF();
     if(!fileName) return;
     topToast.fire({ text: 'Generating PDF...' });
-    try {
-        const { pdf } = await generateMultiPagePDFFromCanvas('pdfTemplate', fileName);
-        pdf.save(fileName);
-        topToast.fire({ text: 'Downloaded successfully!' });
-    } catch (error) { topToast.fire({ text: 'PDF Failed', background: '#E0245E' }); }
+    await executePDF('pdfTemplate', fileName, 'save');
 };
 
 window.shareMainPDF = async () => {
     const fileName = await prepareMainPDF();
     if(!fileName) return;
     topToast.fire({ text: 'Preparing file for sharing...' });
-    try {
-        const { pdf } = await generateMultiPagePDFFromCanvas('pdfTemplate', fileName);
-        const pdfBlob = pdf.output('blob');
-        const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'Consultation Report', text: 'Here is your consultation report from Pratnya Astro.' });
-            topToast.fire({ text: 'Opened share menu!' });
-        } else {
-            Swal.fire({ title: 'Unsupported Browser', text: 'Please click "PDF" to download it, then attach it in WhatsApp manually.', icon: 'info' });
-        }
-    } catch(e) { topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' }); }
+    await executePDF('pdfTemplate', fileName, 'share');
 };
 
-// --- PRESCRIPTION PDF GENERATION & SHARE ---
+
+// --- PRESCRIPTION PDF GENERATION ---
 async function preparePrescriptionPDF() {
     const name = document.getElementById('prescName').value || "Client";
     const star = document.getElementById('prescStar').value || "";
@@ -627,14 +632,18 @@ async function preparePrescriptionPDF() {
         let counts = '';
         if (e.slr > 0) counts += `<span style="margin-right: 15px;"><strong>SLR:</strong> ${e.slr}</span>`;
         if (e.dhr > 0) counts += `<span><strong>DHR:</strong> ${e.dhr}</span>`;
+        
+        let safeNotes = (e.notes || '-').split('\n').map(line => `<div style="min-height: 20px;">${line}</div>`).join('');
 
         htmlContent += `
-        <div style="margin-bottom: 20px; font-family: 'Georgia', serif; font-size: 15px; color: black;">
-            <div style="font-weight: bold; color: #E65100; font-size: 15px; margin-bottom: 8px;">Date: ${e.date}</div>
-            <div style="font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 8px;"><strong style="color: #777777; font-weight: 500;">Rasi:</strong> ${e.rasi || '-'} | <strong style="color: #777777; font-weight: 500;">Udhaya:</strong> ${e.udhaya || '-'}</div>
-            <div style="margin-bottom: 8px; white-space: pre-wrap; line-height: 1.6;">${e.notes || '-'}</div>
-            ${counts ? `<div style="color: #E65100; font-size: 13px; font-weight: bold; font-family: 'Arial', sans-serif;">${counts}</div>` : ''}
-            <div style="border-bottom: 1px dashed #ccc; margin-top: 15px;"></div>
+        <div style="page-break-inside: avoid; margin-bottom: 25px; font-family: 'Georgia', serif; font-size: 15px; color: black;">
+            <div style="font-weight: bold; color: #E65100; font-size: 15px; margin-bottom: 12px;">Date: ${e.date}</div>
+            <div style="font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 12px;">
+                <strong style="color: #6c757d; font-weight: 600;">Rasi:</strong> ${e.rasi || '-'} | 
+                <strong style="color: #6c757d; font-weight: 600;">Udhaya:</strong> ${e.udhaya || '-'}
+            </div>
+            <div style="margin-bottom: 12px; line-height: 1.6;">${safeNotes}</div>
+            ${counts ? `<div style="color: #E65100; font-size: 13px; font-weight: bold; font-family: 'Arial', sans-serif; margin-top: 8px;">${counts}</div>` : ''}
         </div>`;
     });
 
@@ -646,29 +655,14 @@ window.generatePrescriptionPDF = async () => {
     const fileName = await preparePrescriptionPDF();
     if(!fileName) return;
     topToast.fire({ text: 'Generating PDF...' });
-    try {
-        const { pdf } = await generateMultiPagePDFFromCanvas('prescriptionTemplate', fileName);
-        pdf.save(fileName);
-        topToast.fire({ text: 'Downloaded successfully!' });
-    } catch(e) { console.error(e); }
+    await executePDF('prescriptionTemplate', fileName, 'save');
 };
 
 window.sharePrescriptionPDF = async () => {
     const fileName = await preparePrescriptionPDF();
     if(!fileName) return;
     topToast.fire({ text: 'Preparing file for sharing...' });
-    try {
-        const { pdf } = await generateMultiPagePDFFromCanvas('prescriptionTemplate', fileName);
-        const pdfBlob = pdf.output('blob');
-        const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'Prescription', text: 'Here is your prescription from Pratnya Astro.' });
-            topToast.fire({ text: 'Opened share menu!' });
-        } else {
-            Swal.fire({ title: 'Unsupported Browser', text: 'Please click "PDF" to download it, then attach it in WhatsApp manually.', icon: 'info' });
-        }
-    } catch(e) { topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' }); }
+    await executePDF('prescriptionTemplate', fileName, 'share');
 };
 
 function calculateAge() {
