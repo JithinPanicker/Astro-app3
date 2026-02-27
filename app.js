@@ -494,51 +494,103 @@ async function getEntriesToPrint(clientId, isPresc) {
     return entries;
 }
 
-// --- FIX FOR BLANK PDF (CLONE ENGINE) ---
-async function executePDF(elementId, fileName, action) {
-    const originalElement = document.getElementById(elementId);
-    
-    // Create a clone to manipulate safely without touching the live DOM
-    const clone = originalElement.cloneNode(true);
-    
-    // Fix styles on the clone so it renders properly in html2canvas
-    clone.style.position = 'relative';
-    clone.style.left = '0';
-    clone.style.top = '0';
-    clone.style.width = '800px';
-    clone.style.height = 'auto';
-    clone.style.display = 'block';
-    
-    // Create a hidden wrapper safely positioned in the background
+
+// --- NATIVE PDF GENERATOR ENGINE (PERFECT PAGE BREAKS + HEADERS/FOOTERS) ---
+async function executeNativePDF(htmlContent, fileName, action) {
     const wrapper = document.createElement('div');
+    wrapper.innerHTML = htmlContent;
+    
+    // Fluid block to ensure it scales perfectly on any device width without cutting off right edge
+    wrapper.style.padding = '0';
+    wrapper.style.width = '100%'; 
     wrapper.style.position = 'absolute';
     wrapper.style.top = '0';
     wrapper.style.left = '0';
-    wrapper.style.width = '800px';
-    wrapper.style.zIndex = '-9999'; // Securely hide it behind the app
-    wrapper.style.background = 'white';
-    
-    wrapper.appendChild(clone);
+    wrapper.style.zIndex = '-9999';
     document.body.appendChild(wrapper);
 
+    // Margins [Top, Left, Bottom, Right] in millimeters. 
+    // Top 38mm leaves perfect room for header. Bottom 25mm leaves room for footer.
     const opt = {
-        margin:       10, // Top/Left/Bottom/Right padding in the PDF
+        margin:       [38, 15, 25, 15], 
         filename:     fileName,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800, scrollY: 0 },
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak:    { mode: ['css', 'legacy'] }
     };
 
     try {
-        // Yield to browser rendering engine momentarily to apply CSS to the newly attached clone
-        await new Promise(r => setTimeout(r, 100));
+        const pdfWorker = html2pdf().set(opt).from(wrapper).toPdf();
+
+        // Overlay Professional Static Header/Footer on EVERY page generated
+        await pdfWorker.get('pdf').then((pdf) => {
+            const totalPages = pdf.internal.getNumberOfPages();
+            
+            for (let i = 1; i <= totalPages; i++) {
+                pdf.setPage(i);
+                
+                // --- HEADER OVERLAY ---
+                pdf.setTextColor(46, 90, 75); // Dark Teal Color matched to image
+
+                // Left Header
+                pdf.setFontSize(10);
+                pdf.setFont("helvetica", "normal");
+                pdf.text("Astrologer", 15, 15);
+
+                pdf.setFontSize(18);
+                pdf.setFont("helvetica", "bold");
+                pdf.text("C.K. Saji Panicker", 15, 21);
+
+                pdf.setFontSize(10);
+                pdf.setFont("helvetica", "normal");
+                pdf.setTextColor(80, 80, 80);
+                pdf.text("Chathangottupuram, Kalarikkal", 15, 26);
+                pdf.text("Wandoor-Malappuram", 15, 30);
+                pdf.text("Kerala : 679 328", 15, 34);
+
+                // Right Header
+                pdf.setTextColor(80, 80, 80);
+                pdf.text("Office:", 195, 15, { align: "right" });
+                pdf.text("Manjeri Road, Cherucode", 195, 19, { align: "right" });
+
+                pdf.setFontSize(12);
+                pdf.setFont("helvetica", "bold");
+                pdf.setTextColor(46, 90, 75); 
+                pdf.text("Ph: 9495 141 880", 195, 25, { align: "right" });
+                pdf.text("Booking : 7034 600 880", 195, 30, { align: "right" });
+
+                pdf.setFontSize(10);
+                pdf.setFont("helvetica", "normal");
+                pdf.text("www.pratnya.com", 195, 34, { align: "right" });
+
+                // Divider Line
+                pdf.setDrawColor(46, 90, 75);
+                pdf.setLineWidth(0.4);
+                pdf.line(15, 36.5, 195, 36.5);
+
+                // --- FOOTER OVERLAY ---
+                pdf.setDrawColor(46, 90, 75);
+                pdf.setLineWidth(0.4);
+                pdf.line(15, 278, 195, 278);
+
+                pdf.setFont("times", "italic");
+                pdf.setFontSize(16);
+                pdf.setTextColor(46, 90, 75);
+                pdf.text("Fix your appointment through the call", 105, 285, { align: "center" });
+
+                pdf.setFont("helvetica", "normal");
+                pdf.setFontSize(10);
+                pdf.setTextColor(80, 80, 80);
+                pdf.text("www.pratnya.com", 105, 290, { align: "center" });
+            }
+        });
 
         if (action === 'save') {
-            await html2pdf().set(opt).from(clone).save();
+            await pdfWorker.save();
             topToast.fire({ text: 'Downloaded successfully!' });
         } else if (action === 'share') {
-            const pdfBlob = await html2pdf().set(opt).from(clone).output('blob');
+            const pdfBlob = await pdfWorker.output('blob');
             const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({ files: [file], title: 'Consultation Report', text: 'Here is your document from Pratnya Astro.' });
@@ -551,33 +603,16 @@ async function executePDF(elementId, fileName, action) {
         console.error(e);
         topToast.fire({ text: 'Failed to generate PDF', background: '#E0245E' });
     } finally {
-        // Always clean up the wrapper after printing
-        document.body.removeChild(wrapper);
+        document.body.removeChild(wrapper); // Cleanup
     }
 }
 
 
-// --- MAIN PDF GENERATION ---
+// --- MAIN PDF DATA COMPILER ---
 async function prepareMainPDF() {
     const name = document.getElementById('name').value || "Client";
     const star = document.getElementById('star').value;
-    const dob = document.getElementById('dob').value;
-    const time = document.getElementById('birthTime').value;
-
-    let displayTime = time;
-    if(time) {
-        const [h, m] = time.split(':');
-        const hour = parseInt(h);
-        displayTime = `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`;
-    }
-
-    let htmlContent = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 25px; border-bottom: 2px solid #ddd; padding-bottom: 15px;">
-            <div><strong>Name:</strong> ${name}</div>
-            <div><strong>Star:</strong> ${star || '-'}</div>
-            <div><strong>DOB:</strong> ${dob || '-'}</div>
-            <div><strong>Time:</strong> ${displayTime || '-'}</div>
-        </div>`;
+    const place = document.getElementById('place').value;
 
     const id = document.getElementById('clientId').value;
     const entries = await getEntriesToPrint(id, false);
@@ -586,53 +621,59 @@ async function prepareMainPDF() {
         topToast.fire({ text: 'No data to print!', background: '#E0245E' }); return null;
     }
 
+    let htmlContent = `
+        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; line-height: 1.6;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 25px; font-weight: bold; border-bottom: 2px solid #ddd; padding-bottom: 12px; font-size: 15px;">
+                <span>Name: ${name}</span>
+                <span>Star: ${star || '-'}</span>
+                <span>Place: ${place || '-'}</span>
+            </div>
+    `;
+
     entries.forEach((e, index) => {
-        let counts = '';
-        if (e.slr > 0) counts += `<span style="margin-right: 15px;"><strong>SLR:</strong> ${e.slr}</span>`;
-        if (e.dhr > 0) counts += `<span><strong>DHR:</strong> ${e.dhr}</span>`;
-        
         let safeProblem = (e.problem || '-').split('\n').map(line => `<div style="min-height: 20px;">${line}</div>`).join('');
         let safeSolution = (e.solution || '-').split('\n').map(line => `<div style="min-height: 20px;">${line}</div>`).join('');
-
-        // Remove dividing dashed line at the end by tracking index
-        let divider = (index < entries.length - 1) ? `<div style="border-bottom: 1px dashed #ccc; margin-top: 20px; margin-bottom: 15px;"></div>` : ``;
+        let divider = (index < entries.length - 1) ? `<hr style="border: 0; border-top: 1px dashed #ccc; margin-top: 20px; margin-bottom: 20px;">` : ``;
 
         htmlContent += `
-        <div style="page-break-inside: avoid; font-family: 'Arial', sans-serif;">
-            <div style="font-weight: bold; color: #1976D2; font-size: 15px; margin-bottom: 12px;">Date: ${e.date}</div>
-            <div style="margin-bottom: 15px;">
-                <strong style="color: #6c757d; font-weight: 600; font-size: 15px;">Problem:</strong>
-                <div style="color: #222; margin-top: 4px;">${safeProblem}</div>
+            <div style="margin-bottom: 20px;">
+                <div style="color: #E65100; font-weight: bold; margin-bottom: 8px; font-size: 15px;">Date: ${e.date}</div>
+                <div style="margin-bottom: 12px;">
+                    <span style="color: #666; font-weight: bold;">Problem:</span><br>
+                    <div style="color: #222; margin-top: 4px;">${safeProblem}</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <span style="color: #666; font-weight: bold;">Solution:</span><br>
+                    <div style="color: #222; margin-top: 4px;">${safeSolution}</div>
+                </div>
+                <div style="color: #E65100; font-weight: bold; font-size: 13px; margin-top: 12px;">
+                    SLR: ${e.slr} &nbsp;&nbsp;&nbsp;&nbsp; DHR: ${e.dhr}
+                </div>
+                ${divider}
             </div>
-            <div style="margin-bottom: 15px;">
-                <strong style="color: #6c757d; font-weight: 600; font-size: 15px;">Solution:</strong>
-                <div style="color: #222; margin-top: 4px;">${safeSolution}</div>
-            </div>
-            ${counts ? `<div style="color: #E65100; font-size: 13px; font-weight: bold; margin-top: 8px;">${counts}</div>` : ''}
-            ${divider}
-        </div>`;
+        `;
     });
     
-    document.getElementById('pdfContent').innerHTML = htmlContent;
-    return `${name}_Consultation.pdf`;
+    htmlContent += `</div>`;
+    return { html: htmlContent, fileName: `${name}_Consultation.pdf` };
 }
 
 window.generatePDF = async () => {
-    const fileName = await prepareMainPDF();
-    if(!fileName) return;
+    const data = await prepareMainPDF();
+    if(!data) return;
     topToast.fire({ text: 'Generating PDF...' });
-    await executePDF('pdfTemplate', fileName, 'save');
+    await executeNativePDF(data.html, data.fileName, 'save');
 };
 
 window.shareMainPDF = async () => {
-    const fileName = await prepareMainPDF();
-    if(!fileName) return;
+    const data = await prepareMainPDF();
+    if(!data) return;
     topToast.fire({ text: 'Preparing file for sharing...' });
-    await executePDF('pdfTemplate', fileName, 'share');
+    await executeNativePDF(data.html, data.fileName, 'share');
 };
 
 
-// --- PRESCRIPTION PDF GENERATION ---
+// --- PRESCRIPTION PDF DATA COMPILER ---
 async function preparePrescriptionPDF() {
     const name = document.getElementById('prescName').value || "Client";
     const star = document.getElementById('prescStar').value || "";
@@ -646,51 +687,51 @@ async function preparePrescriptionPDF() {
     }
 
     let htmlContent = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 25px; border-bottom: 2px solid #ddd; padding-bottom: 15px;">
-            <div><strong>Name:</strong> ${name}</div>
-            <div><strong>Star:</strong> ${star || '-'}</div>
-            <div><strong>Place:</strong> ${place || '-'}</div>
-        </div>
+        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; line-height: 1.6;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 25px; font-weight: bold; border-bottom: 2px solid #ddd; padding-bottom: 12px; font-size: 15px;">
+                <span>Name: ${name}</span>
+                <span>Star: ${star || '-'}</span>
+                <span>Place: ${place || '-'}</span>
+            </div>
     `;
 
     entries.forEach((e, index) => {
-        let counts = '';
-        if (e.slr > 0) counts += `<span style="margin-right: 15px;"><strong>SLR:</strong> ${e.slr}</span>`;
-        if (e.dhr > 0) counts += `<span><strong>DHR:</strong> ${e.dhr}</span>`;
-        
         let safeNotes = (e.notes || '-').split('\n').map(line => `<div style="min-height: 20px;">${line}</div>`).join('');
-
-        let divider = (index < entries.length - 1) ? `<div style="border-bottom: 1px dashed #ccc; margin-top: 20px; margin-bottom: 15px;"></div>` : ``;
+        let divider = (index < entries.length - 1) ? `<hr style="border: 0; border-top: 1px dashed #ccc; margin-top: 20px; margin-bottom: 20px;">` : ``;
 
         htmlContent += `
-        <div style="page-break-inside: avoid; font-family: 'Georgia', serif; font-size: 15px; color: black;">
-            <div style="font-weight: bold; color: #E65100; font-size: 15px; margin-bottom: 12px;">Date: ${e.date}</div>
-            <div style="font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 12px;">
-                <strong style="color: #6c757d; font-weight: 600;">Rasi:</strong> ${e.rasi || '-'} | 
-                <strong style="color: #6c757d; font-weight: 600;">Udhaya:</strong> ${e.udhaya || '-'}
+            <div style="margin-bottom: 20px;">
+                <div style="color: #E65100; font-weight: bold; margin-bottom: 6px; font-size: 15px;">Date: ${e.date}</div>
+                <div style="color: #666; font-size: 13px; margin-bottom: 12px;">
+                    <strong>Rasi:</strong> ${e.rasi || '-'} &nbsp;|&nbsp; <strong>Udhaya:</strong> ${e.udhaya || '-'}
+                </div>
+                <div style="margin-bottom: 12px; color: #222;">
+                    ${safeNotes}
+                </div>
+                <div style="color: #E65100; font-weight: bold; font-size: 13px; margin-top: 12px;">
+                    SLR: ${e.slr} &nbsp;&nbsp;&nbsp;&nbsp; DHR: ${e.dhr}
+                </div>
+                ${divider}
             </div>
-            <div style="margin-bottom: 12px; line-height: 1.6;">${safeNotes}</div>
-            ${counts ? `<div style="color: #E65100; font-size: 13px; font-weight: bold; font-family: 'Arial', sans-serif; margin-top: 8px;">${counts}</div>` : ''}
-            ${divider}
-        </div>`;
+        `;
     });
 
-    document.getElementById('pdfPrescContent').innerHTML = htmlContent;
-    return `${name}_Prescription.pdf`;
+    htmlContent += `</div>`;
+    return { html: htmlContent, fileName: `${name}_Prescription.pdf` };
 }
 
 window.generatePrescriptionPDF = async () => {
-    const fileName = await preparePrescriptionPDF();
-    if(!fileName) return;
+    const data = await preparePrescriptionPDF();
+    if(!data) return;
     topToast.fire({ text: 'Generating PDF...' });
-    await executePDF('prescriptionTemplate', fileName, 'save');
+    await executeNativePDF(data.html, data.fileName, 'save');
 };
 
 window.sharePrescriptionPDF = async () => {
-    const fileName = await preparePrescriptionPDF();
-    if(!fileName) return;
+    const data = await preparePrescriptionPDF();
+    if(!data) return;
     topToast.fire({ text: 'Preparing file for sharing...' });
-    await executePDF('prescriptionTemplate', fileName, 'share');
+    await executeNativePDF(data.html, data.fileName, 'share');
 };
 
 function calculateAge() {
