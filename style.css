@@ -85,12 +85,26 @@ button {
 }
 
 /* =========================================
-   COUNTERS & PRINT OPTIONS
+   PROFESSIONAL TOOLBAR (Counters & Export)
 ========================================= */
+.options-toolbar {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    background: #f8f9fa; 
+    border: 1px solid #ddd; 
+    padding: 12px 15px; 
+    border-radius: 8px; 
+    margin-top: 15px; 
+    flex-wrap: wrap; 
+    gap: 15px;
+}
+
 .counter-group {
-    display: flex; align-items: center; gap: 5px; 
-    background: #fff; padding: 5px 10px; 
-    border-radius: 6px; border: 1px solid #ddd;
+    display: flex; align-items: center; gap: 5px; margin: 0; padding: 0;
+}
+.counter-group label {
+    font-weight: bold; color: #555; font-size: 13px; margin-right: 2px;
 }
 .counter-group button {
     width: 28px; height: 28px; background: #e0e0e0; border: none; 
@@ -99,14 +113,14 @@ button {
 }
 .counter-group button:hover { background: #d0d0d0; }
 .counter-group input {
-    width: 35px; text-align: center; border: none; font-weight: bold; 
-    padding: 0; background: transparent; font-size: 15px; pointer-events: none;
+    width: 35px; text-align: center; border: none; font-weight: bold; color: #E65100;
+    padding: 0; background: transparent; font-size: 16px; pointer-events: none;
 }
+
 .print-options {
-    background: #f9f9f9; padding: 12px; border-radius: 6px; 
-    border: 1px solid #ddd; margin-top: 15px; display: flex; 
-    gap: 15px; align-items: center; font-size: 14px; flex-wrap: wrap;
+    display: flex; gap: 10px; align-items: center; font-size: 14px; margin: 0; padding: 0;
 }
+.print-options label { cursor: pointer; color: #444; }
 
 /* =========================================
    SEARCH & LIST ITEMS
@@ -305,7 +319,6 @@ input, textarea {
     
     #clientForm { padding: 30px; padding-bottom: 0px; }
     
-    /* Desktop specific fix for floating footer background color */
     .form-actions { 
         background: white; 
         margin: auto -30px 0 -30px; 

@@ -20,8 +20,8 @@
         .letterhead-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px; font-family: 'Arial', sans-serif; }
         .letterhead-left { text-align: left; color: #333; }
         .contact-link { text-decoration: none; color: inherit; cursor: pointer; }
-        .watermark { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); opacity: 0.08; z-index: 0; pointer-events: none; }
-        .letterhead-footer { position: absolute; bottom: 30px; left: 40px; right: 40px; text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; font-size: 16px; }
+        .watermark { position: absolute; top: 420px; left: 50%; transform: translate(-50%, -50%); opacity: 0.08; z-index: 0; pointer-events: none; }
+        .letterhead-footer { position: relative; margin-top: 40px; text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; font-size: 16px; }
         .footer-text { font-family: 'Brush Script MT', cursive; font-size: 22px; }
     </style>
 </head>
@@ -119,26 +119,27 @@
                         </div>
                         <textarea id="currentSolution" style="min-height: 150px; border: 1px solid #ddd; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5; resize: vertical;" placeholder="Write solution here..."></textarea>
                         
-                        <div style="display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap;">
-                            <div class="counter-group">
-                                <label style="font-weight: bold; color: #E65100; font-size: 13px;">SLR:</label>
-                                <button type="button" onclick="adjCount('slrCount', -1)">-</button>
-                                <input type="number" id="slrCount" value="0" readonly>
-                                <button type="button" onclick="adjCount('slrCount', 1)">+</button>
+                        <div class="options-toolbar">
+                            <div style="display: flex; gap: 15px; align-items: center;">
+                                <div class="counter-group">
+                                    <label>SLR:</label>
+                                    <button type="button" onclick="adjCount('slrCount', -1)">-</button>
+                                    <input type="number" id="slrCount" value="0" readonly>
+                                    <button type="button" onclick="adjCount('slrCount', 1)">+</button>
+                                </div>
+                                <div class="counter-group">
+                                    <label>DHR:</label>
+                                    <button type="button" onclick="adjCount('dhrCount', -1)">-</button>
+                                    <input type="number" id="dhrCount" value="0" readonly>
+                                    <button type="button" onclick="adjCount('dhrCount', 1)">+</button>
+                                </div>
                             </div>
-                            <div class="counter-group">
-                                <label style="font-weight: bold; color: #E65100; font-size: 13px;">DHR:</label>
-                                <button type="button" onclick="adjCount('dhrCount', -1)">-</button>
-                                <input type="number" id="dhrCount" value="0" readonly>
-                                <button type="button" onclick="adjCount('dhrCount', 1)">+</button>
+                            <div class="print-options">
+                                <strong style="color: #1976D2;"><i class="fas fa-print"></i> Export:</strong>
+                                <label><input type="radio" name="mainExport" value="current" checked> Current Only</label>
+                                <label><input type="radio" name="mainExport" value="all"> All History</label>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="print-options">
-                        <strong style="color: #333;"><i class="fas fa-print"></i> Export Options:</strong>
-                        <label><input type="radio" name="mainExport" value="current" checked> Current Only</label>
-                        <label><input type="radio" name="mainExport" value="all"> All Previous History</label>
                     </div>
 
                     <div class="form-actions">
@@ -184,25 +185,26 @@
                     </div>
                     <textarea id="prescBody" style="min-height: 200px; border: 1px solid #ccc; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5;" placeholder="Write full prescription here..."></textarea>
 
-                    <div style="display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap;">
-                        <div class="counter-group">
-                            <label style="font-weight: bold; color: #E65100; font-size: 13px;">SLR:</label>
-                            <button type="button" onclick="adjCount('prescSlrCount', -1)">-</button>
-                            <input type="number" id="prescSlrCount" value="0" readonly>
-                            <button type="button" onclick="adjCount('prescSlrCount', 1)">+</button>
+                    <div class="options-toolbar">
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <div class="counter-group">
+                                <label>SLR:</label>
+                                <button type="button" onclick="adjCount('prescSlrCount', -1)">-</button>
+                                <input type="number" id="prescSlrCount" value="0" readonly>
+                                <button type="button" onclick="adjCount('prescSlrCount', 1)">+</button>
+                            </div>
+                            <div class="counter-group">
+                                <label>DHR:</label>
+                                <button type="button" onclick="adjCount('prescDhrCount', -1)">-</button>
+                                <input type="number" id="prescDhrCount" value="0" readonly>
+                                <button type="button" onclick="adjCount('prescDhrCount', 1)">+</button>
+                            </div>
                         </div>
-                        <div class="counter-group">
-                            <label style="font-weight: bold; color: #E65100; font-size: 13px;">DHR:</label>
-                            <button type="button" onclick="adjCount('prescDhrCount', -1)">-</button>
-                            <input type="number" id="prescDhrCount" value="0" readonly>
-                            <button type="button" onclick="adjCount('prescDhrCount', 1)">+</button>
+                        <div class="print-options">
+                            <strong style="color: #E65100;"><i class="fas fa-print"></i> Export:</strong>
+                            <label><input type="radio" name="prescExport" value="current" checked> Current Only</label>
+                            <label><input type="radio" name="prescExport" value="all"> All History</label>
                         </div>
-                    </div>
-
-                    <div class="print-options" style="background: #fffdf9;">
-                        <strong style="color: #E65100;"><i class="fas fa-print"></i> Export Options:</strong>
-                        <label><input type="radio" name="prescExport" value="current" checked> Current Only</label>
-                        <label><input type="radio" name="prescExport" value="all"> All Previous History</label>
                     </div>
 
                     <div class="form-actions" style="background: #FFF3E0;">
@@ -217,7 +219,7 @@
 
     </div>
 
-    <div id="pdfTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
+    <div id="pdfTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; min-height: 842px; background: white; padding: 40px; box-sizing: border-box;">
         <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
         <div class="letterhead-header">
             <div class="letterhead-left">
@@ -243,7 +245,7 @@
         </div>
     </div>
 
-    <div id="prescriptionTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
+    <div id="prescriptionTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; min-height: 842px; background: white; padding: 40px; box-sizing: border-box;">
         <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
         <div class="letterhead-header">
             <div class="letterhead-left">
@@ -271,7 +273,7 @@
 
     <script src="app.js"></script>
     <script>
-        const LATEST_CHANGES = "Added Print Options, WhatsApp Share, SLR/DHR Counters, Descriptive PDFs";
+        const LATEST_CHANGES = "Auto-pagination (no messy text on footer), Lighter PDF Headings, Professional UI layout";
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(registration => {
                 if (registration.waiting) { newWorker = registration.waiting; showNotificationIcon(); }

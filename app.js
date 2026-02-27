@@ -495,6 +495,36 @@ async function getEntriesToPrint(clientId, isPresc) {
     return entries;
 }
 
+// --- MULTI-PAGE PDF GENERATOR ENGINE ---
+async function generateMultiPagePDFFromCanvas(elementId, fileName) {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const imgWidth = 210; // A4 width in mm
+    const pageHeight = 297; // A4 height in mm
+
+    const element = document.getElementById(elementId);
+    const canvas = await html2canvas(element, { scale: 2 });
+    const imgData = canvas.toDataURL('image/png');
+    
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    // Add first page
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    // Add subsequent pages if text was too long
+    while (heightLeft > 0) {
+        position = position - pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+    }
+
+    return { pdf, fileName };
+}
+
 // --- MAIN PDF GENERATION & SHARE ---
 async function prepareMainPDF() {
     const name = document.getElementById('name').value || "Client";
@@ -532,51 +562,36 @@ async function prepareMainPDF() {
         htmlContent += `
         <div style="margin-bottom: 20px; font-family: 'Arial', sans-serif;">
             <div style="font-weight: bold; color: #1976D2; font-size: 15px; margin-bottom: 8px;">Date: ${e.date}</div>
-            <div style="margin-bottom: 8px;"><strong>Problem:</strong><br><span style="white-space: pre-wrap;">${e.problem || '-'}</span></div>
-            <div style="margin-bottom: 8px;"><strong style="color: #2E7D32;">Solution:</strong><br><span style="white-space: pre-wrap;">${e.solution || '-'}</span></div>
-            ${counts ? `<div style="color: #E65100; font-size: 13px; font-weight: bold;">${counts}</div>` : ''}
+            <div style="margin-bottom: 8px;"><strong style="color: #777777; font-weight: 500;">Problem:</strong><br><span style="white-space: pre-wrap; color: #111;">${e.problem || '-'}</span></div>
+            <div style="margin-bottom: 8px;"><strong style="color: #4CAF50; font-weight: 500;">Solution:</strong><br><span style="white-space: pre-wrap; color: #111;">${e.solution || '-'}</span></div>
+            ${counts ? `<div style="color: #E65100; font-size: 13px; font-weight: bold; margin-top: 5px;">${counts}</div>` : ''}
             <div style="border-bottom: 1px dashed #ccc; margin-top: 15px;"></div>
         </div>`;
     });
     
     document.getElementById('pdfContent').innerHTML = htmlContent;
-    return name;
+    return `${name}_Consultation.pdf`;
 }
 
 window.generatePDF = async () => {
-    const name = await prepareMainPDF();
-    if(!name) return;
+    const fileName = await prepareMainPDF();
+    if(!fileName) return;
     topToast.fire({ text: 'Generating PDF...' });
     try {
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
-        const element1 = document.getElementById('pdfTemplate');
-        const canvas1 = await html2canvas(element1, { scale: 2 });
-        const imgData1 = canvas1.toDataURL('image/png');
-        const height1 = (canvas1.height * width) / canvas1.width;
-        pdf.addImage(imgData1, 'PNG', 0, 0, width, height1);
-        pdf.save(`${name}_Full_Report.pdf`);
+        const { pdf } = await generateMultiPagePDFFromCanvas('pdfTemplate', fileName);
+        pdf.save(fileName);
         topToast.fire({ text: 'Downloaded successfully!' });
     } catch (error) { topToast.fire({ text: 'PDF Failed', background: '#E0245E' }); }
 };
 
 window.shareMainPDF = async () => {
-    const name = await prepareMainPDF();
-    if(!name) return;
+    const fileName = await prepareMainPDF();
+    if(!fileName) return;
     topToast.fire({ text: 'Preparing file for sharing...' });
     try {
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
-        const element1 = document.getElementById('pdfTemplate');
-        const canvas1 = await html2canvas(element1, { scale: 2 });
-        const imgData1 = canvas1.toDataURL('image/png');
-        const height1 = (canvas1.height * width) / canvas1.width;
-        pdf.addImage(imgData1, 'PNG', 0, 0, width, height1);
-        
+        const { pdf } = await generateMultiPagePDFFromCanvas('pdfTemplate', fileName);
         const pdfBlob = pdf.output('blob');
-        const file = new File([pdfBlob], `${name}_Full_Report.pdf`, { type: 'application/pdf' });
+        const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({ files: [file], title: 'Consultation Report', text: 'Here is your consultation report from Pratnya Astro.' });
@@ -586,7 +601,6 @@ window.shareMainPDF = async () => {
         }
     } catch(e) { topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' }); }
 };
-
 
 // --- PRESCRIPTION PDF GENERATION & SHARE ---
 async function preparePrescriptionPDF() {
@@ -617,7 +631,7 @@ async function preparePrescriptionPDF() {
         htmlContent += `
         <div style="margin-bottom: 20px; font-family: 'Georgia', serif; font-size: 15px; color: black;">
             <div style="font-weight: bold; color: #E65100; font-size: 15px; margin-bottom: 8px;">Date: ${e.date}</div>
-            <div style="font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 8px;"><strong>Rasi:</strong> ${e.rasi || '-'} | <strong>Udhaya:</strong> ${e.udhaya || '-'}</div>
+            <div style="font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 8px;"><strong style="color: #777777; font-weight: 500;">Rasi:</strong> ${e.rasi || '-'} | <strong style="color: #777777; font-weight: 500;">Udhaya:</strong> ${e.udhaya || '-'}</div>
             <div style="margin-bottom: 8px; white-space: pre-wrap; line-height: 1.6;">${e.notes || '-'}</div>
             ${counts ? `<div style="color: #E65100; font-size: 13px; font-weight: bold; font-family: 'Arial', sans-serif;">${counts}</div>` : ''}
             <div style="border-bottom: 1px dashed #ccc; margin-top: 15px;"></div>
@@ -625,47 +639,28 @@ async function preparePrescriptionPDF() {
     });
 
     document.getElementById('pdfPrescContent').innerHTML = htmlContent;
-    return name;
+    return `${name}_Prescription.pdf`;
 }
 
 window.generatePrescriptionPDF = async () => {
-    const name = await preparePrescriptionPDF();
-    if(!name) return;
-    
+    const fileName = await preparePrescriptionPDF();
+    if(!fileName) return;
     topToast.fire({ text: 'Generating PDF...' });
     try {
-        const { jsPDF } = window.jspdf;
-        const element = document.getElementById('prescriptionTemplate');
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
-        const height = (canvas.height * width) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-        pdf.save(`${name}_Prescription.pdf`);
+        const { pdf } = await generateMultiPagePDFFromCanvas('prescriptionTemplate', fileName);
+        pdf.save(fileName);
         topToast.fire({ text: 'Downloaded successfully!' });
     } catch(e) { console.error(e); }
 };
 
 window.sharePrescriptionPDF = async () => {
-    const name = await preparePrescriptionPDF();
-    if(!name) return;
-
+    const fileName = await preparePrescriptionPDF();
+    if(!fileName) return;
     topToast.fire({ text: 'Preparing file for sharing...' });
     try {
-        const { jsPDF } = window.jspdf;
-        const element = document.getElementById('prescriptionTemplate');
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
-        const height = (canvas.height * width) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-        
+        const { pdf } = await generateMultiPagePDFFromCanvas('prescriptionTemplate', fileName);
         const pdfBlob = pdf.output('blob');
-        const file = new File([pdfBlob], `${name}_Prescription.pdf`, { type: 'application/pdf' });
+        const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({ files: [file], title: 'Prescription', text: 'Here is your prescription from Pratnya Astro.' });
