@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -213,9 +214,41 @@
 
     </div>
 
+    <div style="width: 0; height: 0; overflow: hidden; position: absolute; z-index: -9999;">
+        
+        <div id="asset-watermark" style="width: 800px; height: 1131px; background: white; display: flex; align-items: center; justify-content: center;">
+            <img src="logo.png" style="width: 500px; opacity: 0.05;">
+        </div>
+
+        <div id="asset-header" style="width: 800px; padding: 40px 40px 10px 40px; box-sizing: border-box; background: white;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #318c4b; padding-bottom: 12px;">
+                <div style="flex: 1;">
+                    <p style="color: #318c4b; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Astrologer</p>
+                    <h2 style="color: #318c4b; font-family: 'Arial', sans-serif; font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 0.5px;">C.K. Saji Panicker</h2>
+                    <div style="color: #444; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; line-height: 1.4; margin-top: 6px;">
+                        Chathangottupuram, Kalarikkal<br>Wandoor-Malappuram<br>Kerala : 679 328
+                    </div>
+                </div>
+                <div style="text-align: right; flex: 0 0 auto;">
+                    <p style="color: #318c4b; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 6px 0;">Consultation</p>
+                    <div style="color: #555; font-family: 'Arial', sans-serif; font-size: 14px; margin: 2px 0;">Online: <strong style="color: #318c4b; font-size: 15px;">9207 773 880</strong></div>
+                    <div style="color: #555; font-family: 'Arial', sans-serif; font-size: 14px; margin: 2px 0;">Office: <strong style="color: #318c4b; font-size: 15px;">7034 600 880</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="asset-footer" style="width: 800px; padding: 10px 40px 30px 40px; box-sizing: border-box; background: white; text-align: center;">
+            <div style="border-top: 2px solid #318c4b; padding-top: 15px;">
+                <p style="color: #318c4b; font-family: 'Brush Script MT', 'Lucida Handwriting', 'Segoe Print', cursive; font-size: 30px; margin: 0;">Fix your appointment through the call</p>
+                <p style="color: #318c4b; font-family: 'Arial', sans-serif; font-size: 15px; font-weight: bold; margin: 4px 0 0 0;">www.pratnya.in</p>
+            </div>
+        </div>
+
+    </div>
+
     <script src="app.js"></script>
     <script>
-        const LATEST_CHANGES = "Blank PDF Bug resolved! Professional green headers and footers are now natively stamped on every page, preventing any floating or overlap issues.";
+        const LATEST_CHANGES = "Perfect PDF Snapshots! Resolved blank pages, fixed overlapping phone numbers, restored watermark, and added cursive footer.";
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(registration => {
                 if (registration.waiting) { newWorker = registration.waiting; showNotificationIcon(); }

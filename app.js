@@ -495,122 +495,92 @@ async function getEntriesToPrint(clientId, isPresc) {
 }
 
 
-// --- NATIVE PDF GENERATOR ENGINE (PERFECT PAGE BREAKS + FIXED HEADERS/FOOTERS) ---
+// --- PERFECT PDF STAMPING ENGINE ---
+// This guarantees exact header/footer rendering and no blank pages
 async function executeNativePDF(htmlContent, fileName, action) {
-    
-    // Create a strict 800px wrapper in the background so text NEVER shrinks or disappears
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = htmlContent;
-    wrapper.style.position = 'absolute';
-    wrapper.style.left = '-9999px'; 
-    wrapper.style.top = '0';
-    wrapper.style.width = '800px'; 
-    wrapper.style.backgroundColor = 'white';
-    wrapper.style.color = 'black';
-    wrapper.style.padding = '0 55px'; // Mimics the 15mm left/right margin perfectly
-    document.body.appendChild(wrapper);
-
-    // CRITICAL: Give the browser 500ms to calculate Malayalam fonts and layout
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const opt = {
-        margin:       [46, 0, 30, 0], // Top, Left, Bottom, Right spaces specifically left for Header & Footer
-        filename:     fileName,
-        image:        { type: 'jpeg', quality: 1.0 },
-        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['css', 'legacy'] }
-    };
+    Swal.showLoading();
 
     try {
+        // 1. Capture exact snapshots of your professional layout
+        const headerCanvas = await html2canvas(document.getElementById('asset-header'), { scale: 2 });
+        const footerCanvas = await html2canvas(document.getElementById('asset-footer'), { scale: 2 });
+        const watermarkCanvas = await html2canvas(document.getElementById('asset-watermark'), { scale: 2 });
+
+        const headerImg = headerCanvas.toDataURL('image/jpeg', 1.0);
+        const footerImg = footerCanvas.toDataURL('image/jpeg', 1.0);
+        const watermarkImg = watermarkCanvas.toDataURL('image/jpeg', 1.0);
+
+        // 2. Setup the text content safely in view for html2canvas to capture
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = htmlContent;
+        wrapper.style.position = 'absolute';
+        wrapper.style.top = '0'; // Keeps it near the scroll axis to avoid blank culling
+        wrapper.style.left = '0';
+        wrapper.style.width = '800px';
+        wrapper.style.padding = '10px 40px'; // 40px margins perfectly aligned
+        wrapper.style.backgroundColor = 'white';
+        wrapper.style.zIndex = '-9999'; // Securely hidden behind the app UI
+        document.body.appendChild(wrapper);
+
+        // Crucial pause for Malayalam fonts and layouts to render
+        await new Promise(r => setTimeout(r, 400));
+
+        const opt = {
+            margin:       [40, 0, 30, 0], // Exact spacing cleared for stamped Header and Footer
+            filename:     fileName,
+            image:        { type: 'jpeg', quality: 1.0 },
+            html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800, scrollY: 0 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak:    { mode: ['css', 'legacy'] }
+        };
+
         const pdfWorker = html2pdf().set(opt).from(wrapper).toPdf();
 
         await pdfWorker.get('pdf').then((pdf) => {
             const totalPages = pdf.internal.getNumberOfPages();
-            
-            // Loop through every page generated to stamp the Header and Footer securely
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+
+            // Calculate proportional heights for the stamps
+            const headerHeight = pdfWidth * (headerCanvas.height / headerCanvas.width);
+            const footerHeight = pdfWidth * (footerCanvas.height / footerCanvas.width);
+
+            // Stamp every single page
             for (let i = 1; i <= totalPages; i++) {
                 pdf.setPage(i);
                 
-                // --- HEADER OVERLAY ---
-                pdf.setTextColor(49, 140, 75); // Professional Match for Green Color
-
-                // Left Header
-                pdf.setFont("helvetica", "italic");
-                pdf.setFontSize(10);
-                pdf.text("Astrologer", 15, 18);
-
-                pdf.setFont("helvetica", "bold");
-                pdf.setFontSize(18);
-                pdf.text("C.K. Saji Panicker", 15, 25);
-
-                pdf.setFont("helvetica", "italic");
-                pdf.setFontSize(9);
-                pdf.text("Chathangottupuram, Kalarikkal", 15, 30);
-                pdf.text("Wandoor-Malappuram", 15, 34);
-                pdf.text("Kerala : 679 328", 15, 38);
-
-                // Right Header
-                pdf.setFont("helvetica", "italic");
-                pdf.setFontSize(10);
-                pdf.text("Consultation", 195, 18, { align: "right" });
-
-                pdf.setFont("helvetica", "normal");
-                pdf.setFontSize(9);
-                pdf.text("Online: ", 165, 25);
-                pdf.setFont("helvetica", "bold");
-                pdf.setFontSize(10);
-                pdf.text("9207 773 880", 195, 25, { align: "right" });
-
-                pdf.setFont("helvetica", "normal");
-                pdf.setFontSize(9);
-                pdf.text("Office: ", 166.5, 29);
-                pdf.setFont("helvetica", "bold");
-                pdf.setFontSize(10);
-                pdf.text("7034 600 880", 195, 29, { align: "right" });
-
-                // Header Bottom Line
-                pdf.setDrawColor(49, 140, 75);
-                pdf.setLineWidth(0.4);
-                pdf.line(15, 42, 195, 42);
-
-                // --- FOOTER OVERLAY ---
-                // Footer Top Line
-                pdf.setDrawColor(49, 140, 75);
-                pdf.setLineWidth(0.4);
-                pdf.line(15, 275, 195, 275);
-
-                // Footer Text
-                pdf.setTextColor(49, 140, 75);
-                pdf.setFont("times", "italic");
-                pdf.setFontSize(16);
-                pdf.text("Fix your appointment through the call", 105, 283, { align: "center" });
-
-                pdf.setFont("helvetica", "bold");
-                pdf.setFontSize(10);
-                pdf.text("www.pratnya.in", 105, 288, { align: "center" });
+                // Stamp Watermark (Covers full page)
+                pdf.addImage(watermarkImg, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                
+                // Stamp Header
+                pdf.addImage(headerImg, 'JPEG', 0, 0, pdfWidth, headerHeight);
+                
+                // Stamp Footer
+                pdf.addImage(footerImg, 'JPEG', 0, pdfHeight - footerHeight, pdfWidth, footerHeight);
             }
         });
 
         if (action === 'save') {
             await pdfWorker.save();
+            Swal.close();
             topToast.fire({ text: 'Downloaded successfully!' });
         } else if (action === 'share') {
             const pdfBlob = await pdfWorker.output('blob');
             const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+            Swal.close();
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({ files: [file], title: 'Consultation Report', text: 'Here is your document from Pratnya Astro.' });
-                topToast.fire({ text: 'Opened share menu!' });
             } else {
                 Swal.fire({ title: 'Unsupported Browser', text: 'Please download the PDF manually.', icon: 'info' });
             }
         }
-    } catch(e) {
-        console.error("PDF Generation Error: ", e);
-        topToast.fire({ text: 'Failed to generate PDF', background: '#E0245E' });
-    } finally {
-        // Always clean up DOM
+
         document.body.removeChild(wrapper);
+
+    } catch(e) {
+        console.error("PDF Engine Error:", e);
+        Swal.close();
+        topToast.fire({ text: 'Failed to generate PDF', background: '#E0245E' });
     }
 }
 
@@ -629,7 +599,7 @@ async function prepareMainPDF() {
     }
 
     let htmlContent = `
-        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: black; line-height: 1.5; padding-top: 5px;">
+        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; color: black; line-height: 1.6; padding-top: 5px;">
             <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px;">
                 <span>Name: ${name}</span>
                 <span>Star: ${star || ''}</span>
@@ -645,11 +615,11 @@ async function prepareMainPDF() {
 
         htmlContent += `
             <div style="page-break-inside: avoid; margin-bottom: 15px;">
-                <div style="color: #d25c1a; font-weight: bold; margin-bottom: 8px; font-size: 13px;">Date: ${e.date}</div>
-                ${e.problem ? `<div style="margin-bottom: 8px;"><strong style="color: #666;">Problem:</strong><br><div style="margin-top: 3px; color: #222; text-align: justify;">${safeProblem}</div></div>` : ''}
-                ${e.solution ? `<div style="margin-bottom: 8px;"><strong style="color: #666;">Solution:</strong><br><div style="margin-top: 3px; color: #222; text-align: justify;">${safeSolution}</div></div>` : ''}
+                <div style="color: #d25c1a; font-weight: bold; margin-bottom: 8px; font-size: 14px;">Date: ${e.date}</div>
+                ${e.problem ? `<div style="margin-bottom: 10px;"><strong style="color: #666;">Problem:</strong><div style="margin-top: 4px; color: #222; text-align: justify;">${safeProblem}</div></div>` : ''}
+                ${e.solution ? `<div style="margin-bottom: 10px;"><strong style="color: #666;">Solution:</strong><div style="margin-top: 4px; color: #222; text-align: justify;">${safeSolution}</div></div>` : ''}
                 
-                ${(e.slr > 0 || e.dhr > 0) ? `<div style="color: #d25c1a; font-weight: bold; font-size: 12px; margin-top: 10px;">
+                ${(e.slr > 0 || e.dhr > 0) ? `<div style="color: #d25c1a; font-weight: bold; font-size: 13px; margin-top: 12px;">
                     ${e.slr > 0 ? `SLR: ${e.slr}` : ''} ${e.slr > 0 && e.dhr > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;' : ''} ${e.dhr > 0 ? `DHR: ${e.dhr}` : ''}
                 </div>` : ''}
                 ${divider}
@@ -664,14 +634,12 @@ async function prepareMainPDF() {
 window.generatePDF = async () => {
     const data = await prepareMainPDF();
     if(!data) return;
-    topToast.fire({ text: 'Generating PDF...' });
     await executeNativePDF(data.html, data.fileName, 'save');
 };
 
 window.shareMainPDF = async () => {
     const data = await prepareMainPDF();
     if(!data) return;
-    topToast.fire({ text: 'Preparing file for sharing...' });
     await executeNativePDF(data.html, data.fileName, 'share');
 };
 
@@ -690,7 +658,7 @@ async function preparePrescriptionPDF() {
     }
 
     let htmlContent = `
-        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: black; line-height: 1.5; padding-top: 5px;">
+        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; color: black; line-height: 1.6; padding-top: 5px;">
             <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px;">
                 <span>Name: ${name}</span>
                 <span>Star: ${star || ''}</span>
@@ -705,7 +673,7 @@ async function preparePrescriptionPDF() {
 
         let rasiUdhaya = '';
         if(e.rasi || e.udhaya) {
-            rasiUdhaya = `<div style="color: #666; font-weight: bold; font-size: 12px; margin-bottom: 8px;">`;
+            rasiUdhaya = `<div style="color: #666; font-weight: bold; font-size: 13px; margin-bottom: 10px;">`;
             if(e.rasi) rasiUdhaya += `Rasi: ${e.rasi}`;
             if(e.rasi && e.udhaya) rasiUdhaya += ` | `;
             if(e.udhaya) rasiUdhaya += `Udhaya: ${e.udhaya}`;
@@ -714,11 +682,11 @@ async function preparePrescriptionPDF() {
 
         htmlContent += `
             <div style="page-break-inside: avoid; margin-bottom: 15px;">
-                <div style="color: #d25c1a; font-weight: bold; margin-bottom: 6px; font-size: 13px;">Date: ${e.date}</div>
+                <div style="color: #d25c1a; font-weight: bold; margin-bottom: 8px; font-size: 14px;">Date: ${e.date}</div>
                 ${rasiUdhaya}
                 <div style="margin-bottom: 8px; color: #222; text-align: justify;">${safeNotes}</div>
                 
-                ${(e.slr > 0 || e.dhr > 0) ? `<div style="color: #d25c1a; font-weight: bold; font-size: 12px; margin-top: 10px;">
+                ${(e.slr > 0 || e.dhr > 0) ? `<div style="color: #d25c1a; font-weight: bold; font-size: 13px; margin-top: 12px;">
                     ${e.slr > 0 ? `SLR: ${e.slr}` : ''} ${e.slr > 0 && e.dhr > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;' : ''} ${e.dhr > 0 ? `DHR: ${e.dhr}` : ''}
                 </div>` : ''}
                 ${divider}
@@ -733,14 +701,12 @@ async function preparePrescriptionPDF() {
 window.generatePrescriptionPDF = async () => {
     const data = await preparePrescriptionPDF();
     if(!data) return;
-    topToast.fire({ text: 'Generating PDF...' });
     await executeNativePDF(data.html, data.fileName, 'save');
 };
 
 window.sharePrescriptionPDF = async () => {
     const data = await preparePrescriptionPDF();
     if(!data) return;
-    topToast.fire({ text: 'Preparing file for sharing...' });
     await executeNativePDF(data.html, data.fileName, 'share');
 };
 
