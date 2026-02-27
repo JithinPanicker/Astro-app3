@@ -494,30 +494,51 @@ async function getEntriesToPrint(clientId, isPresc) {
     return entries;
 }
 
-// --- HTML2PDF ENGINE ---
+// --- FIX FOR BLANK PDF (CLONE ENGINE) ---
 async function executePDF(elementId, fileName, action) {
-    const element = document.getElementById(elementId);
+    const originalElement = document.getElementById(elementId);
     
-    // Temporarily bring the element onto screen so html2pdf can calculate its DOM accurately 
-    // without CSS cutting it off improperly.
-    element.style.left = '0px';
-    element.style.zIndex = '-9999';
+    // Create a clone to manipulate safely without touching the live DOM
+    const clone = originalElement.cloneNode(true);
+    
+    // Fix styles on the clone so it renders properly in html2canvas
+    clone.style.position = 'relative';
+    clone.style.left = '0';
+    clone.style.top = '0';
+    clone.style.width = '800px';
+    clone.style.height = 'auto';
+    clone.style.display = 'block';
+    
+    // Create a hidden wrapper safely positioned in the background
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'absolute';
+    wrapper.style.top = '0';
+    wrapper.style.left = '0';
+    wrapper.style.width = '800px';
+    wrapper.style.zIndex = '-9999'; // Securely hide it behind the app
+    wrapper.style.background = 'white';
+    
+    wrapper.appendChild(clone);
+    document.body.appendChild(wrapper);
 
     const opt = {
-        margin:       [10, 10, 15, 10], // Top, Left, Bottom, Right
+        margin:       10, // Top/Left/Bottom/Right padding in the PDF
         filename:     fileName,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800, scrollY: 0 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak:    { mode: ['css', 'legacy'] }
     };
 
     try {
+        // Yield to browser rendering engine momentarily to apply CSS to the newly attached clone
+        await new Promise(r => setTimeout(r, 100));
+
         if (action === 'save') {
-            await html2pdf().set(opt).from(element).save();
+            await html2pdf().set(opt).from(clone).save();
             topToast.fire({ text: 'Downloaded successfully!' });
         } else if (action === 'share') {
-            const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+            const pdfBlob = await html2pdf().set(opt).from(clone).output('blob');
             const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({ files: [file], title: 'Consultation Report', text: 'Here is your document from Pratnya Astro.' });
@@ -530,7 +551,8 @@ async function executePDF(elementId, fileName, action) {
         console.error(e);
         topToast.fire({ text: 'Failed to generate PDF', background: '#E0245E' });
     } finally {
-        element.style.left = '-9999px'; // Hide it again
+        // Always clean up the wrapper after printing
+        document.body.removeChild(wrapper);
     }
 }
 
@@ -564,17 +586,19 @@ async function prepareMainPDF() {
         topToast.fire({ text: 'No data to print!', background: '#E0245E' }); return null;
     }
 
-    entries.forEach(e => {
+    entries.forEach((e, index) => {
         let counts = '';
         if (e.slr > 0) counts += `<span style="margin-right: 15px;"><strong>SLR:</strong> ${e.slr}</span>`;
         if (e.dhr > 0) counts += `<span><strong>DHR:</strong> ${e.dhr}</span>`;
         
-        // Wrap lines in a div that resists page breaking inside
         let safeProblem = (e.problem || '-').split('\n').map(line => `<div style="min-height: 20px;">${line}</div>`).join('');
         let safeSolution = (e.solution || '-').split('\n').map(line => `<div style="min-height: 20px;">${line}</div>`).join('');
 
+        // Remove dividing dashed line at the end by tracking index
+        let divider = (index < entries.length - 1) ? `<div style="border-bottom: 1px dashed #ccc; margin-top: 20px; margin-bottom: 15px;"></div>` : ``;
+
         htmlContent += `
-        <div style="page-break-inside: avoid; margin-bottom: 25px; font-family: 'Arial', sans-serif;">
+        <div style="page-break-inside: avoid; font-family: 'Arial', sans-serif;">
             <div style="font-weight: bold; color: #1976D2; font-size: 15px; margin-bottom: 12px;">Date: ${e.date}</div>
             <div style="margin-bottom: 15px;">
                 <strong style="color: #6c757d; font-weight: 600; font-size: 15px;">Problem:</strong>
@@ -585,6 +609,7 @@ async function prepareMainPDF() {
                 <div style="color: #222; margin-top: 4px;">${safeSolution}</div>
             </div>
             ${counts ? `<div style="color: #E65100; font-size: 13px; font-weight: bold; margin-top: 8px;">${counts}</div>` : ''}
+            ${divider}
         </div>`;
     });
     
@@ -628,15 +653,17 @@ async function preparePrescriptionPDF() {
         </div>
     `;
 
-    entries.forEach(e => {
+    entries.forEach((e, index) => {
         let counts = '';
         if (e.slr > 0) counts += `<span style="margin-right: 15px;"><strong>SLR:</strong> ${e.slr}</span>`;
         if (e.dhr > 0) counts += `<span><strong>DHR:</strong> ${e.dhr}</span>`;
         
         let safeNotes = (e.notes || '-').split('\n').map(line => `<div style="min-height: 20px;">${line}</div>`).join('');
 
+        let divider = (index < entries.length - 1) ? `<div style="border-bottom: 1px dashed #ccc; margin-top: 20px; margin-bottom: 15px;"></div>` : ``;
+
         htmlContent += `
-        <div style="page-break-inside: avoid; margin-bottom: 25px; font-family: 'Georgia', serif; font-size: 15px; color: black;">
+        <div style="page-break-inside: avoid; font-family: 'Georgia', serif; font-size: 15px; color: black;">
             <div style="font-weight: bold; color: #E65100; font-size: 15px; margin-bottom: 12px;">Date: ${e.date}</div>
             <div style="font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 12px;">
                 <strong style="color: #6c757d; font-weight: 600;">Rasi:</strong> ${e.rasi || '-'} | 
@@ -644,6 +671,7 @@ async function preparePrescriptionPDF() {
             </div>
             <div style="margin-bottom: 12px; line-height: 1.6;">${safeNotes}</div>
             ${counts ? `<div style="color: #E65100; font-size: 13px; font-weight: bold; font-family: 'Arial', sans-serif; margin-top: 8px;">${counts}</div>` : ''}
+            ${divider}
         </div>`;
     });
 
