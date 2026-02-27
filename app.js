@@ -495,26 +495,28 @@ async function getEntriesToPrint(clientId, isPresc) {
 }
 
 
-// --- NATIVE PDF GENERATOR ENGINE (PERFECT PAGE BREAKS + HEADERS/FOOTERS) ---
+// --- NATIVE PDF GENERATOR ENGINE (PERFECT PAGE BREAKS + FIXED HEADERS/FOOTERS) ---
 async function executeNativePDF(htmlContent, fileName, action) {
+    
+    // Create a strict 800px wrapper in the background so text NEVER shrinks or disappears
     const wrapper = document.createElement('div');
     wrapper.innerHTML = htmlContent;
-    
-    // Fluid block to ensure it scales perfectly on any device width without cutting off right edge
-    wrapper.style.padding = '0';
-    wrapper.style.width = '100%'; 
     wrapper.style.position = 'absolute';
+    wrapper.style.left = '-9999px'; 
     wrapper.style.top = '0';
-    wrapper.style.left = '0';
-    wrapper.style.zIndex = '-9999';
+    wrapper.style.width = '800px'; 
+    wrapper.style.backgroundColor = 'white';
+    wrapper.style.color = 'black';
+    wrapper.style.padding = '0 55px'; // Mimics the 15mm left/right margin perfectly
     document.body.appendChild(wrapper);
 
-    // Margins [Top, Left, Bottom, Right] in millimeters. 
-    // Top 38mm leaves perfect room for header. Bottom 25mm leaves room for footer.
+    // CRITICAL: Give the browser 500ms to calculate Malayalam fonts and layout
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     const opt = {
-        margin:       [38, 15, 25, 15], 
+        margin:       [46, 0, 30, 0], // Top, Left, Bottom, Right spaces specifically left for Header & Footer
         filename:     fileName,
-        image:        { type: 'jpeg', quality: 0.98 },
+        image:        { type: 'jpeg', quality: 1.0 },
         html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak:    { mode: ['css', 'legacy'] }
@@ -523,66 +525,70 @@ async function executeNativePDF(htmlContent, fileName, action) {
     try {
         const pdfWorker = html2pdf().set(opt).from(wrapper).toPdf();
 
-        // Overlay Professional Static Header/Footer on EVERY page generated
         await pdfWorker.get('pdf').then((pdf) => {
             const totalPages = pdf.internal.getNumberOfPages();
             
+            // Loop through every page generated to stamp the Header and Footer securely
             for (let i = 1; i <= totalPages; i++) {
                 pdf.setPage(i);
                 
                 // --- HEADER OVERLAY ---
-                pdf.setTextColor(46, 90, 75); // Dark Teal Color matched to image
+                pdf.setTextColor(49, 140, 75); // Professional Match for Green Color
 
                 // Left Header
+                pdf.setFont("helvetica", "italic");
                 pdf.setFontSize(10);
-                pdf.setFont("helvetica", "normal");
-                pdf.text("Astrologer", 15, 15);
+                pdf.text("Astrologer", 15, 18);
 
-                pdf.setFontSize(18);
                 pdf.setFont("helvetica", "bold");
-                pdf.text("C.K. Saji Panicker", 15, 21);
+                pdf.setFontSize(18);
+                pdf.text("C.K. Saji Panicker", 15, 25);
 
-                pdf.setFontSize(10);
-                pdf.setFont("helvetica", "normal");
-                pdf.setTextColor(80, 80, 80);
-                pdf.text("Chathangottupuram, Kalarikkal", 15, 26);
-                pdf.text("Wandoor-Malappuram", 15, 30);
-                pdf.text("Kerala : 679 328", 15, 34);
+                pdf.setFont("helvetica", "italic");
+                pdf.setFontSize(9);
+                pdf.text("Chathangottupuram, Kalarikkal", 15, 30);
+                pdf.text("Wandoor-Malappuram", 15, 34);
+                pdf.text("Kerala : 679 328", 15, 38);
 
                 // Right Header
-                pdf.setTextColor(80, 80, 80);
-                pdf.text("Office:", 195, 15, { align: "right" });
-                pdf.text("Manjeri Road, Cherucode", 195, 19, { align: "right" });
-
-                pdf.setFontSize(12);
-                pdf.setFont("helvetica", "bold");
-                pdf.setTextColor(46, 90, 75); 
-                pdf.text("Ph: 9495 141 880", 195, 25, { align: "right" });
-                pdf.text("Booking : 7034 600 880", 195, 30, { align: "right" });
-
+                pdf.setFont("helvetica", "italic");
                 pdf.setFontSize(10);
-                pdf.setFont("helvetica", "normal");
-                pdf.text("www.pratnya.com", 195, 34, { align: "right" });
+                pdf.text("Consultation", 195, 18, { align: "right" });
 
-                // Divider Line
-                pdf.setDrawColor(46, 90, 75);
+                pdf.setFont("helvetica", "normal");
+                pdf.setFontSize(9);
+                pdf.text("Online: ", 165, 25);
+                pdf.setFont("helvetica", "bold");
+                pdf.setFontSize(10);
+                pdf.text("9207 773 880", 195, 25, { align: "right" });
+
+                pdf.setFont("helvetica", "normal");
+                pdf.setFontSize(9);
+                pdf.text("Office: ", 166.5, 29);
+                pdf.setFont("helvetica", "bold");
+                pdf.setFontSize(10);
+                pdf.text("7034 600 880", 195, 29, { align: "right" });
+
+                // Header Bottom Line
+                pdf.setDrawColor(49, 140, 75);
                 pdf.setLineWidth(0.4);
-                pdf.line(15, 36.5, 195, 36.5);
+                pdf.line(15, 42, 195, 42);
 
                 // --- FOOTER OVERLAY ---
-                pdf.setDrawColor(46, 90, 75);
+                // Footer Top Line
+                pdf.setDrawColor(49, 140, 75);
                 pdf.setLineWidth(0.4);
-                pdf.line(15, 278, 195, 278);
+                pdf.line(15, 275, 195, 275);
 
+                // Footer Text
+                pdf.setTextColor(49, 140, 75);
                 pdf.setFont("times", "italic");
                 pdf.setFontSize(16);
-                pdf.setTextColor(46, 90, 75);
-                pdf.text("Fix your appointment through the call", 105, 285, { align: "center" });
+                pdf.text("Fix your appointment through the call", 105, 283, { align: "center" });
 
-                pdf.setFont("helvetica", "normal");
+                pdf.setFont("helvetica", "bold");
                 pdf.setFontSize(10);
-                pdf.setTextColor(80, 80, 80);
-                pdf.text("www.pratnya.com", 105, 290, { align: "center" });
+                pdf.text("www.pratnya.in", 105, 288, { align: "center" });
             }
         });
 
@@ -600,10 +606,11 @@ async function executeNativePDF(htmlContent, fileName, action) {
             }
         }
     } catch(e) {
-        console.error(e);
+        console.error("PDF Generation Error: ", e);
         topToast.fire({ text: 'Failed to generate PDF', background: '#E0245E' });
     } finally {
-        document.body.removeChild(wrapper); // Cleanup
+        // Always clean up DOM
+        document.body.removeChild(wrapper);
     }
 }
 
@@ -622,33 +629,29 @@ async function prepareMainPDF() {
     }
 
     let htmlContent = `
-        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; line-height: 1.6;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 25px; font-weight: bold; border-bottom: 2px solid #ddd; padding-bottom: 12px; font-size: 15px;">
+        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: black; line-height: 1.5; padding-top: 5px;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px;">
                 <span>Name: ${name}</span>
-                <span>Star: ${star || '-'}</span>
-                <span>Place: ${place || '-'}</span>
+                <span>Star: ${star || ''}</span>
             </div>
+            ${place ? `<div style="font-weight: bold; margin-bottom: 12px;">Place: ${place}</div>` : `<div style="margin-bottom: 12px;"></div>`}
+            <div style="border-bottom: 1px solid #318c4b; margin-bottom: 25px;"></div>
     `;
 
     entries.forEach((e, index) => {
-        let safeProblem = (e.problem || '-').split('\n').map(line => `<div style="min-height: 20px;">${line}</div>`).join('');
-        let safeSolution = (e.solution || '-').split('\n').map(line => `<div style="min-height: 20px;">${line}</div>`).join('');
-        let divider = (index < entries.length - 1) ? `<hr style="border: 0; border-top: 1px dashed #ccc; margin-top: 20px; margin-bottom: 20px;">` : ``;
+        let safeProblem = (e.problem || '').split('\n').join('<br>');
+        let safeSolution = (e.solution || '').split('\n').join('<br>');
+        let divider = (index < entries.length - 1) ? `<div style="border-bottom: 1px dashed #ccc; margin-top: 20px; margin-bottom: 25px;"></div>` : ``;
 
         htmlContent += `
-            <div style="margin-bottom: 20px;">
-                <div style="color: #E65100; font-weight: bold; margin-bottom: 8px; font-size: 15px;">Date: ${e.date}</div>
-                <div style="margin-bottom: 12px;">
-                    <span style="color: #666; font-weight: bold;">Problem:</span><br>
-                    <div style="color: #222; margin-top: 4px;">${safeProblem}</div>
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <span style="color: #666; font-weight: bold;">Solution:</span><br>
-                    <div style="color: #222; margin-top: 4px;">${safeSolution}</div>
-                </div>
-                <div style="color: #E65100; font-weight: bold; font-size: 13px; margin-top: 12px;">
-                    SLR: ${e.slr} &nbsp;&nbsp;&nbsp;&nbsp; DHR: ${e.dhr}
-                </div>
+            <div style="page-break-inside: avoid; margin-bottom: 15px;">
+                <div style="color: #d25c1a; font-weight: bold; margin-bottom: 8px; font-size: 13px;">Date: ${e.date}</div>
+                ${e.problem ? `<div style="margin-bottom: 8px;"><strong style="color: #666;">Problem:</strong><br><div style="margin-top: 3px; color: #222; text-align: justify;">${safeProblem}</div></div>` : ''}
+                ${e.solution ? `<div style="margin-bottom: 8px;"><strong style="color: #666;">Solution:</strong><br><div style="margin-top: 3px; color: #222; text-align: justify;">${safeSolution}</div></div>` : ''}
+                
+                ${(e.slr > 0 || e.dhr > 0) ? `<div style="color: #d25c1a; font-weight: bold; font-size: 12px; margin-top: 10px;">
+                    ${e.slr > 0 ? `SLR: ${e.slr}` : ''} ${e.slr > 0 && e.dhr > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;' : ''} ${e.dhr > 0 ? `DHR: ${e.dhr}` : ''}
+                </div>` : ''}
                 ${divider}
             </div>
         `;
@@ -687,30 +690,37 @@ async function preparePrescriptionPDF() {
     }
 
     let htmlContent = `
-        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; line-height: 1.6;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 25px; font-weight: bold; border-bottom: 2px solid #ddd; padding-bottom: 12px; font-size: 15px;">
+        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: black; line-height: 1.5; padding-top: 5px;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px;">
                 <span>Name: ${name}</span>
-                <span>Star: ${star || '-'}</span>
-                <span>Place: ${place || '-'}</span>
+                <span>Star: ${star || ''}</span>
             </div>
+            ${place ? `<div style="font-weight: bold; margin-bottom: 12px;">Place: ${place}</div>` : `<div style="margin-bottom: 12px;"></div>`}
+            <div style="border-bottom: 1px solid #318c4b; margin-bottom: 25px;"></div>
     `;
 
     entries.forEach((e, index) => {
-        let safeNotes = (e.notes || '-').split('\n').map(line => `<div style="min-height: 20px;">${line}</div>`).join('');
-        let divider = (index < entries.length - 1) ? `<hr style="border: 0; border-top: 1px dashed #ccc; margin-top: 20px; margin-bottom: 20px;">` : ``;
+        let safeNotes = (e.notes || '').split('\n').join('<br>');
+        let divider = (index < entries.length - 1) ? `<div style="border-bottom: 1px dashed #ccc; margin-top: 20px; margin-bottom: 25px;"></div>` : ``;
+
+        let rasiUdhaya = '';
+        if(e.rasi || e.udhaya) {
+            rasiUdhaya = `<div style="color: #666; font-weight: bold; font-size: 12px; margin-bottom: 8px;">`;
+            if(e.rasi) rasiUdhaya += `Rasi: ${e.rasi}`;
+            if(e.rasi && e.udhaya) rasiUdhaya += ` | `;
+            if(e.udhaya) rasiUdhaya += `Udhaya: ${e.udhaya}`;
+            rasiUdhaya += `</div>`;
+        }
 
         htmlContent += `
-            <div style="margin-bottom: 20px;">
-                <div style="color: #E65100; font-weight: bold; margin-bottom: 6px; font-size: 15px;">Date: ${e.date}</div>
-                <div style="color: #666; font-size: 13px; margin-bottom: 12px;">
-                    <strong>Rasi:</strong> ${e.rasi || '-'} &nbsp;|&nbsp; <strong>Udhaya:</strong> ${e.udhaya || '-'}
-                </div>
-                <div style="margin-bottom: 12px; color: #222;">
-                    ${safeNotes}
-                </div>
-                <div style="color: #E65100; font-weight: bold; font-size: 13px; margin-top: 12px;">
-                    SLR: ${e.slr} &nbsp;&nbsp;&nbsp;&nbsp; DHR: ${e.dhr}
-                </div>
+            <div style="page-break-inside: avoid; margin-bottom: 15px;">
+                <div style="color: #d25c1a; font-weight: bold; margin-bottom: 6px; font-size: 13px;">Date: ${e.date}</div>
+                ${rasiUdhaya}
+                <div style="margin-bottom: 8px; color: #222; text-align: justify;">${safeNotes}</div>
+                
+                ${(e.slr > 0 || e.dhr > 0) ? `<div style="color: #d25c1a; font-weight: bold; font-size: 12px; margin-top: 10px;">
+                    ${e.slr > 0 ? `SLR: ${e.slr}` : ''} ${e.slr > 0 && e.dhr > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;' : ''} ${e.dhr > 0 ? `DHR: ${e.dhr}` : ''}
+                </div>` : ''}
                 ${divider}
             </div>
         `;
