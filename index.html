@@ -117,12 +117,34 @@
                             </div>
                             <button type="button" onclick="transferToPrescription()" class="btn-ghost">Open as Prescription</button>
                         </div>
-                        <textarea id="currentSolution" style="flex: 1; min-height: 200px; border: 1px solid #ddd; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5; resize: vertical;" placeholder="Write solution here..."></textarea>
+                        <textarea id="currentSolution" style="min-height: 150px; border: 1px solid #ddd; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5; resize: vertical;" placeholder="Write solution here..."></textarea>
+                        
+                        <div style="display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap;">
+                            <div class="counter-group">
+                                <label style="font-weight: bold; color: #E65100; font-size: 13px;">SLR:</label>
+                                <button type="button" onclick="adjCount('slrCount', -1)">-</button>
+                                <input type="number" id="slrCount" value="0" readonly>
+                                <button type="button" onclick="adjCount('slrCount', 1)">+</button>
+                            </div>
+                            <div class="counter-group">
+                                <label style="font-weight: bold; color: #E65100; font-size: 13px;">DHR:</label>
+                                <button type="button" onclick="adjCount('dhrCount', -1)">-</button>
+                                <input type="number" id="dhrCount" value="0" readonly>
+                                <button type="button" onclick="adjCount('dhrCount', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="print-options">
+                        <strong style="color: #333;"><i class="fas fa-print"></i> Export Options:</strong>
+                        <label><input type="radio" name="mainExport" value="current" checked> Current Only</label>
+                        <label><input type="radio" name="mainExport" value="all"> All Previous History</label>
                     </div>
 
                     <div class="form-actions">
                         <button type="submit" style="background-color: #2E7D32; color: white; font-weight: bold;">Save</button>
                         <button type="button" onclick="generatePDF()" style="background-color: #1976D2; color: white; font-weight: bold;">PDF</button>
+                        <button type="button" onclick="shareMainPDF()" style="background-color: #25D366; color: white; font-weight: bold;"><i class="fab fa-whatsapp"></i> Share</button>
                         <button type="button" onclick="deleteCurrentClient()" style="background-color: #D32F2F; color: white; font-weight: bold;">Delete</button>
                     </div>
                 </form>
@@ -160,7 +182,28 @@
                             <span onclick="clearText('prescBody')">Clear</span>
                         </div>
                     </div>
-                    <textarea id="prescBody" style="flex: 1; min-height: 250px; border: 1px solid #ccc; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5;" placeholder="Write full prescription here..."></textarea>
+                    <textarea id="prescBody" style="min-height: 200px; border: 1px solid #ccc; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5;" placeholder="Write full prescription here..."></textarea>
+
+                    <div style="display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap;">
+                        <div class="counter-group">
+                            <label style="font-weight: bold; color: #E65100; font-size: 13px;">SLR:</label>
+                            <button type="button" onclick="adjCount('prescSlrCount', -1)">-</button>
+                            <input type="number" id="prescSlrCount" value="0" readonly>
+                            <button type="button" onclick="adjCount('prescSlrCount', 1)">+</button>
+                        </div>
+                        <div class="counter-group">
+                            <label style="font-weight: bold; color: #E65100; font-size: 13px;">DHR:</label>
+                            <button type="button" onclick="adjCount('prescDhrCount', -1)">-</button>
+                            <input type="number" id="prescDhrCount" value="0" readonly>
+                            <button type="button" onclick="adjCount('prescDhrCount', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="print-options" style="background: #fffdf9;">
+                        <strong style="color: #E65100;"><i class="fas fa-print"></i> Export Options:</strong>
+                        <label><input type="radio" name="prescExport" value="current" checked> Current Only</label>
+                        <label><input type="radio" name="prescExport" value="all"> All Previous History</label>
+                    </div>
 
                     <div class="form-actions" style="background: #FFF3E0;">
                         <button type="button" onclick="savePrescription()" style="background-color: #4CAF50; color: white; font-weight: bold;">Save</button>
@@ -219,17 +262,7 @@
                 <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Office: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">7034 600 880</strong></p>
             </div>
         </div>
-        <div style="position: relative; z-index: 1; font-family: 'Georgia', serif; color: black;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 30px;">
-                <div><strong>Name:</strong> <span id="pdfPrescName"></span></div>
-                <div><strong>Date:</strong> <span id="pdfPrescDate"></span></div>
-                <div><strong>Star:</strong> <span id="pdfPrescStar"></span></div>
-                <div><strong>Place:</strong> <span id="pdfPrescPlace"></span></div>
-                <div><strong>Rasi:</strong> <span id="pdfPrescRasi"></span></div>
-                <div><strong>Udhaya Rasi:</strong> <span id="pdfPrescUdhaya"></span></div>
-            </div>
-            <div id="pdfPrescBody" style="font-size: 16px; line-height: 1.8; min-height: 400px; white-space: pre-wrap;"></div>
-        </div>
+        <div id="pdfPrescContent" style="position: relative; z-index: 1;"></div>
         <div class="letterhead-footer">
             <span class="footer-text">Fix your appointment through the call</span><br>
             <span style="font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #2E7D32; font-weight: bold;">www.pratnya.in</span>
@@ -238,7 +271,7 @@
 
     <script src="app.js"></script>
     <script>
-        const LATEST_CHANGES = "Fixed PDF Template Font Colors and Italics";
+        const LATEST_CHANGES = "Added Print Options, WhatsApp Share, SLR/DHR Counters, Descriptive PDFs";
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(registration => {
                 if (registration.waiting) { newWorker = registration.waiting; showNotificationIcon(); }
