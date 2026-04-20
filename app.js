@@ -26,7 +26,7 @@ const topToast = Swal.mixin({
     position: 'top',
     showConfirmButton: false,
     timer: 2500,
-    background: '#1DA1F2', // Twitter Blue
+    background: '#1DA1F2',
     color: '#fff',
     customClass: { popup: 'x-toast' }
 });
@@ -36,10 +36,10 @@ const warnToast = Swal.mixin({
     position: 'top',
     showConfirmButton: true,
     showCancelButton: true,
-    confirmButtonColor: '#E0245E', // Twitter Red
-    cancelButtonColor: '#657786',  // Twitter Gray
+    confirmButtonColor: '#E0245E',
+    cancelButtonColor: '#657786',
     confirmButtonText: 'Confirm',
-    background: '#15202B', // Twitter Dark
+    background: '#15202B',
     color: '#fff',
     customClass: { popup: 'x-toast-confirm' }
 });
@@ -402,7 +402,6 @@ async function updateList() {
         const hasPresc = client.prescriptions && client.prescriptions.length > 0;
         const noHistory = !hasConsults && !hasPresc;
 
-        // Generate WA button with Font Awesome icon if phone exists
         let waBtn = '';
         if (client.phone) {
             let waPhone = client.phone.replace(/\D/g, '');
@@ -435,7 +434,55 @@ async function updateList() {
     document.getElementById('clientList').innerHTML = html;
 }
 
-// Helper to fill the PDF template
+// --- LETTERHEAD SELECTION DIALOG ---
+function askLetterheadChoice() {
+    return Swal.fire({
+        title: 'Select Letterhead',
+        text: 'Choose the header style for the PDF',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'CK Saji Panicker',
+        cancelButtonText: 'Pratnya (Logo)',
+        reverseButtons: true,
+        focusConfirm: false,
+        focusCancel: false,
+        allowOutsideClick: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            return 'ck';      // Default letterhead
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            return 'pratnya';  // Logo letterhead
+        }
+        return null; // dismissed by esc/backdrop
+    });
+}
+
+// Helper to temporarily replace header with Pratnya logo style
+function applyPratnyaHeader(templateElement) {
+    const header = templateElement.querySelector('.letterhead-header');
+    if (!header) return () => {}; // no-op restore
+
+    // Save original HTML
+    const originalHTML = header.innerHTML;
+
+    // Replace with logo-centered header
+    header.innerHTML = `
+        <div style="text-align: center; width: 100%; padding: 10px 0;">
+            <img src="logo.png" alt="Pratnya Astro" style="height: 80px; width: auto;">
+        </div>
+    `;
+    header.style.borderBottom = '2px solid #2E7D32';
+    header.style.paddingBottom = '10px';
+
+    // Return restore function
+    return () => {
+        header.innerHTML = originalHTML;
+        header.style.borderBottom = '';
+        header.style.paddingBottom = '';
+    };
+}
+
+// --- PRESCRIPTION PDF GENERATION (with letterhead choice) ---
 function fillPrescriptionTemplate() {
     const name = document.getElementById('prescName').value || "";
     const star = document.getElementById('prescStar').value || "";
@@ -457,14 +504,26 @@ function fillPrescriptionTemplate() {
 }
 
 window.generatePrescriptionPDF = async () => {
-    if (!fillPrescriptionTemplate()) { topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); return; }
-    const name = document.getElementById('prescName').value || "Client";
+    if (!fillPrescriptionTemplate()) {
+        topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
+        return;
+    }
 
+    const choice = await askLetterheadChoice();
+    if (!choice) return; // cancelled
+
+    const template = document.getElementById('prescriptionTemplate');
+    let restoreHeader = () => {};
+    if (choice === 'pratnya') {
+        restoreHeader = applyPratnyaHeader(template);
+    }
+
+    const name = document.getElementById('prescName').value || "Client";
     topToast.fire({ text: 'Generating PDF...' });
+
     try {
         const { jsPDF } = window.jspdf;
-        const element = document.getElementById('prescriptionTemplate');
-        const canvas = await html2canvas(element, { scale: 2 });
+        const canvas = await html2canvas(template, { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const width = pdf.internal.pageSize.getWidth();
@@ -473,19 +532,36 @@ window.generatePrescriptionPDF = async () => {
         pdf.addImage(imgData, 'PNG', 0, 0, width, height);
         pdf.save(`${name}_Prescription.pdf`);
         topToast.fire({ text: 'Downloaded successfully!' });
-    } catch(e) { console.error(e); }
+    } catch(e) {
+        console.error(e);
+        topToast.fire({ text: 'PDF generation failed', background: '#E0245E' });
+    } finally {
+        restoreHeader();
+    }
 };
 
-// --- SHARE WA BUTTON LOGIC ---
+// --- SHARE WA BUTTON LOGIC (with letterhead choice) ---
 window.sharePrescriptionPDF = async () => {
-    if (!fillPrescriptionTemplate()) { topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); return; }
-    const name = document.getElementById('prescName').value || "Client";
+    if (!fillPrescriptionTemplate()) {
+        topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
+        return;
+    }
 
+    const choice = await askLetterheadChoice();
+    if (!choice) return;
+
+    const template = document.getElementById('prescriptionTemplate');
+    let restoreHeader = () => {};
+    if (choice === 'pratnya') {
+        restoreHeader = applyPratnyaHeader(template);
+    }
+
+    const name = document.getElementById('prescName').value || "Client";
     topToast.fire({ text: 'Preparing file for sharing...' });
+
     try {
         const { jsPDF } = window.jspdf;
-        const element = document.getElementById('prescriptionTemplate');
-        const canvas = await html2canvas(element, { scale: 2 });
+        const canvas = await html2canvas(template, { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const width = pdf.internal.pageSize.getWidth();
@@ -493,7 +569,6 @@ window.sharePrescriptionPDF = async () => {
         
         pdf.addImage(imgData, 'PNG', 0, 0, width, height);
         
-        // Convert to a File object for sharing
         const pdfBlob = pdf.output('blob');
         const file = new File([pdfBlob], `${name}_Prescription.pdf`, { type: 'application/pdf' });
 
@@ -505,7 +580,6 @@ window.sharePrescriptionPDF = async () => {
             });
             topToast.fire({ text: 'Opened share menu!' });
         } else {
-            // Fallback for desktop browsers that don't support file sharing
             Swal.fire({
                 title: 'Unsupported Browser',
                 text: 'Your device/browser does not support direct file sharing. Please click "PDF" to download it, then attach it in WhatsApp manually.',
@@ -515,10 +589,12 @@ window.sharePrescriptionPDF = async () => {
     } catch(e) { 
         console.error(e); 
         topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' }); 
+    } finally {
+        restoreHeader();
     }
 };
 
-
+// --- CLIENT CONSULTATION PDF (with letterhead choice) ---
 window.generatePDF = async () => {
     const name = document.getElementById('name').value;
     const star = document.getElementById('star').value;
@@ -563,24 +639,39 @@ window.generatePDF = async () => {
     htmlContent += `</table>`;
     document.getElementById('pdfContent').innerHTML = htmlContent;
 
+    const choice = await askLetterheadChoice();
+    if (!choice) return;
+
+    const template = document.getElementById('pdfTemplate');
+    let restoreHeader = () => {};
+    if (choice === 'pratnya') {
+        restoreHeader = applyPratnyaHeader(template);
+    }
+
     topToast.fire({ text: 'Generating PDF...' });
+
     try {
         const { jsPDF } = window.jspdf;
+        const canvas = await html2canvas(template, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const width = pdf.internal.pageSize.getWidth();
-
-        const element1 = document.getElementById('pdfTemplate');
-        const canvas1 = await html2canvas(element1, { scale: 2 });
-        const imgData1 = canvas1.toDataURL('image/png');
-        const height1 = (canvas1.height * width) / canvas1.width;
-        pdf.addImage(imgData1, 'PNG', 0, 0, width, height1);
-
+        const height = (canvas.height * width) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
         pdf.save(`${name}_Full_Report.pdf`);
         topToast.fire({ text: 'Downloaded successfully!' });
-    } catch (error) { topToast.fire({ text: 'PDF Failed', background: '#E0245E' }); }
+    } catch (error) {
+        console.error(error);
+        topToast.fire({ text: 'PDF Failed', background: '#E0245E' });
+    } finally {
+        restoreHeader();
+    }
 };
 
+// --- MISC FUNCTIONS ---
 searchInput.oninput = () => updateList();
+
 function calculateAge() {
     const dobInput = document.getElementById('dob').value;
     if (!dobInput) return;
@@ -598,6 +689,7 @@ async function deleteCurrentClient() {
         if (result.isConfirmed) { await db.clients.delete(parseInt(id)); closeForm(); await updateList(); topToast.fire({ text: 'Deleted' }); }
     });
 }
+
 async function deleteCurrentPrescClient() {
     const id = document.getElementById('prescClientId').value;
     if (!id) return;
