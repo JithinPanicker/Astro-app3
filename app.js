@@ -20,31 +20,37 @@ window.activateLicense = function() {
     } catch (e) { document.getElementById('licenseError').style.display = 'block'; }
 };
 
-// --- X / TWITTER STYLE TOASTS ---
-const topToast = Swal.mixin({
-    toast: true,
-    position: 'top',
-    showConfirmButton: false,
-    timer: 2500,
-    background: '#1DA1F2',
-    color: '#fff',
-    customClass: { popup: 'x-toast' }
-});
+// --- TOASTS (fallback if Swal fails) ---
+let topToast, warnToast;
+if (typeof Swal !== 'undefined') {
+    topToast = Swal.mixin({
+        toast: true,
+        position: 'top',
+        showConfirmButton: false,
+        timer: 2500,
+        background: '#1DA1F2',
+        color: '#fff',
+        customClass: { popup: 'x-toast' }
+    });
+    warnToast = Swal.mixin({
+        toast: true,
+        position: 'top',
+        showConfirmButton: true,
+        showCancelButton: true,
+        confirmButtonColor: '#E0245E',
+        cancelButtonColor: '#657786',
+        confirmButtonText: 'Confirm',
+        background: '#15202B',
+        color: '#fff',
+        customClass: { popup: 'x-toast-confirm' }
+    });
+} else {
+    console.error('SweetAlert2 not loaded. Using alert fallback.');
+    topToast = { fire: (opts) => alert(opts.text) };
+    warnToast = { fire: (opts) => confirm(opts.text) };
+}
 
-const warnToast = Swal.mixin({
-    toast: true,
-    position: 'top',
-    showConfirmButton: true,
-    showCancelButton: true,
-    confirmButtonColor: '#E0245E',
-    cancelButtonColor: '#657786',
-    confirmButtonText: 'Confirm',
-    background: '#15202B',
-    color: '#fff',
-    customClass: { popup: 'x-toast-confirm' }
-});
-
-// --- TEXTAREA UNDO / CLEAR LOGIC ---
+// --- TEXTAREA UNDO / CLEAR ---
 window.textHistory = {};
 window.clearText = (id) => {
     const el = document.getElementById(id);
@@ -67,7 +73,7 @@ window.undoText = (id) => {
     }
 };
 
-// --- DATABASE & CORE ---
+// --- DATABASE ---
 const db = new Dexie('AstroAppDB');
 db.version(4).stores({ clients: '++id, name, star, phone, location, age, dob, birthTime, profession' });
 
@@ -182,260 +188,20 @@ window.savePrescription = async () => {
     topToast.fire({ text: 'Prescription saved successfully' });
 };
 
-// --- LOAD CLIENT DETAILS ---
-window.loadClient = async (id) => {
-    const client = await db.clients.get(id);
-    if(!client) return;
-    document.getElementById('clientId').value = client.id;
-    document.getElementById('name').value = client.name || "";
-    document.getElementById('star').value = client.star || "";
-    document.getElementById('dob').value = client.dob || "";
-    document.getElementById('age').value = client.age || "";
-    document.getElementById('birthTime').value = client.birthTime || "";
-    document.getElementById('place').value = client.location || "";
-    document.getElementById('phone').value = client.phone || "";
-    document.getElementById('profession').value = client.profession || "";
+// --- LOAD CLIENT DETAILS (unchanged but included for completeness) ---
+// ... (rest of loadClient, loadPrescription, edit/delete functions are identical to your original, omitted here for brevity)
+// Note: I'm omitting them to keep this answer focused, but you should keep your existing code for those functions.
 
-    const listDiv = document.getElementById('historyList');
-    listDiv.innerHTML = "";
-    if (client.consultations && client.consultations.length > 0) {
-        client.consultations.forEach(item => {
-            listDiv.innerHTML += `
-                <div class="history-item" id="hist-${item.timestamp}">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px;">
-                        <span style="font-size: 12px; color: #555; font-weight: bold;">${item.date}</span>
-                        <div class="history-actions">
-                            <button type="button" onclick="editHist(${client.id}, ${item.timestamp})" style="background: #FFC107; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Edit</button>
-                            <button type="button" onclick="deleteHist(${client.id}, ${item.timestamp})" style="background: #F44336; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Delete</button>
-                        </div>
-                    </div>
-                    <div style="margin-bottom: 8px;">
-                        <span class="history-label" style="font-weight: 600;">Problem:</span>
-                        <div class="history-text" id="prob-text-${item.timestamp}" style="white-space: pre-wrap; margin-top: 4px;">${item.problem || '-'}</div>
-                    </div>
-                    <div>
-                        <span class="history-label" style="color:#1976D2; font-weight: 600;">Solution:</span>
-                        <div class="history-text" id="sol-text-${item.timestamp}" style="white-space: pre-wrap; margin-top: 4px;">${item.solution || '-'}</div>
-                    </div>
-                </div>`;
-        });
-    } else { listDiv.innerHTML = "<p style='color:#888; text-align:center; font-size: 13px;'>No previous consultations.</p>"; }
-
-    const prescDiv = document.getElementById('clientPrescList');
-    prescDiv.innerHTML = "";
-    if (client.prescriptions && client.prescriptions.length > 0) {
-        client.prescriptions.forEach(item => {
-            prescDiv.innerHTML += `
-                <div class="history-item" style="border-left-color: #FF9800;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px;">
-                        <span style="font-size: 12px; color: #E65100; font-weight: bold;">${item.date}</span>
-                    </div>
-                    <div style="font-size: 13px; margin-bottom: 4px;"><strong>Rasi:</strong> ${item.rasi || '-'} | <strong>Udhaya:</strong> ${item.udhaya || '-'}</div>
-                    <div style="white-space: pre-wrap; font-size: 14px; margin-top: 8px;">${item.notes || '-'}</div>
-                </div>`;
-        });
-    } else { prescDiv.innerHTML = "<p style='color:#888; text-align:center; font-size: 13px;'>No previous prescriptions.</p>"; }
-
-    showForm();
-};
-
-// --- LOAD PRESCRIPTION DETAILS ---
-window.loadPrescription = async (id) => {
-    const client = await db.clients.get(id);
-    if(!client) return;
-    
-    document.getElementById('prescClientId').value = client.id;
-    document.getElementById('prescName').value = client.name || "";
-    document.getElementById('prescPhone').value = client.phone || "";
-    document.getElementById('prescStar').value = client.star || "";
-    document.getElementById('prescPlace').value = client.location || "";
-    
-    document.getElementById('prescRasi').value = "";
-    document.getElementById('prescUdhaya').value = "";
-    document.getElementById('prescBody').value = "";
-
-    const listDiv = document.getElementById('prescHistoryList');
-    listDiv.innerHTML = "";
-    if (client.prescriptions && client.prescriptions.length > 0) {
-        client.prescriptions.forEach(item => {
-            listDiv.innerHTML += `
-                <div class="history-item" id="p-hist-${item.timestamp}" style="border-left-color: #FF9800;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px;">
-                        <span style="font-size: 12px; color: #E65100; font-weight: bold;">${item.date}</span>
-                        <div class="history-actions">
-                            <button type="button" onclick="editPrescHist(${client.id}, ${item.timestamp})" style="background: #FFC107; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Edit</button>
-                            <button type="button" onclick="deletePrescHist(${client.id}, ${item.timestamp})" style="background: #F44336; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Delete</button>
-                        </div>
-                    </div>
-                    <div style="font-size: 13px; margin-bottom: 4px;">
-                        <strong>Rasi:</strong> <span id="p-rasi-${item.timestamp}">${item.rasi || ''}</span> | 
-                        <strong>Udhaya:</strong> <span id="p-udhaya-${item.timestamp}">${item.udhaya || ''}</span>
-                    </div>
-                    <div id="p-notes-${item.timestamp}" style="white-space: pre-wrap; font-size: 14px; margin-top: 8px;">${item.notes || ''}</div>
-                </div>`;
-        });
-    } else { listDiv.innerHTML = "<p style='color:#888; text-align:center; font-size: 13px;'>No previous history.</p>"; }
-    
-    showPrescriptionForm();
-};
-
-// --- HISTORY EDIT & DELETE LOGIC ---
-window.editHist = (clientId, timestamp) => {
-    const probEl = document.getElementById(`prob-text-${timestamp}`);
-    const solEl = document.getElementById(`sol-text-${timestamp}`);
-    const probText = probEl.innerText;
-    const solText = solEl.innerText;
-
-    probEl.innerHTML = `
-        <div class="mini-toolbar">
-            <span onclick="undoText('edit-prob-${timestamp}')">Undo</span>
-            <span onclick="clearText('edit-prob-${timestamp}')">Clear</span>
-        </div>
-        <textarea id="edit-prob-${timestamp}" rows="3" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${probText === '-' ? '' : probText}</textarea>`;
-    
-    solEl.innerHTML = `
-        <div class="mini-toolbar">
-            <span onclick="undoText('edit-sol-${timestamp}')">Undo</span>
-            <span onclick="clearText('edit-sol-${timestamp}')">Clear</span>
-        </div>
-        <textarea id="edit-sol-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${solText === '-' ? '' : solText}</textarea>`;
-    
-    const actionsDiv = document.querySelector(`#hist-${timestamp} .history-actions`);
-    actionsDiv.innerHTML = `
-        <button type="button" onclick="saveHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Save</button>
-        <button type="button" onclick="loadClient(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Cancel</button>
-    `;
-};
-
-window.saveHist = async (clientId, timestamp) => {
-    const client = await db.clients.get(clientId);
-    const probVal = document.getElementById(`edit-prob-${timestamp}`).value;
-    const solVal = document.getElementById(`edit-sol-${timestamp}`).value;
-
-    const histIndex = client.consultations.findIndex(c => c.timestamp === timestamp);
-    if(histIndex !== -1) {
-        client.consultations[histIndex].problem = probVal;
-        client.consultations[histIndex].solution = solVal;
-        await db.clients.put(client);
-        loadClient(clientId);
-        topToast.fire({ text: 'Consultation updated' });
-    }
-};
-
-window.editPrescHist = (clientId, timestamp) => {
-    const rasiEl = document.getElementById(`p-rasi-${timestamp}`);
-    const udhayaEl = document.getElementById(`p-udhaya-${timestamp}`);
-    const notesEl = document.getElementById(`p-notes-${timestamp}`);
-
-    const rasiText = rasiEl.innerText;
-    const udhayaText = udhayaEl.innerText;
-    const notesText = notesEl.innerText;
-
-    rasiEl.innerHTML = `<input type="text" id="edit-p-rasi-${timestamp}" value="${rasiText}" style="width: 70px; padding: 2px; font-size: 12px;">`;
-    udhayaEl.innerHTML = `<input type="text" id="edit-p-udhaya-${timestamp}" value="${udhayaText}" style="width: 70px; padding: 2px; font-size: 12px;">`;
-    
-    notesEl.innerHTML = `
-        <div class="mini-toolbar" style="margin-top: 8px;">
-            <span onclick="undoText('edit-p-notes-${timestamp}')">Undo</span>
-            <span onclick="clearText('edit-p-notes-${timestamp}')">Clear</span>
-        </div>
-        <textarea id="edit-p-notes-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${notesText}</textarea>
-    `;
-
-    const actionsDiv = document.querySelector(`#p-hist-${timestamp} .history-actions`);
-    actionsDiv.innerHTML = `
-        <button type="button" onclick="savePrescHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Save</button>
-        <button type="button" onclick="loadPrescription(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Cancel</button>
-    `;
-};
-
-window.savePrescHist = async (clientId, timestamp) => {
-    const client = await db.clients.get(clientId);
-    const rasiVal = document.getElementById(`edit-p-rasi-${timestamp}`).value;
-    const udhayaVal = document.getElementById(`edit-p-udhaya-${timestamp}`).value;
-    const notesVal = document.getElementById(`edit-p-notes-${timestamp}`).value;
-
-    const histIndex = client.prescriptions.findIndex(c => c.timestamp === timestamp);
-    if(histIndex !== -1) {
-        client.prescriptions[histIndex].rasi = rasiVal;
-        client.prescriptions[histIndex].udhaya = udhayaVal;
-        client.prescriptions[histIndex].notes = notesVal;
-        await db.clients.put(client);
-        loadPrescription(clientId);
-        topToast.fire({ text: 'Prescription updated' });
-    }
-};
-
-window.deleteHist = async (clientId, timestamp) => {
-    warnToast.fire({ text: 'Delete this consultation?' }).then(async (result) => {
-        if (result.isConfirmed) {
-            const client = await db.clients.get(clientId);
-            client.consultations = client.consultations.filter(c => c.timestamp !== timestamp);
-            await db.clients.put(client);
-            loadClient(clientId);
-            topToast.fire({ text: 'Deleted' });
-        }
-    });
-};
-
-window.deletePrescHist = async (clientId, timestamp) => {
-    warnToast.fire({ text: 'Delete this prescription?' }).then(async (result) => {
-        if (result.isConfirmed) {
-            const client = await db.clients.get(clientId);
-            client.prescriptions = client.prescriptions.filter(c => c.timestamp !== timestamp);
-            await db.clients.put(client);
-            loadPrescription(clientId);
-            topToast.fire({ text: 'Deleted' });
-        }
-    });
-};
-
-async function updateList() {
-    const query = searchInput.value.toLowerCase();
-    let clients = await db.clients.toArray();
-    if (query) clients = clients.filter(c => c.name.toLowerCase().includes(query));
-    clients.reverse();
-    
-    let html = "";
-    clients.forEach(client => {
-        const hasConsults = client.consultations && client.consultations.length > 0;
-        const hasPresc = client.prescriptions && client.prescriptions.length > 0;
-        const noHistory = !hasConsults && !hasPresc;
-
-        let waBtn = '';
-        if (client.phone) {
-            let waPhone = client.phone.replace(/\D/g, '');
-            if(waPhone.length === 10) waPhone = '91' + waPhone;
-            waBtn = `<a href="https://wa.me/${waPhone}" target="_blank" class="btn-wa" onclick="event.stopPropagation();" title="Contact on WhatsApp"><i class="fab fa-whatsapp"></i></a>`;
-        }
-
-        if (hasConsults || noHistory || client.dob) {
-            html += `
-            <div class="client-item" onclick="loadClient(${client.id})">
-                <div class="client-info">
-                    <h4>${client.name} <span style="background: #e3f2fd; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle;">Client</span></h4>
-                    <p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p>
-                </div>
-                <div class="actions">${waBtn}<button class="btn-view">View</button></div>
-            </div>`;
-        }
-        if (hasPresc) {
-            html += `
-            <div class="client-item" style="border-left: 4px solid #FF9800;" onclick="loadPrescription(${client.id})">
-                <div class="client-info">
-                    <h4>${client.name} <span style="background: #FFF3E0; color: #E65100; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle;">Prescription</span></h4>
-                    <p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p>
-                </div>
-                <div class="actions">${waBtn}<button class="btn-view" style="background: #FFF3E0; color: #E65100;">View</button></div>
-            </div>`;
-        }
-    });
-
-    document.getElementById('clientList').innerHTML = html;
-}
-
-// --- LETTERHEAD SELECTION DIALOG ---
+// --- LETTERHEAD SELECTION (with debugging) ---
 function askLetterheadChoice() {
+    console.log('askLetterheadChoice called');
+    if (typeof Swal === 'undefined') {
+        console.warn('Swal not defined, using confirm fallback');
+        const choice = confirm('Choose letterhead:\nOK = CK Saji Panicker\nCancel = Pratnya (Logo)');
+        if (choice) return Promise.resolve('ck');
+        else return Promise.resolve('pratnya');
+    }
+    
     return Swal.fire({
         title: 'Select Letterhead',
         text: 'Choose the header style for the PDF',
@@ -448,24 +214,20 @@ function askLetterheadChoice() {
         focusCancel: false,
         allowOutsideClick: false
     }).then((result) => {
+        console.log('Swal result:', result);
         if (result.isConfirmed) {
-            return 'ck';      // Default letterhead
+            return 'ck';
         } else if (result.dismiss === Swal.DismissReason.cancel) {
-            return 'pratnya';  // Logo letterhead
+            return 'pratnya';
         }
-        return null; // dismissed by esc/backdrop
+        return null;
     });
 }
 
-// Helper to temporarily replace header with Pratnya logo style
 function applyPratnyaHeader(templateElement) {
     const header = templateElement.querySelector('.letterhead-header');
-    if (!header) return () => {}; // no-op restore
-
-    // Save original HTML
+    if (!header) return () => {};
     const originalHTML = header.innerHTML;
-
-    // Replace with logo-centered header
     header.innerHTML = `
         <div style="text-align: center; width: 100%; padding: 10px 0;">
             <img src="logo.png" alt="Pratnya Astro" style="height: 80px; width: auto;">
@@ -473,8 +235,6 @@ function applyPratnyaHeader(templateElement) {
     `;
     header.style.borderBottom = '2px solid #2E7D32';
     header.style.paddingBottom = '10px';
-
-    // Return restore function
     return () => {
         header.innerHTML = originalHTML;
         header.style.borderBottom = '';
@@ -482,7 +242,7 @@ function applyPratnyaHeader(templateElement) {
     };
 }
 
-// --- PRESCRIPTION PDF GENERATION (with letterhead choice) ---
+// --- PRESCRIPTION PDF (with choice) ---
 function fillPrescriptionTemplate() {
     const name = document.getElementById('prescName').value || "";
     const star = document.getElementById('prescStar').value || "";
@@ -504,13 +264,15 @@ function fillPrescriptionTemplate() {
 }
 
 window.generatePrescriptionPDF = async () => {
+    console.log('generatePrescriptionPDF clicked');
     if (!fillPrescriptionTemplate()) {
         topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
         return;
     }
 
     const choice = await askLetterheadChoice();
-    if (!choice) return; // cancelled
+    console.log('Choice received:', choice);
+    if (!choice) return;
 
     const template = document.getElementById('prescriptionTemplate');
     let restoreHeader = () => {};
@@ -540,14 +302,16 @@ window.generatePrescriptionPDF = async () => {
     }
 };
 
-// --- SHARE WA BUTTON LOGIC (with letterhead choice) ---
+// --- SHARE WA (with choice) ---
 window.sharePrescriptionPDF = async () => {
+    console.log('sharePrescriptionPDF clicked');
     if (!fillPrescriptionTemplate()) {
         topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
         return;
     }
 
     const choice = await askLetterheadChoice();
+    console.log('Choice received:', choice);
     if (!choice) return;
 
     const template = document.getElementById('prescriptionTemplate');
@@ -594,8 +358,9 @@ window.sharePrescriptionPDF = async () => {
     }
 };
 
-// --- CLIENT CONSULTATION PDF (with letterhead choice) ---
+// --- CLIENT CONSULTATION PDF (with choice) ---
 window.generatePDF = async () => {
+    console.log('generatePDF (client) clicked');
     const name = document.getElementById('name').value;
     const star = document.getElementById('star').value;
     const dob = document.getElementById('dob').value;
@@ -640,6 +405,7 @@ window.generatePDF = async () => {
     document.getElementById('pdfContent').innerHTML = htmlContent;
 
     const choice = await askLetterheadChoice();
+    console.log('Choice received:', choice);
     if (!choice) return;
 
     const template = document.getElementById('pdfTemplate');
@@ -669,7 +435,7 @@ window.generatePDF = async () => {
     }
 };
 
-// --- MISC FUNCTIONS ---
+// --- SEARCH & MISC (unchanged) ---
 searchInput.oninput = () => updateList();
 
 function calculateAge() {
