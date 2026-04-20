@@ -1,4 +1,4 @@
-const CACHE_NAME = "astro-manager-v32"; // <-- INCREMENTED
+const CACHE_NAME = "astro-manager-v33"; // <-- INCREMENTED
 const ASSETS_TO_CACHE = [
     "./",
     "./index.html",
