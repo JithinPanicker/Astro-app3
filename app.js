@@ -26,7 +26,7 @@ const topToast = Swal.mixin({
     position: 'top',
     showConfirmButton: false,
     timer: 2500,
-    background: '#1DA1F2',
+    background: '#1DA1F2', // Twitter Blue
     color: '#fff',
     customClass: { popup: 'x-toast' }
 });
@@ -36,35 +36,35 @@ const warnToast = Swal.mixin({
     position: 'top',
     showConfirmButton: true,
     showCancelButton: true,
-    confirmButtonColor: '#E0245E',
-    cancelButtonColor: '#657786',
+    confirmButtonColor: '#E0245E', // Twitter Red
+    cancelButtonColor: '#657786',  // Twitter Gray
     confirmButtonText: 'Confirm',
-    background: '#15202B',
+    background: '#15202B', // Twitter Dark
     color: '#fff',
     customClass: { popup: 'x-toast-confirm' }
 });
 
-// --- TEXTAREA UNDO / CLEAR & COUNTERS ---
+// --- TEXTAREA UNDO / CLEAR LOGIC ---
 window.textHistory = {};
 window.clearText = (id) => {
     const el = document.getElementById(id);
-    if(el) { window.textHistory[id] = el.value; el.value = ''; el.focus(); }
+    if(el) {
+        window.textHistory[id] = el.value;
+        el.value = '';
+        el.focus();
+    }
 };
 window.undoText = (id) => {
     const el = document.getElementById(id);
     if(el) {
         if(window.textHistory[id] !== undefined) {
-            el.value = window.textHistory[id]; delete window.textHistory[id];
-        } else { document.execCommand('undo'); }
+            el.value = window.textHistory[id];
+            delete window.textHistory[id];
+        } else {
+            document.execCommand('undo'); 
+        }
         el.focus();
     }
-};
-window.adjCount = (id, delta) => {
-    const el = document.getElementById(id);
-    let val = parseInt(el.value) || 0;
-    val += delta;
-    if(val < 0) val = 0;
-    el.value = val;
 };
 
 // --- DATABASE & CORE ---
@@ -83,22 +83,16 @@ updateList();
 function showForm() { modal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
 function closeForm() { 
     modal.classList.add('hidden'); document.body.style.overflow = 'auto'; 
-    form.reset(); 
-    document.getElementById('clientId').value = ""; 
+    form.reset(); document.getElementById('clientId').value = ""; 
     document.getElementById('historyList').innerHTML = ""; 
     document.getElementById('clientPrescList').innerHTML = ""; 
-    document.getElementById('slrCount').value = "0";
-    document.getElementById('dhrCount').value = "0";
 }
 
 function showPrescriptionForm() { prescModal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
 function closePrescriptionForm() { 
     prescModal.classList.add('hidden'); document.body.style.overflow = 'auto'; 
-    prescForm.reset(); 
-    document.getElementById('prescClientId').value = "";
+    prescForm.reset(); document.getElementById('prescClientId').value = "";
     document.getElementById('prescHistoryList').innerHTML = "";
-    document.getElementById('prescSlrCount').value = "0";
-    document.getElementById('prescDhrCount').value = "0";
 }
 
 // --- SAVE MAIN CLIENT ---
@@ -117,21 +111,16 @@ form.onsubmit = async (event) => {
         profession: document.getElementById('profession').value,
         updated: new Date()
     };
-    
     const problem = document.getElementById('currentProblem').value.trim();
     const solution = document.getElementById('currentSolution').value.trim();
-    const slr = parseInt(document.getElementById('slrCount').value) || 0;
-    const dhr = parseInt(document.getElementById('dhrCount').value) || 0;
     
     let consultationEntry = null;
-    if (problem || solution || slr > 0 || dhr > 0) {
+    if (problem || solution) {
         consultationEntry = {
             date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
             timestamp: Date.now(),
             problem: problem,
-            solution: solution,
-            slr: slr,
-            dhr: dhr
+            solution: solution
         };
     }
 
@@ -166,19 +155,15 @@ window.savePrescription = async () => {
     const rasi = document.getElementById('prescRasi').value.trim();
     const udhaya = document.getElementById('prescUdhaya').value.trim();
     const notes = document.getElementById('prescBody').value.trim();
-    const slr = parseInt(document.getElementById('prescSlrCount').value) || 0;
-    const dhr = parseInt(document.getElementById('prescDhrCount').value) || 0;
 
     let newPresc = null;
-    if(rasi || udhaya || notes || slr > 0 || dhr > 0) {
+    if(rasi || udhaya || notes) {
         newPresc = {
             date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
             timestamp: Date.now(),
             rasi: rasi,
             udhaya: udhaya,
-            notes: notes,
-            slr: slr,
-            dhr: dhr
+            notes: notes
         };
     }
 
@@ -215,10 +200,6 @@ window.loadClient = async (id) => {
     listDiv.innerHTML = "";
     if (client.consultations && client.consultations.length > 0) {
         client.consultations.forEach(item => {
-            let counters = '';
-            if(item.slr > 0) counters += `<span style="margin-right: 15px;"><strong>SLR:</strong> ${item.slr}</span>`;
-            if(item.dhr > 0) counters += `<span><strong>DHR:</strong> ${item.dhr}</span>`;
-            
             listDiv.innerHTML += `
                 <div class="history-item" id="hist-${item.timestamp}">
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px;">
@@ -236,7 +217,6 @@ window.loadClient = async (id) => {
                         <span class="history-label" style="color:#1976D2; font-weight: 600;">Solution:</span>
                         <div class="history-text" id="sol-text-${item.timestamp}" style="white-space: pre-wrap; margin-top: 4px;">${item.solution || '-'}</div>
                     </div>
-                    ${counters ? `<div id="count-text-${item.timestamp}" style="margin-top: 8px; color: #E65100; font-size: 12px;">${counters}</div>` : `<div id="count-text-${item.timestamp}"></div>`}
                 </div>`;
         });
     } else { listDiv.innerHTML = "<p style='color:#888; text-align:center; font-size: 13px;'>No previous consultations.</p>"; }
@@ -245,10 +225,6 @@ window.loadClient = async (id) => {
     prescDiv.innerHTML = "";
     if (client.prescriptions && client.prescriptions.length > 0) {
         client.prescriptions.forEach(item => {
-            let counters = '';
-            if(item.slr > 0) counters += `<span style="margin-right: 15px;"><strong>SLR:</strong> ${item.slr}</span>`;
-            if(item.dhr > 0) counters += `<span><strong>DHR:</strong> ${item.dhr}</span>`;
-            
             prescDiv.innerHTML += `
                 <div class="history-item" style="border-left-color: #FF9800;">
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px;">
@@ -256,7 +232,6 @@ window.loadClient = async (id) => {
                     </div>
                     <div style="font-size: 13px; margin-bottom: 4px;"><strong>Rasi:</strong> ${item.rasi || '-'} | <strong>Udhaya:</strong> ${item.udhaya || '-'}</div>
                     <div style="white-space: pre-wrap; font-size: 14px; margin-top: 8px;">${item.notes || '-'}</div>
-                    ${counters ? `<div style="margin-top: 8px; color: #E65100; font-size: 12px;">${counters}</div>` : ''}
                 </div>`;
         });
     } else { prescDiv.innerHTML = "<p style='color:#888; text-align:center; font-size: 13px;'>No previous prescriptions.</p>"; }
@@ -283,10 +258,6 @@ window.loadPrescription = async (id) => {
     listDiv.innerHTML = "";
     if (client.prescriptions && client.prescriptions.length > 0) {
         client.prescriptions.forEach(item => {
-            let counters = '';
-            if(item.slr > 0) counters += `<span style="margin-right: 15px;"><strong>SLR:</strong> ${item.slr}</span>`;
-            if(item.dhr > 0) counters += `<span><strong>DHR:</strong> ${item.dhr}</span>`;
-
             listDiv.innerHTML += `
                 <div class="history-item" id="p-hist-${item.timestamp}" style="border-left-color: #FF9800;">
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px;">
@@ -301,7 +272,6 @@ window.loadPrescription = async (id) => {
                         <strong>Udhaya:</strong> <span id="p-udhaya-${item.timestamp}">${item.udhaya || ''}</span>
                     </div>
                     <div id="p-notes-${item.timestamp}" style="white-space: pre-wrap; font-size: 14px; margin-top: 8px;">${item.notes || ''}</div>
-                    ${counters ? `<div id="p-count-${item.timestamp}" style="margin-top: 8px; color: #E65100; font-size: 12px;">${counters}</div>` : `<div id="p-count-${item.timestamp}"></div>`}
                 </div>`;
         });
     } else { listDiv.innerHTML = "<p style='color:#888; text-align:center; font-size: 13px;'>No previous history.</p>"; }
@@ -310,25 +280,25 @@ window.loadPrescription = async (id) => {
 };
 
 // --- HISTORY EDIT & DELETE LOGIC ---
-window.editHist = async (clientId, timestamp) => {
-    const client = await db.clients.get(clientId);
-    const hist = client.consultations.find(c => c.timestamp === timestamp);
-    if(!hist) return;
-
+window.editHist = (clientId, timestamp) => {
     const probEl = document.getElementById(`prob-text-${timestamp}`);
     const solEl = document.getElementById(`sol-text-${timestamp}`);
-    const countEl = document.getElementById(`count-text-${timestamp}`);
+    const probText = probEl.innerText;
+    const solText = solEl.innerText;
 
     probEl.innerHTML = `
-        <textarea id="edit-prob-${timestamp}" rows="3" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${hist.problem || ''}</textarea>`;
-    solEl.innerHTML = `
-        <textarea id="edit-sol-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${hist.solution || ''}</textarea>`;
+        <div class="mini-toolbar">
+            <span onclick="undoText('edit-prob-${timestamp}')">Undo</span>
+            <span onclick="clearText('edit-prob-${timestamp}')">Clear</span>
+        </div>
+        <textarea id="edit-prob-${timestamp}" rows="3" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${probText === '-' ? '' : probText}</textarea>`;
     
-    countEl.innerHTML = `
-        <div style="display: flex; gap: 15px; margin-top: 10px;">
-            <label style="font-weight:bold; color:#E65100; font-size:12px;">SLR: <input type="number" id="edit-slr-${timestamp}" value="${hist.slr || 0}" style="width: 50px; padding:2px; font-size:12px;"></label>
-            <label style="font-weight:bold; color:#E65100; font-size:12px;">DHR: <input type="number" id="edit-dhr-${timestamp}" value="${hist.dhr || 0}" style="width: 50px; padding:2px; font-size:12px;"></label>
-        </div>`;
+    solEl.innerHTML = `
+        <div class="mini-toolbar">
+            <span onclick="undoText('edit-sol-${timestamp}')">Undo</span>
+            <span onclick="clearText('edit-sol-${timestamp}')">Clear</span>
+        </div>
+        <textarea id="edit-sol-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${solText === '-' ? '' : solText}</textarea>`;
     
     const actionsDiv = document.querySelector(`#hist-${timestamp} .history-actions`);
     actionsDiv.innerHTML = `
@@ -339,38 +309,38 @@ window.editHist = async (clientId, timestamp) => {
 
 window.saveHist = async (clientId, timestamp) => {
     const client = await db.clients.get(clientId);
+    const probVal = document.getElementById(`edit-prob-${timestamp}`).value;
+    const solVal = document.getElementById(`edit-sol-${timestamp}`).value;
+
     const histIndex = client.consultations.findIndex(c => c.timestamp === timestamp);
     if(histIndex !== -1) {
-        client.consultations[histIndex].problem = document.getElementById(`edit-prob-${timestamp}`).value;
-        client.consultations[histIndex].solution = document.getElementById(`edit-sol-${timestamp}`).value;
-        client.consultations[histIndex].slr = parseInt(document.getElementById(`edit-slr-${timestamp}`).value) || 0;
-        client.consultations[histIndex].dhr = parseInt(document.getElementById(`edit-dhr-${timestamp}`).value) || 0;
+        client.consultations[histIndex].problem = probVal;
+        client.consultations[histIndex].solution = solVal;
         await db.clients.put(client);
         loadClient(clientId);
         topToast.fire({ text: 'Consultation updated' });
     }
 };
 
-window.editPrescHist = async (clientId, timestamp) => {
-    const client = await db.clients.get(clientId);
-    const hist = client.prescriptions.find(c => c.timestamp === timestamp);
-    if(!hist) return;
-
+window.editPrescHist = (clientId, timestamp) => {
     const rasiEl = document.getElementById(`p-rasi-${timestamp}`);
     const udhayaEl = document.getElementById(`p-udhaya-${timestamp}`);
     const notesEl = document.getElementById(`p-notes-${timestamp}`);
-    const countEl = document.getElementById(`p-count-${timestamp}`);
 
-    rasiEl.innerHTML = `<input type="text" id="edit-p-rasi-${timestamp}" value="${hist.rasi || ''}" style="width: 70px; padding: 2px; font-size: 12px;">`;
-    udhayaEl.innerHTML = `<input type="text" id="edit-p-udhaya-${timestamp}" value="${hist.udhaya || ''}" style="width: 70px; padding: 2px; font-size: 12px;">`;
+    const rasiText = rasiEl.innerText;
+    const udhayaText = udhayaEl.innerText;
+    const notesText = notesEl.innerText;
+
+    rasiEl.innerHTML = `<input type="text" id="edit-p-rasi-${timestamp}" value="${rasiText}" style="width: 70px; padding: 2px; font-size: 12px;">`;
+    udhayaEl.innerHTML = `<input type="text" id="edit-p-udhaya-${timestamp}" value="${udhayaText}" style="width: 70px; padding: 2px; font-size: 12px;">`;
+    
     notesEl.innerHTML = `
-        <textarea id="edit-p-notes-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${hist.notes || ''}</textarea>
+        <div class="mini-toolbar" style="margin-top: 8px;">
+            <span onclick="undoText('edit-p-notes-${timestamp}')">Undo</span>
+            <span onclick="clearText('edit-p-notes-${timestamp}')">Clear</span>
+        </div>
+        <textarea id="edit-p-notes-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${notesText}</textarea>
     `;
-    countEl.innerHTML = `
-        <div style="display: flex; gap: 15px; margin-top: 10px;">
-            <label style="font-weight:bold; color:#E65100; font-size:12px;">SLR: <input type="number" id="edit-p-slr-${timestamp}" value="${hist.slr || 0}" style="width: 50px; padding:2px; font-size:12px;"></label>
-            <label style="font-weight:bold; color:#E65100; font-size:12px;">DHR: <input type="number" id="edit-p-dhr-${timestamp}" value="${hist.dhr || 0}" style="width: 50px; padding:2px; font-size:12px;"></label>
-        </div>`;
 
     const actionsDiv = document.querySelector(`#p-hist-${timestamp} .history-actions`);
     actionsDiv.innerHTML = `
@@ -381,13 +351,15 @@ window.editPrescHist = async (clientId, timestamp) => {
 
 window.savePrescHist = async (clientId, timestamp) => {
     const client = await db.clients.get(clientId);
+    const rasiVal = document.getElementById(`edit-p-rasi-${timestamp}`).value;
+    const udhayaVal = document.getElementById(`edit-p-udhaya-${timestamp}`).value;
+    const notesVal = document.getElementById(`edit-p-notes-${timestamp}`).value;
+
     const histIndex = client.prescriptions.findIndex(c => c.timestamp === timestamp);
     if(histIndex !== -1) {
-        client.prescriptions[histIndex].rasi = document.getElementById(`edit-p-rasi-${timestamp}`).value;
-        client.prescriptions[histIndex].udhaya = document.getElementById(`edit-p-udhaya-${timestamp}`).value;
-        client.prescriptions[histIndex].notes = document.getElementById(`edit-p-notes-${timestamp}`).value;
-        client.prescriptions[histIndex].slr = parseInt(document.getElementById(`edit-p-slr-${timestamp}`).value) || 0;
-        client.prescriptions[histIndex].dhr = parseInt(document.getElementById(`edit-p-dhr-${timestamp}`).value) || 0;
+        client.prescriptions[histIndex].rasi = rasiVal;
+        client.prescriptions[histIndex].udhaya = udhayaVal;
+        client.prescriptions[histIndex].notes = notesVal;
         await db.clients.put(client);
         loadPrescription(clientId);
         topToast.fire({ text: 'Prescription updated' });
@@ -430,6 +402,7 @@ async function updateList() {
         const hasPresc = client.prescriptions && client.prescriptions.length > 0;
         const noHistory = !hasConsults && !hasPresc;
 
+        // Generate WA button with Font Awesome icon if phone exists
         let waBtn = '';
         if (client.phone) {
             let waPhone = client.phone.replace(/\D/g, '');
@@ -458,258 +431,156 @@ async function updateList() {
             </div>`;
         }
     });
+
     document.getElementById('clientList').innerHTML = html;
 }
 
-// --- DYNAMIC PDF PRINT HELPERS ---
-async function getEntriesToPrint(clientId, isPresc) {
-    let entries = [];
-    const exportOpt = isPresc ? document.querySelector('input[name="prescExport"]:checked').value : document.querySelector('input[name="mainExport"]:checked').value;
-
-    if (!isPresc) {
-        const prob = document.getElementById('currentProblem').value.trim();
-        const sol = document.getElementById('currentSolution').value.trim();
-        const slr = parseInt(document.getElementById('slrCount').value) || 0;
-        const dhr = parseInt(document.getElementById('dhrCount').value) || 0;
-        if (prob || sol || slr > 0 || dhr > 0) entries.push({ date: new Date().toLocaleDateString('en-IN'), problem: prob, solution: sol, slr, dhr });
-    } else {
-        const rasi = document.getElementById('prescRasi').value.trim();
-        const udhaya = document.getElementById('prescUdhaya').value.trim();
-        const notes = document.getElementById('prescBody').value.trim();
-        const slr = parseInt(document.getElementById('prescSlrCount').value) || 0;
-        const dhr = parseInt(document.getElementById('prescDhrCount').value) || 0;
-        if (rasi || udhaya || notes || slr > 0 || dhr > 0) entries.push({ date: new Date().toLocaleDateString('en-IN'), rasi, udhaya, notes, slr, dhr });
-    }
-
-    if (clientId) {
-        const client = await db.clients.get(parseInt(clientId));
-        if (client) {
-            const history = isPresc ? client.prescriptions : client.consultations;
-            if (history && history.length > 0) {
-                if (exportOpt === 'all') { entries = entries.concat(history); } 
-                else if (entries.length === 0) { entries.push(history[0]); }
-            }
-        }
-    }
-    return entries;
-}
-
-
-// --- PERFECT PDF STAMPING ENGINE ---
-// This guarantees exact header/footer rendering and no blank pages
-async function executeNativePDF(htmlContent, fileName, action) {
-    Swal.showLoading();
-
-    try {
-        // 1. Capture exact snapshots of your professional layout
-        const headerCanvas = await html2canvas(document.getElementById('asset-header'), { scale: 2 });
-        const footerCanvas = await html2canvas(document.getElementById('asset-footer'), { scale: 2 });
-        const watermarkCanvas = await html2canvas(document.getElementById('asset-watermark'), { scale: 2 });
-
-        const headerImg = headerCanvas.toDataURL('image/jpeg', 1.0);
-        const footerImg = footerCanvas.toDataURL('image/jpeg', 1.0);
-        const watermarkImg = watermarkCanvas.toDataURL('image/jpeg', 1.0);
-
-        // 2. Setup the text content safely in view for html2canvas to capture
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = htmlContent;
-        wrapper.style.position = 'absolute';
-        wrapper.style.top = '0'; // Keeps it near the scroll axis to avoid blank culling
-        wrapper.style.left = '0';
-        wrapper.style.width = '800px';
-        wrapper.style.padding = '10px 40px'; // 40px margins perfectly aligned
-        wrapper.style.backgroundColor = 'white';
-        wrapper.style.zIndex = '-9999'; // Securely hidden behind the app UI
-        document.body.appendChild(wrapper);
-
-        // Crucial pause for Malayalam fonts and layouts to render
-        await new Promise(r => setTimeout(r, 400));
-
-        const opt = {
-            margin:       [40, 0, 30, 0], // Exact spacing cleared for stamped Header and Footer
-            filename:     fileName,
-            image:        { type: 'jpeg', quality: 1.0 },
-            html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800, scrollY: 0 },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak:    { mode: ['css', 'legacy'] }
-        };
-
-        const pdfWorker = html2pdf().set(opt).from(wrapper).toPdf();
-
-        await pdfWorker.get('pdf').then((pdf) => {
-            const totalPages = pdf.internal.getNumberOfPages();
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-
-            // Calculate proportional heights for the stamps
-            const headerHeight = pdfWidth * (headerCanvas.height / headerCanvas.width);
-            const footerHeight = pdfWidth * (footerCanvas.height / footerCanvas.width);
-
-            // Stamp every single page
-            for (let i = 1; i <= totalPages; i++) {
-                pdf.setPage(i);
-                
-                // Stamp Watermark (Covers full page)
-                pdf.addImage(watermarkImg, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-                
-                // Stamp Header
-                pdf.addImage(headerImg, 'JPEG', 0, 0, pdfWidth, headerHeight);
-                
-                // Stamp Footer
-                pdf.addImage(footerImg, 'JPEG', 0, pdfHeight - footerHeight, pdfWidth, footerHeight);
-            }
-        });
-
-        if (action === 'save') {
-            await pdfWorker.save();
-            Swal.close();
-            topToast.fire({ text: 'Downloaded successfully!' });
-        } else if (action === 'share') {
-            const pdfBlob = await pdfWorker.output('blob');
-            const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
-            Swal.close();
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({ files: [file], title: 'Consultation Report', text: 'Here is your document from Pratnya Astro.' });
-            } else {
-                Swal.fire({ title: 'Unsupported Browser', text: 'Please download the PDF manually.', icon: 'info' });
-            }
-        }
-
-        document.body.removeChild(wrapper);
-
-    } catch(e) {
-        console.error("PDF Engine Error:", e);
-        Swal.close();
-        topToast.fire({ text: 'Failed to generate PDF', background: '#E0245E' });
-    }
-}
-
-
-// --- MAIN PDF DATA COMPILER ---
-async function prepareMainPDF() {
-    const name = document.getElementById('name').value || "Client";
-    const star = document.getElementById('star').value;
-    const place = document.getElementById('place').value;
-
-    const id = document.getElementById('clientId').value;
-    const entries = await getEntriesToPrint(id, false);
-    
-    if(entries.length === 0) {
-        topToast.fire({ text: 'No data to print!', background: '#E0245E' }); return null;
-    }
-
-    let htmlContent = `
-        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; color: black; line-height: 1.6; padding-top: 5px;">
-            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px;">
-                <span>Name: ${name}</span>
-                <span>Star: ${star || ''}</span>
-            </div>
-            ${place ? `<div style="font-weight: bold; margin-bottom: 12px;">Place: ${place}</div>` : `<div style="margin-bottom: 12px;"></div>`}
-            <div style="border-bottom: 1px solid #318c4b; margin-bottom: 25px;"></div>
-    `;
-
-    entries.forEach((e, index) => {
-        let safeProblem = (e.problem || '').split('\n').join('<br>');
-        let safeSolution = (e.solution || '').split('\n').join('<br>');
-        let divider = (index < entries.length - 1) ? `<div style="border-bottom: 1px dashed #ccc; margin-top: 20px; margin-bottom: 25px;"></div>` : ``;
-
-        htmlContent += `
-            <div style="page-break-inside: avoid; margin-bottom: 15px;">
-                <div style="color: #d25c1a; font-weight: bold; margin-bottom: 8px; font-size: 14px;">Date: ${e.date}</div>
-                ${e.problem ? `<div style="margin-bottom: 10px;"><strong style="color: #666;">Problem:</strong><div style="margin-top: 4px; color: #222; text-align: justify;">${safeProblem}</div></div>` : ''}
-                ${e.solution ? `<div style="margin-bottom: 10px;"><strong style="color: #666;">Solution:</strong><div style="margin-top: 4px; color: #222; text-align: justify;">${safeSolution}</div></div>` : ''}
-                
-                ${(e.slr > 0 || e.dhr > 0) ? `<div style="color: #d25c1a; font-weight: bold; font-size: 13px; margin-top: 12px;">
-                    ${e.slr > 0 ? `SLR: ${e.slr}` : ''} ${e.slr > 0 && e.dhr > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;' : ''} ${e.dhr > 0 ? `DHR: ${e.dhr}` : ''}
-                </div>` : ''}
-                ${divider}
-            </div>
-        `;
-    });
-    
-    htmlContent += `</div>`;
-    return { html: htmlContent, fileName: `${name}_Consultation.pdf` };
-}
-
-window.generatePDF = async () => {
-    const data = await prepareMainPDF();
-    if(!data) return;
-    await executeNativePDF(data.html, data.fileName, 'save');
-};
-
-window.shareMainPDF = async () => {
-    const data = await prepareMainPDF();
-    if(!data) return;
-    await executeNativePDF(data.html, data.fileName, 'share');
-};
-
-
-// --- PRESCRIPTION PDF DATA COMPILER ---
-async function preparePrescriptionPDF() {
-    const name = document.getElementById('prescName').value || "Client";
+// Helper to fill the PDF template
+function fillPrescriptionTemplate() {
+    const name = document.getElementById('prescName').value || "";
     const star = document.getElementById('prescStar').value || "";
     const place = document.getElementById('prescPlace').value || "";
-    
-    const id = document.getElementById('prescClientId').value;
-    const entries = await getEntriesToPrint(id, true);
+    const rasi = document.getElementById('prescRasi').value || "";
+    const udhaya = document.getElementById('prescUdhaya').value || "";
+    const body = document.getElementById('prescBody').value || "";
 
-    if(entries.length === 0) {
-        topToast.fire({ text: 'No data to print!', background: '#E0245E' }); return null;
-    }
+    if(!name && !body) return false;
 
-    let htmlContent = `
-        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; color: black; line-height: 1.6; padding-top: 5px;">
-            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px;">
-                <span>Name: ${name}</span>
-                <span>Star: ${star || ''}</span>
-            </div>
-            ${place ? `<div style="font-weight: bold; margin-bottom: 12px;">Place: ${place}</div>` : `<div style="margin-bottom: 12px;"></div>`}
-            <div style="border-bottom: 1px solid #318c4b; margin-bottom: 25px;"></div>
-    `;
-
-    entries.forEach((e, index) => {
-        let safeNotes = (e.notes || '').split('\n').join('<br>');
-        let divider = (index < entries.length - 1) ? `<div style="border-bottom: 1px dashed #ccc; margin-top: 20px; margin-bottom: 25px;"></div>` : ``;
-
-        let rasiUdhaya = '';
-        if(e.rasi || e.udhaya) {
-            rasiUdhaya = `<div style="color: #666; font-weight: bold; font-size: 13px; margin-bottom: 10px;">`;
-            if(e.rasi) rasiUdhaya += `Rasi: ${e.rasi}`;
-            if(e.rasi && e.udhaya) rasiUdhaya += ` | `;
-            if(e.udhaya) rasiUdhaya += `Udhaya: ${e.udhaya}`;
-            rasiUdhaya += `</div>`;
-        }
-
-        htmlContent += `
-            <div style="page-break-inside: avoid; margin-bottom: 15px;">
-                <div style="color: #d25c1a; font-weight: bold; margin-bottom: 8px; font-size: 14px;">Date: ${e.date}</div>
-                ${rasiUdhaya}
-                <div style="margin-bottom: 8px; color: #222; text-align: justify;">${safeNotes}</div>
-                
-                ${(e.slr > 0 || e.dhr > 0) ? `<div style="color: #d25c1a; font-weight: bold; font-size: 13px; margin-top: 12px;">
-                    ${e.slr > 0 ? `SLR: ${e.slr}` : ''} ${e.slr > 0 && e.dhr > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;' : ''} ${e.dhr > 0 ? `DHR: ${e.dhr}` : ''}
-                </div>` : ''}
-                ${divider}
-            </div>
-        `;
-    });
-
-    htmlContent += `</div>`;
-    return { html: htmlContent, fileName: `${name}_Prescription.pdf` };
+    document.getElementById('pdfPrescName').innerText = name;
+    document.getElementById('pdfPrescDate').innerText = new Date().toLocaleDateString('en-IN');
+    document.getElementById('pdfPrescStar').innerText = star;
+    document.getElementById('pdfPrescPlace').innerText = place;
+    document.getElementById('pdfPrescRasi').innerText = rasi;
+    document.getElementById('pdfPrescUdhaya').innerText = udhaya;
+    document.getElementById('pdfPrescBody').innerText = body;
+    return true;
 }
 
 window.generatePrescriptionPDF = async () => {
-    const data = await preparePrescriptionPDF();
-    if(!data) return;
-    await executeNativePDF(data.html, data.fileName, 'save');
+    if (!fillPrescriptionTemplate()) { topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); return; }
+    const name = document.getElementById('prescName').value || "Client";
+
+    topToast.fire({ text: 'Generating PDF...' });
+    try {
+        const { jsPDF } = window.jspdf;
+        const element = document.getElementById('prescriptionTemplate');
+        const canvas = await html2canvas(element, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const width = pdf.internal.pageSize.getWidth();
+        const height = (canvas.height * width) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        pdf.save(`${name}_Prescription.pdf`);
+        topToast.fire({ text: 'Downloaded successfully!' });
+    } catch(e) { console.error(e); }
 };
 
+// --- SHARE WA BUTTON LOGIC ---
 window.sharePrescriptionPDF = async () => {
-    const data = await preparePrescriptionPDF();
-    if(!data) return;
-    await executeNativePDF(data.html, data.fileName, 'share');
+    if (!fillPrescriptionTemplate()) { topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); return; }
+    const name = document.getElementById('prescName').value || "Client";
+
+    topToast.fire({ text: 'Preparing file for sharing...' });
+    try {
+        const { jsPDF } = window.jspdf;
+        const element = document.getElementById('prescriptionTemplate');
+        const canvas = await html2canvas(element, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const width = pdf.internal.pageSize.getWidth();
+        const height = (canvas.height * width) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        
+        // Convert to a File object for sharing
+        const pdfBlob = pdf.output('blob');
+        const file = new File([pdfBlob], `${name}_Prescription.pdf`, { type: 'application/pdf' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: 'Prescription',
+                text: 'Here is your prescription from Pratnya Astro.'
+            });
+            topToast.fire({ text: 'Opened share menu!' });
+        } else {
+            // Fallback for desktop browsers that don't support file sharing
+            Swal.fire({
+                title: 'Unsupported Browser',
+                text: 'Your device/browser does not support direct file sharing. Please click "PDF" to download it, then attach it in WhatsApp manually.',
+                icon: 'info'
+            });
+        }
+    } catch(e) { 
+        console.error(e); 
+        topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' }); 
+    }
 };
 
+
+window.generatePDF = async () => {
+    const name = document.getElementById('name').value;
+    const star = document.getElementById('star').value;
+    const dob = document.getElementById('dob').value;
+    const time = document.getElementById('birthTime').value;
+
+    let displayTime = time;
+    if(time) {
+        const [h, m] = time.split(':');
+        const hour = parseInt(h);
+        displayTime = `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`;
+    }
+
+    let htmlContent = `
+        <table style="width: 100%; margin-bottom: 20px; font-size: 14px;">
+            <tr><td><strong>Name:</strong> ${name}</td><td><strong>Star:</strong> ${star}</td></tr>
+            <tr><td><strong>DOB:</strong> ${dob}</td><td><strong>Time:</strong> ${displayTime}</td></tr>
+        </table>
+        <h3>Consultation History</h3>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
+            <tr style="background-color: #f2f2f2;">
+                <th style="border: 1px solid #ddd; padding: 8px;">Date</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Details</th>
+            </tr>`;
+
+    const id = document.getElementById('clientId').value;
+    if(id) {
+        const client = await db.clients.get(parseInt(id));
+        if(client && client.consultations) {
+            client.consultations.forEach(c => {
+                htmlContent += `
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px; width: 25%; vertical-align: top;">${c.date}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">
+                            <strong>Problem:</strong><br>${c.problem || '-'}<br><br>
+                            <strong style="color: #2E7D32;">Solution:</strong><br>${c.solution || '-'}
+                        </td>
+                    </tr>`;
+            });
+        }
+    }
+    htmlContent += `</table>`;
+    document.getElementById('pdfContent').innerHTML = htmlContent;
+
+    topToast.fire({ text: 'Generating PDF...' });
+    try {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const width = pdf.internal.pageSize.getWidth();
+
+        const element1 = document.getElementById('pdfTemplate');
+        const canvas1 = await html2canvas(element1, { scale: 2 });
+        const imgData1 = canvas1.toDataURL('image/png');
+        const height1 = (canvas1.height * width) / canvas1.width;
+        pdf.addImage(imgData1, 'PNG', 0, 0, width, height1);
+
+        pdf.save(`${name}_Full_Report.pdf`);
+        topToast.fire({ text: 'Downloaded successfully!' });
+    } catch (error) { topToast.fire({ text: 'PDF Failed', background: '#E0245E' }); }
+};
+
+searchInput.oninput = () => updateList();
 function calculateAge() {
     const dobInput = document.getElementById('dob').value;
     if (!dobInput) return;
@@ -753,5 +624,3 @@ function transferToPrescription() {
     document.getElementById('prescPlace').value = place;
     document.getElementById('prescBody').value = solution;
 }
-
-searchInput.oninput = () => updateList();
