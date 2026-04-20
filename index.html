@@ -9,13 +9,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="[cdnjs.cloudflare.com](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script src="[unpkg.com](https://unpkg.com/dexie/dist/dexie.js)"></script>
-    <script src="[cdnjs.cloudflare.com](https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js)"></script>
-    <script src="[cdnjs.cloudflare.com](https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js)"></script>
-    <script src="[cdnjs.cloudflare.com](https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js)"></script>
-    <script src="[cdn.jsdelivr.net](https://cdn.jsdelivr.net/npm/sweetalert2@11)"></script>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .letterhead-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px; font-family: 'Arial', sans-serif; }
         .letterhead-left { text-align: left; color: #333; }
@@ -23,10 +23,52 @@
         .watermark { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); opacity: 0.08; z-index: 0; pointer-events: none; }
         .letterhead-footer { position: absolute; bottom: 30px; left: 40px; right: 40px; text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; font-size: 16px; }
         .footer-text { font-family: 'Brush Script MT', cursive; font-size: 22px; }
-        
-        /* Pratnya Letterhead Header Style */
-        .pratnya-header { display: flex; justify-content: center; align-items: center; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px; }
-        .pratnya-header img { max-height: 80px; width: auto; }
+
+        /* Letterhead Picker Dialog */
+        .lh-picker-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 9000;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px; box-sizing: border-box;
+        }
+        .lh-picker-box {
+            background: white; border-radius: 16px; padding: 28px 24px;
+            width: 100%; max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: lhSlideUp 0.25s ease-out;
+        }
+        @keyframes lhSlideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .lh-picker-title {
+            font-size: 18px; font-weight: 700; color: #222;
+            margin: 0 0 6px 0; text-align: center;
+        }
+        .lh-picker-sub {
+            font-size: 13px; color: #888; text-align: center; margin: 0 0 22px 0;
+        }
+        .lh-options { display: flex; gap: 14px; }
+        .lh-option {
+            flex: 1; border: 2px solid #e0e0e0; border-radius: 12px;
+            padding: 16px 10px; cursor: pointer; text-align: center;
+            transition: all 0.2s; background: #fafafa;
+        }
+        .lh-option:hover { border-color: #2E7D32; background: #f0f9f0; }
+        .lh-option.selected { border-color: #2E7D32; background: #e8f5e9; }
+        .lh-option-icon { font-size: 28px; margin-bottom: 8px; }
+        .lh-option-name { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 3px; }
+        .lh-option-desc { font-size: 11px; color: #888; }
+        .lh-actions { display: flex; gap: 10px; margin-top: 22px; }
+        .lh-btn-cancel {
+            flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px;
+            background: white; color: #666; font-weight: 600; cursor: pointer; font-size: 14px;
+        }
+        .lh-btn-go {
+            flex: 2; padding: 12px; border: none; border-radius: 8px;
+            background: #2E7D32; color: white; font-weight: 700; cursor: pointer; font-size: 14px;
+        }
+        .lh-btn-go:hover { background: #1b5e20; }
     </style>
 </head>
 <body>
@@ -126,7 +168,7 @@
 
                     <div class="form-actions">
                         <button type="submit" style="background-color: #2E7D32; color: white; font-weight: bold;">Save</button>
-                        <button type="button" onclick="showLetterheadOptions('client-pdf')" style="background-color: #1976D2; color: white; font-weight: bold;">PDF</button>
+                        <button type="button" onclick="askLetterheadThenPDF('client')" style="background-color: #1976D2; color: white; font-weight: bold;">PDF</button>
                         <button type="button" onclick="deleteCurrentClient()" style="background-color: #D32F2F; color: white; font-weight: bold;">Delete</button>
                     </div>
                 </form>
@@ -168,8 +210,8 @@
 
                     <div class="form-actions" style="background: #FFF3E0;">
                         <button type="button" onclick="savePrescription()" style="background-color: #4CAF50; color: white; font-weight: bold;">Save</button>
-                        <button type="button" onclick="showLetterheadOptions('presc-pdf')" style="background-color: #FF9800; color: white; font-weight: bold;">PDF</button>
-                        <button type="button" onclick="showLetterheadOptions('presc-share')" style="background-color: #25D366; color: white; font-weight: bold;"><i class="fab fa-whatsapp"></i> Share</button>
+                        <button type="button" onclick="askLetterheadThenPDF('prescription')" style="background-color: #FF9800; color: white; font-weight: bold;">PDF</button>
+                        <button type="button" onclick="askLetterheadThenPDF('prescriptionShare')" style="background-color: #25D366; color: white; font-weight: bold;"><i class="fab fa-whatsapp"></i> Share</button>
                         <button type="button" onclick="deleteCurrentPrescClient()" style="background-color: #D32F2F; color: white; font-weight: bold;">Delete</button>
                     </div>
                 </form>
@@ -178,14 +220,15 @@
 
     </div>
 
-    <!-- CK Saji Panicker Letterhead Template for Client PDF -->
+    <!-- ========================
+         CK SAJI PANICKER TEMPLATE (default)
+    ========================= -->
     <div id="pdfTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
         <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
         <div class="letterhead-header">
             <div class="letterhead-left">
                 <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Astrologer</p>
                 <h2 style="color: #2E7D32; font-size: 26px; font-weight: bold; margin: 0;">C.K. Saji Panicker</h2>
-                
                 <div style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; line-height: 1.6; margin-top: 6px;">
                     Chathangottupuram, Kalarikkal<br>
                     Wandoor-Malappuram<br>
@@ -205,11 +248,13 @@
         </div>
     </div>
 
-    <!-- Pratnya Letterhead Template for Client PDF -->
+    <!-- ========================
+         PRATNYA LETTERHEAD TEMPLATE (logo header)
+    ========================= -->
     <div id="pdfTemplatePratnya" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
         <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
-        <div class="pratnya-header">
-            <img src="logo.png" style="max-height: 80px; width: auto;">
+        <div style="text-align: center; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px;">
+            <img src="logo.png" style="max-height: 90px; width: auto; display: block; margin: 0 auto;">
         </div>
         <div id="pdfContentPratnya" style="position: relative; z-index: 1;"></div>
         <div class="letterhead-footer">
@@ -218,14 +263,15 @@
         </div>
     </div>
 
-    <!-- CK Saji Panicker Letterhead Template for Prescription -->
+    <!-- ========================
+         CK SAJI PRESCRIPTION TEMPLATE (default)
+    ========================= -->
     <div id="prescriptionTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
         <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
         <div class="letterhead-header">
             <div class="letterhead-left">
                 <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Astrologer</p>
                 <h2 style="color: #2E7D32; font-size: 26px; font-weight: bold; margin: 0;">C.K. Saji Panicker</h2>
-                
                 <div style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; line-height: 1.6; margin-top: 6px;">
                     Chathangottupuram, Kalarikkal<br>
                     Wandoor-Malappuram<br>
@@ -255,22 +301,24 @@
         </div>
     </div>
 
-    <!-- Pratnya Letterhead Template for Prescription -->
+    <!-- ========================
+         PRATNYA PRESCRIPTION TEMPLATE (logo header)
+    ========================= -->
     <div id="prescriptionTemplatePratnya" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
         <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
-        <div class="pratnya-header">
-            <img src="logo.png" style="max-height: 80px; width: auto;">
+        <div style="text-align: center; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px;">
+            <img src="logo.png" style="max-height: 90px; width: auto; display: block; margin: 0 auto;">
         </div>
         <div style="position: relative; z-index: 1; font-family: 'Georgia', serif; color: black;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 30px;">
-                <div><strong>Name:</strong> <span id="pdfPrescNamePratnya"></span></div>
-                <div><strong>Date:</strong> <span id="pdfPrescDatePratnya"></span></div>
-                <div><strong>Star:</strong> <span id="pdfPrescStarPratnya"></span></div>
-                <div><strong>Place:</strong> <span id="pdfPrescPlacePratnya"></span></div>
-                <div><strong>Rasi:</strong> <span id="pdfPrescRasiPratnya"></span></div>
-                <div><strong>Udhaya Rasi:</strong> <span id="pdfPrescUdhayaPratnya"></span></div>
+                <div><strong>Name:</strong> <span id="pdfPrescNameP"></span></div>
+                <div><strong>Date:</strong> <span id="pdfPrescDateP"></span></div>
+                <div><strong>Star:</strong> <span id="pdfPrescStarP"></span></div>
+                <div><strong>Place:</strong> <span id="pdfPrescPlaceP"></span></div>
+                <div><strong>Rasi:</strong> <span id="pdfPrescRasiP"></span></div>
+                <div><strong>Udhaya Rasi:</strong> <span id="pdfPrescUdhayaP"></span></div>
             </div>
-            <div id="pdfPrescBodyPratnya" style="font-size: 16px; line-height: 1.8; min-height: 400px; white-space: pre-wrap;"></div>
+            <div id="pdfPrescBodyP" style="font-size: 16px; line-height: 1.8; min-height: 400px; white-space: pre-wrap;"></div>
         </div>
         <div class="letterhead-footer">
             <span class="footer-text">Fix your appointment through the call</span><br>
@@ -280,7 +328,7 @@
 
     <script src="app.js"></script>
     <script>
-        const LATEST_CHANGES = "Added Letterhead Selection Options for PDF Generation";
+        const LATEST_CHANGES = "Added Pratnya Letterhead option for PDF & Share";
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(registration => {
                 if (registration.waiting) { newWorker = registration.waiting; showNotificationIcon(); }
