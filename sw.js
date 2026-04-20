@@ -1,4 +1,4 @@
-const CACHE_NAME = "astro-manager-v30"; // INCREMENT THIS EVERY TIME YOU CHANGE CODE
+const CACHE_NAME = "astro-manager-v31"; // <-- INCREMENTED
 const ASSETS_TO_CACHE = [
     "./",
     "./index.html",
@@ -15,7 +15,7 @@ const ASSETS_TO_CACHE = [
 
 // Install Event
 self.addEventListener("install", (event) => {
-    self.skipWaiting(); // Force new worker to active immediately
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(ASSETS_TO_CACHE);
@@ -30,16 +30,16 @@ self.addEventListener("activate", (event) => {
             return Promise.all(
                 cacheNames.map((cache) => {
                     if (cache !== CACHE_NAME) {
-                        return caches.delete(cache); // Delete old code only
+                        return caches.delete(cache);
                     }
                 })
             );
         })
     );
-    self.clients.claim(); // Take control of all pages immediately
+    self.clients.claim();
 });
 
-// Fetch Event (Serve from Cache)
+// Fetch Event
 self.addEventListener("fetch", (event) => {
     event.respondWith(
         caches.match(event.request).then((response) => {
