@@ -20,37 +20,31 @@ window.activateLicense = function() {
     } catch (e) { document.getElementById('licenseError').style.display = 'block'; }
 };
 
-// --- TOASTS (with fallback) ---
-let topToast, warnToast;
-if (typeof Swal !== 'undefined') {
-    topToast = Swal.mixin({
-        toast: true,
-        position: 'top',
-        showConfirmButton: false,
-        timer: 2500,
-        background: '#1DA1F2',
-        color: '#fff',
-        customClass: { popup: 'x-toast' }
-    });
-    warnToast = Swal.mixin({
-        toast: true,
-        position: 'top',
-        showConfirmButton: true,
-        showCancelButton: true,
-        confirmButtonColor: '#E0245E',
-        cancelButtonColor: '#657786',
-        confirmButtonText: 'Confirm',
-        background: '#15202B',
-        color: '#fff',
-        customClass: { popup: 'x-toast-confirm' }
-    });
-} else {
-    console.error('SweetAlert2 not loaded. Using alert fallback.');
-    topToast = { fire: (opts) => alert(opts.text) };
-    warnToast = { fire: (opts) => confirm(opts.text) };
-}
+// --- X / TWITTER STYLE TOASTS ---
+const topToast = Swal.mixin({
+    toast: true,
+    position: 'top',
+    showConfirmButton: false,
+    timer: 2500,
+    background: '#1DA1F2',
+    color: '#fff',
+    customClass: { popup: 'x-toast' }
+});
 
-// --- TEXTAREA UNDO / CLEAR ---
+const warnToast = Swal.mixin({
+    toast: true,
+    position: 'top',
+    showConfirmButton: true,
+    showCancelButton: true,
+    confirmButtonColor: '#E0245E',
+    cancelButtonColor: '#657786',
+    confirmButtonText: 'Confirm',
+    background: '#15202B',
+    color: '#fff',
+    customClass: { popup: 'x-toast-confirm' }
+});
+
+// --- TEXTAREA UNDO / CLEAR LOGIC ---
 window.textHistory = {};
 window.clearText = (id) => {
     const el = document.getElementById(id);
@@ -73,7 +67,7 @@ window.undoText = (id) => {
     }
 };
 
-// --- DATABASE ---
+// --- DATABASE & CORE ---
 const db = new Dexie('AstroAppDB');
 db.version(4).stores({ clients: '++id, name, star, phone, location, age, dob, birthTime, profession' });
 
@@ -99,6 +93,51 @@ function closePrescriptionForm() {
     prescModal.classList.add('hidden'); document.body.style.overflow = 'auto'; 
     prescForm.reset(); document.getElementById('prescClientId').value = "";
     document.getElementById('prescHistoryList').innerHTML = "";
+}
+
+// --- LETTERHEAD SELECTION POPUP ---
+window.showLetterheadOptions = function(action) {
+    Swal.fire({
+        title: 'Select Letterhead',
+        html: `
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px;">
+                <button id="btn-ck-saji" style="padding: 15px 20px; font-size: 16px; font-weight: bold; background: #2E7D32; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    C.K. Saji Panicker
+                </button>
+                <button id="btn-pratnya" style="padding: 15px 20px; font-size: 16px; font-weight: bold; background: #1976D2; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    Pratnya
+                </button>
+            </div>
+        `,
+        showConfirmButton: false,
+        showCancelButton: true,
+        cancelButtonText: 'Cancel',
+        cancelButtonColor: '#657786',
+        didOpen: () => {
+            document.getElementById('btn-ck-saji').addEventListener('click', () => {
+                Swal.close();
+                executeAction(action, 'cksaji');
+            });
+            document.getElementById('btn-pratnya').addEventListener('click', () => {
+                Swal.close();
+                executeAction(action, 'pratnya');
+            });
+        }
+    });
+};
+
+function executeAction(action, letterhead) {
+    switch(action) {
+        case 'client-pdf':
+            generatePDF(letterhead);
+            break;
+        case 'presc-pdf':
+            generatePrescriptionPDF(letterhead);
+            break;
+        case 'presc-share':
+            sharePrescriptionPDF(letterhead);
+            break;
+    }
 }
 
 // --- SAVE MAIN CLIENT ---
@@ -396,7 +435,6 @@ window.deletePrescHist = async (clientId, timestamp) => {
     });
 };
 
-// --- UPDATE LIST ---
 async function updateList() {
     const query = searchInput.value.toLowerCase();
     let clients = await db.clients.toArray();
@@ -413,7 +451,7 @@ async function updateList() {
         if (client.phone) {
             let waPhone = client.phone.replace(/\D/g, '');
             if(waPhone.length === 10) waPhone = '91' + waPhone;
-            waBtn = `<a href="https://wa.me/${waPhone}" target="_blank" class="btn-wa" onclick="event.stopPropagation();" title="Contact on WhatsApp"><i class="fab fa-whatsapp"></i></a>`;
+            waBtn = `<a href="[wa.me](https://wa.me/${waPhone})" target="_blank" class="btn-wa" onclick="event.stopPropagation();" title="Contact on WhatsApp"><i class="fab fa-whatsapp"></i></a>`;
         }
 
         if (hasConsults || noHistory || client.dob) {
@@ -441,57 +479,7 @@ async function updateList() {
     document.getElementById('clientList').innerHTML = html;
 }
 
-// --- LETTERHEAD SELECTION DIALOG ---
-function askLetterheadChoice() {
-    console.log('askLetterheadChoice called');
-    if (typeof Swal === 'undefined') {
-        console.warn('Swal not defined, using confirm fallback');
-        const choice = confirm('Choose letterhead:\nOK = CK Saji Panicker\nCancel = Pratnya (Logo)');
-        if (choice) return Promise.resolve('ck');
-        else return Promise.resolve('pratnya');
-    }
-    
-    return Swal.fire({
-        title: 'Select Letterhead',
-        text: 'Choose the header style for the PDF',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'CK Saji Panicker',
-        cancelButtonText: 'Pratnya (Logo)',
-        reverseButtons: true,
-        focusConfirm: false,
-        focusCancel: false,
-        allowOutsideClick: false
-    }).then((result) => {
-        console.log('Swal result:', result);
-        if (result.isConfirmed) {
-            return 'ck';
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
-            return 'pratnya';
-        }
-        return null;
-    });
-}
-
-function applyPratnyaHeader(templateElement) {
-    const header = templateElement.querySelector('.letterhead-header');
-    if (!header) return () => {};
-    const originalHTML = header.innerHTML;
-    header.innerHTML = `
-        <div style="text-align: center; width: 100%; padding: 10px 0;">
-            <img src="logo.png" alt="Pratnya Astro" style="height: 80px; width: auto;">
-        </div>
-    `;
-    header.style.borderBottom = '2px solid #2E7D32';
-    header.style.paddingBottom = '10px';
-    return () => {
-        header.innerHTML = originalHTML;
-        header.style.borderBottom = '';
-        header.style.paddingBottom = '';
-    };
-}
-
-// --- FILL PRESCRIPTION TEMPLATE ---
+// Helper to fill the CK Saji Panicker Prescription template
 function fillPrescriptionTemplate() {
     const name = document.getElementById('prescName').value || "";
     const star = document.getElementById('prescStar').value || "";
@@ -512,30 +500,50 @@ function fillPrescriptionTemplate() {
     return true;
 }
 
-// --- PRESCRIPTION PDF (with choice) ---
-window.generatePrescriptionPDF = async () => {
-    console.log('generatePrescriptionPDF clicked');
-    if (!fillPrescriptionTemplate()) {
-        topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
-        return;
+// Helper to fill the Pratnya Prescription template
+function fillPrescriptionTemplatePratnya() {
+    const name = document.getElementById('prescName').value || "";
+    const star = document.getElementById('prescStar').value || "";
+    const place = document.getElementById('prescPlace').value || "";
+    const rasi = document.getElementById('prescRasi').value || "";
+    const udhaya = document.getElementById('prescUdhaya').value || "";
+    const body = document.getElementById('prescBody').value || "";
+
+    if(!name && !body) return false;
+
+    document.getElementById('pdfPrescNamePratnya').innerText = name;
+    document.getElementById('pdfPrescDatePratnya').innerText = new Date().toLocaleDateString('en-IN');
+    document.getElementById('pdfPrescStarPratnya').innerText = star;
+    document.getElementById('pdfPrescPlacePratnya').innerText = place;
+    document.getElementById('pdfPrescRasiPratnya').innerText = rasi;
+    document.getElementById('pdfPrescUdhayaPratnya').innerText = udhaya;
+    document.getElementById('pdfPrescBodyPratnya').innerText = body;
+    return true;
+}
+
+window.generatePrescriptionPDF = async (letterhead = 'cksaji') => {
+    let templateId, filled;
+    
+    if (letterhead === 'pratnya') {
+        filled = fillPrescriptionTemplatePratnya();
+        templateId = 'prescriptionTemplatePratnya';
+    } else {
+        filled = fillPrescriptionTemplate();
+        templateId = 'prescriptionTemplate';
     }
-
-    const choice = await askLetterheadChoice();
-    console.log('Choice received:', choice);
-    if (!choice) return;
-
-    const template = document.getElementById('prescriptionTemplate');
-    let restoreHeader = () => {};
-    if (choice === 'pratnya') {
-        restoreHeader = applyPratnyaHeader(template);
+    
+    if (!filled) { 
+        topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); 
+        return; 
     }
-
+    
     const name = document.getElementById('prescName').value || "Client";
-    topToast.fire({ text: 'Generating PDF...' });
 
+    topToast.fire({ text: 'Generating PDF...' });
     try {
         const { jsPDF } = window.jspdf;
-        const canvas = await html2canvas(template, { scale: 2 });
+        const element = document.getElementById(templateId);
+        const canvas = await html2canvas(element, { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const width = pdf.internal.pageSize.getWidth();
@@ -544,38 +552,36 @@ window.generatePrescriptionPDF = async () => {
         pdf.addImage(imgData, 'PNG', 0, 0, width, height);
         pdf.save(`${name}_Prescription.pdf`);
         topToast.fire({ text: 'Downloaded successfully!' });
-    } catch(e) {
-        console.error(e);
+    } catch(e) { 
+        console.error(e); 
         topToast.fire({ text: 'PDF generation failed', background: '#E0245E' });
-    } finally {
-        restoreHeader();
     }
 };
 
-// --- SHARE WA (with choice) ---
-window.sharePrescriptionPDF = async () => {
-    console.log('sharePrescriptionPDF clicked');
-    if (!fillPrescriptionTemplate()) {
-        topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
-        return;
+// --- SHARE WA BUTTON LOGIC ---
+window.sharePrescriptionPDF = async (letterhead = 'cksaji') => {
+    let templateId, filled;
+    
+    if (letterhead === 'pratnya') {
+        filled = fillPrescriptionTemplatePratnya();
+        templateId = 'prescriptionTemplatePratnya';
+    } else {
+        filled = fillPrescriptionTemplate();
+        templateId = 'prescriptionTemplate';
     }
-
-    const choice = await askLetterheadChoice();
-    console.log('Choice received:', choice);
-    if (!choice) return;
-
-    const template = document.getElementById('prescriptionTemplate');
-    let restoreHeader = () => {};
-    if (choice === 'pratnya') {
-        restoreHeader = applyPratnyaHeader(template);
+    
+    if (!filled) { 
+        topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); 
+        return; 
     }
-
+    
     const name = document.getElementById('prescName').value || "Client";
-    topToast.fire({ text: 'Preparing file for sharing...' });
 
+    topToast.fire({ text: 'Preparing file for sharing...' });
     try {
         const { jsPDF } = window.jspdf;
-        const canvas = await html2canvas(template, { scale: 2 });
+        const element = document.getElementById(templateId);
+        const canvas = await html2canvas(element, { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const width = pdf.internal.pageSize.getWidth();
@@ -603,14 +609,10 @@ window.sharePrescriptionPDF = async () => {
     } catch(e) { 
         console.error(e); 
         topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' }); 
-    } finally {
-        restoreHeader();
     }
 };
 
-// --- CLIENT CONSULTATION PDF (with choice) ---
-window.generatePDF = async () => {
-    console.log('generatePDF (client) clicked');
+window.generatePDF = async (letterhead = 'cksaji') => {
     const name = document.getElementById('name').value;
     const star = document.getElementById('star').value;
     const dob = document.getElementById('dob').value;
@@ -652,40 +654,39 @@ window.generatePDF = async () => {
         }
     }
     htmlContent += `</table>`;
-    document.getElementById('pdfContent').innerHTML = htmlContent;
-
-    const choice = await askLetterheadChoice();
-    console.log('Choice received:', choice);
-    if (!choice) return;
-
-    const template = document.getElementById('pdfTemplate');
-    let restoreHeader = () => {};
-    if (choice === 'pratnya') {
-        restoreHeader = applyPratnyaHeader(template);
+    
+    // Determine which template to use
+    let templateId, contentId;
+    if (letterhead === 'pratnya') {
+        templateId = 'pdfTemplatePratnya';
+        contentId = 'pdfContentPratnya';
+    } else {
+        templateId = 'pdfTemplate';
+        contentId = 'pdfContent';
     }
+    
+    document.getElementById(contentId).innerHTML = htmlContent;
 
     topToast.fire({ text: 'Generating PDF...' });
-
     try {
         const { jsPDF } = window.jspdf;
-        const canvas = await html2canvas(template, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const width = pdf.internal.pageSize.getWidth();
-        const height = (canvas.height * width) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+
+        const element1 = document.getElementById(templateId);
+        const canvas1 = await html2canvas(element1, { scale: 2 });
+        const imgData1 = canvas1.toDataURL('image/png');
+        const height1 = (canvas1.height * width) / canvas1.width;
+        pdf.addImage(imgData1, 'PNG', 0, 0, width, height1);
+
         pdf.save(`${name}_Full_Report.pdf`);
         topToast.fire({ text: 'Downloaded successfully!' });
-    } catch (error) {
+    } catch (error) { 
         console.error(error);
-        topToast.fire({ text: 'PDF Failed', background: '#E0245E' });
-    } finally {
-        restoreHeader();
+        topToast.fire({ text: 'PDF Failed', background: '#E0245E' }); 
     }
 };
 
-// --- SEARCH & MISC ---
 searchInput.oninput = () => updateList();
 
 function calculateAge() {
