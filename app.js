@@ -26,7 +26,7 @@ const topToast = Swal.mixin({
     position: 'top',
     showConfirmButton: false,
     timer: 2500,
-    background: '#1DA1F2',
+    background: '#1DA1F2', 
     color: '#fff',
     customClass: { popup: 'x-toast' }
 });
@@ -36,10 +36,10 @@ const warnToast = Swal.mixin({
     position: 'top',
     showConfirmButton: true,
     showCancelButton: true,
-    confirmButtonColor: '#E0245E',
-    cancelButtonColor: '#657786',
+    confirmButtonColor: '#E0245E', 
+    cancelButtonColor: '#657786',  
     confirmButtonText: 'Confirm',
-    background: '#15202B',
+    background: '#15202B', 
     color: '#fff',
     customClass: { popup: 'x-toast-confirm' }
 });
@@ -48,7 +48,11 @@ const warnToast = Swal.mixin({
 window.textHistory = {};
 window.clearText = (id) => {
     const el = document.getElementById(id);
-    if(el) { window.textHistory[id] = el.value; el.value = ''; el.focus(); }
+    if(el) {
+        window.textHistory[id] = el.value;
+        el.value = '';
+        el.focus();
+    }
 };
 window.undoText = (id) => {
     const el = document.getElementById(id);
@@ -56,7 +60,9 @@ window.undoText = (id) => {
         if(window.textHistory[id] !== undefined) {
             el.value = window.textHistory[id];
             delete window.textHistory[id];
-        } else { document.execCommand('undo'); }
+        } else {
+            document.execCommand('undo'); 
+        }
         el.focus();
     }
 };
@@ -75,88 +81,25 @@ updateList();
 
 // --- MODAL FUNCTIONS ---
 function showForm() { modal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
-function closeForm() {
-    modal.classList.add('hidden'); document.body.style.overflow = 'auto';
-    form.reset(); document.getElementById('clientId').value = "";
-    document.getElementById('historyList').innerHTML = "";
-    document.getElementById('clientPrescList').innerHTML = "";
+function closeForm() { 
+    modal.classList.add('hidden'); document.body.style.overflow = 'auto'; 
+    form.reset(); document.getElementById('clientId').value = ""; 
+    document.getElementById('historyList').innerHTML = ""; 
+    document.getElementById('clientPrescList').innerHTML = ""; 
 }
 
 function showPrescriptionForm() { prescModal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
-function closePrescriptionForm() {
-    prescModal.classList.add('hidden'); document.body.style.overflow = 'auto';
+function closePrescriptionForm() { 
+    prescModal.classList.add('hidden'); document.body.style.overflow = 'auto'; 
     prescForm.reset(); document.getElementById('prescClientId').value = "";
     document.getElementById('prescHistoryList').innerHTML = "";
 }
-
-// =============================================
-// LETTERHEAD PICKER
-// =============================================
-// action: 'client' | 'prescription' | 'prescriptionShare'
-window.askLetterheadThenPDF = function(action) {
-    // Remove any existing picker
-    const existing = document.getElementById('lhPickerOverlay');
-    if (existing) existing.remove();
-
-    const overlay = document.createElement('div');
-    overlay.id = 'lhPickerOverlay';
-    overlay.className = 'lh-picker-overlay';
-
-    overlay.innerHTML = `
-        <div class="lh-picker-box">
-            <p class="lh-picker-title">Choose Letterhead</p>
-            <p class="lh-picker-sub">Select which letterhead to use for this PDF</p>
-            <div class="lh-options">
-                <div class="lh-option selected" id="lh-opt-ck" onclick="selectLH('ck')">
-                    <div class="lh-option-icon">📜</div>
-                    <div class="lh-option-name">C.K. Saji Panicker</div>
-                    <div class="lh-option-desc">Name, address &amp; contact</div>
-                </div>
-                <div class="lh-option" id="lh-opt-pratnya" onclick="selectLH('pratnya')">
-                    <div class="lh-option-icon">🌟</div>
-                    <div class="lh-option-name">Pratnya Letterhead</div>
-                    <div class="lh-option-desc">Logo as header</div>
-                </div>
-            </div>
-            <div class="lh-actions">
-                <button class="lh-btn-cancel" onclick="closeLHPicker()">Cancel</button>
-                <button class="lh-btn-go" onclick="confirmLHPicker('${action}')">Generate →</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-};
-
-window._selectedLH = 'ck';
-window.selectLH = function(type) {
-    window._selectedLH = type;
-    document.getElementById('lh-opt-ck').classList.toggle('selected', type === 'ck');
-    document.getElementById('lh-opt-pratnya').classList.toggle('selected', type === 'pratnya');
-};
-
-window.closeLHPicker = function() {
-    const el = document.getElementById('lhPickerOverlay');
-    if (el) el.remove();
-    window._selectedLH = 'ck';
-};
-
-window.confirmLHPicker = function(action) {
-    const lh = window._selectedLH;
-    closeLHPicker();
-    if (action === 'client') {
-        generatePDF(lh);
-    } else if (action === 'prescription') {
-        generatePrescriptionPDF(lh);
-    } else if (action === 'prescriptionShare') {
-        sharePrescriptionPDF(lh);
-    }
-};
 
 // --- SAVE MAIN CLIENT ---
 form.onsubmit = async (event) => {
     event.preventDefault();
     const id = document.getElementById('clientId').value;
-
+    
     const basicData = {
         name: document.getElementById('name').value,
         star: document.getElementById('star').value,
@@ -170,7 +113,7 @@ form.onsubmit = async (event) => {
     };
     const problem = document.getElementById('currentProblem').value.trim();
     const solution = document.getElementById('currentSolution').value.trim();
-
+    
     let consultationEntry = null;
     if (problem || solution) {
         consultationEntry = {
@@ -208,7 +151,7 @@ window.savePrescription = async () => {
         location: document.getElementById('prescPlace').value,
         updated: new Date()
     };
-
+    
     const rasi = document.getElementById('prescRasi').value.trim();
     const udhaya = document.getElementById('prescUdhaya').value.trim();
     const notes = document.getElementById('prescBody').value.trim();
@@ -233,7 +176,7 @@ window.savePrescription = async () => {
         const pHistory = newPresc ? [newPresc] : [];
         await db.clients.add({ ...prescData, consultations: [], prescriptions: pHistory });
     }
-
+    
     closePrescriptionForm();
     await updateList();
     topToast.fire({ text: 'Prescription saved successfully' });
@@ -300,12 +243,13 @@ window.loadClient = async (id) => {
 window.loadPrescription = async (id) => {
     const client = await db.clients.get(id);
     if(!client) return;
-
+    
     document.getElementById('prescClientId').value = client.id;
     document.getElementById('prescName').value = client.name || "";
     document.getElementById('prescPhone').value = client.phone || "";
     document.getElementById('prescStar').value = client.star || "";
     document.getElementById('prescPlace').value = client.location || "";
+    
     document.getElementById('prescRasi').value = "";
     document.getElementById('prescUdhaya').value = "";
     document.getElementById('prescBody').value = "";
@@ -324,14 +268,14 @@ window.loadPrescription = async (id) => {
                         </div>
                     </div>
                     <div style="font-size: 13px; margin-bottom: 4px;">
-                        <strong>Rasi:</strong> <span id="p-rasi-${item.timestamp}">${item.rasi || ''}</span> |
+                        <strong>Rasi:</strong> <span id="p-rasi-${item.timestamp}">${item.rasi || ''}</span> | 
                         <strong>Udhaya:</strong> <span id="p-udhaya-${item.timestamp}">${item.udhaya || ''}</span>
                     </div>
                     <div id="p-notes-${item.timestamp}" style="white-space: pre-wrap; font-size: 14px; margin-top: 8px;">${item.notes || ''}</div>
                 </div>`;
         });
     } else { listDiv.innerHTML = "<p style='color:#888; text-align:center; font-size: 13px;'>No previous history.</p>"; }
-
+    
     showPrescriptionForm();
 };
 
@@ -348,14 +292,14 @@ window.editHist = (clientId, timestamp) => {
             <span onclick="clearText('edit-prob-${timestamp}')">Clear</span>
         </div>
         <textarea id="edit-prob-${timestamp}" rows="3" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${probText === '-' ? '' : probText}</textarea>`;
-
+    
     solEl.innerHTML = `
         <div class="mini-toolbar">
             <span onclick="undoText('edit-sol-${timestamp}')">Undo</span>
             <span onclick="clearText('edit-sol-${timestamp}')">Clear</span>
         </div>
         <textarea id="edit-sol-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${solText === '-' ? '' : solText}</textarea>`;
-
+    
     const actionsDiv = document.querySelector(`#hist-${timestamp} .history-actions`);
     actionsDiv.innerHTML = `
         <button type="button" onclick="saveHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Save</button>
@@ -367,6 +311,7 @@ window.saveHist = async (clientId, timestamp) => {
     const client = await db.clients.get(clientId);
     const probVal = document.getElementById(`edit-prob-${timestamp}`).value;
     const solVal = document.getElementById(`edit-sol-${timestamp}`).value;
+
     const histIndex = client.consultations.findIndex(c => c.timestamp === timestamp);
     if(histIndex !== -1) {
         client.consultations[histIndex].problem = probVal;
@@ -388,7 +333,7 @@ window.editPrescHist = (clientId, timestamp) => {
 
     rasiEl.innerHTML = `<input type="text" id="edit-p-rasi-${timestamp}" value="${rasiText}" style="width: 70px; padding: 2px; font-size: 12px;">`;
     udhayaEl.innerHTML = `<input type="text" id="edit-p-udhaya-${timestamp}" value="${udhayaText}" style="width: 70px; padding: 2px; font-size: 12px;">`;
-
+    
     notesEl.innerHTML = `
         <div class="mini-toolbar" style="margin-top: 8px;">
             <span onclick="undoText('edit-p-notes-${timestamp}')">Undo</span>
@@ -409,6 +354,7 @@ window.savePrescHist = async (clientId, timestamp) => {
     const rasiVal = document.getElementById(`edit-p-rasi-${timestamp}`).value;
     const udhayaVal = document.getElementById(`edit-p-udhaya-${timestamp}`).value;
     const notesVal = document.getElementById(`edit-p-notes-${timestamp}`).value;
+
     const histIndex = client.prescriptions.findIndex(c => c.timestamp === timestamp);
     if(histIndex !== -1) {
         client.prescriptions[histIndex].rasi = rasiVal;
@@ -449,7 +395,7 @@ async function updateList() {
     let clients = await db.clients.toArray();
     if (query) clients = clients.filter(c => c.name.toLowerCase().includes(query));
     clients.reverse();
-
+    
     let html = "";
     clients.forEach(client => {
         const hasConsults = client.consultations && client.consultations.length > 0;
@@ -488,116 +434,30 @@ async function updateList() {
     document.getElementById('clientList').innerHTML = html;
 }
 
-// =============================================
-// PDF HELPERS - fill both prescription templates
-// =============================================
-function fillPrescriptionTemplate(usePratnya) {
-    const name   = document.getElementById('prescName').value || "";
-    const star   = document.getElementById('prescStar').value || "";
-    const place  = document.getElementById('prescPlace').value || "";
-    const rasi   = document.getElementById('prescRasi').value || "";
-    const udhaya = document.getElementById('prescUdhaya').value || "";
-    const body   = document.getElementById('prescBody').value || "";
-
-    if(!name && !body) return false;
-
-    const date = new Date().toLocaleDateString('en-IN');
-
-    if (usePratnya) {
-        document.getElementById('pdfPrescNameP').innerText  = name;
-        document.getElementById('pdfPrescDateP').innerText  = date;
-        document.getElementById('pdfPrescStarP').innerText  = star;
-        document.getElementById('pdfPrescPlaceP').innerText = place;
-        document.getElementById('pdfPrescRasiP').innerText  = rasi;
-        document.getElementById('pdfPrescUdhayaP').innerText = udhaya;
-        document.getElementById('pdfPrescBodyP').innerText  = body;
-    } else {
-        document.getElementById('pdfPrescName').innerText   = name;
-        document.getElementById('pdfPrescDate').innerText   = date;
-        document.getElementById('pdfPrescStar').innerText   = star;
-        document.getElementById('pdfPrescPlace').innerText  = place;
-        document.getElementById('pdfPrescRasi').innerText   = rasi;
-        document.getElementById('pdfPrescUdhaya').innerText = udhaya;
-        document.getElementById('pdfPrescBody').innerText   = body;
-    }
-    return true;
+// --- SWEETALERT LETTERHEAD SELECTOR ---
+async function chooseLetterhead() {
+    const { value: letterhead } = await Swal.fire({
+        title: 'Select Letterhead',
+        text: 'Which letterhead should be used for this PDF?',
+        input: 'radio',
+        inputOptions: {
+            'ck': 'C.K. Saji Panicker',
+            'pratnya': 'Pratnya Letterhead (Logo)'
+        },
+        inputValue: 'ck', // Default Selection
+        showCancelButton: true,
+        confirmButtonText: 'Continue',
+        confirmButtonColor: '#2E7D32',
+    });
+    return letterhead;
 }
 
-// =============================================
-// GENERATE PRESCRIPTION PDF  (lh = 'ck' | 'pratnya')
-// =============================================
-window.generatePrescriptionPDF = async (lh = 'ck') => {
-    const usePratnya = lh === 'pratnya';
-    if (!fillPrescriptionTemplate(usePratnya)) {
-        topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); return;
-    }
-    const name = document.getElementById('prescName').value || "Client";
-    const templateId = usePratnya ? 'prescriptionTemplatePratnya' : 'prescriptionTemplate';
 
-    topToast.fire({ text: 'Generating PDF...' });
-    try {
-        const { jsPDF } = window.jspdf;
-        const element = document.getElementById(templateId);
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
-        const height = (canvas.height * width) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-        pdf.save(`${name}_Prescription.pdf`);
-        topToast.fire({ text: 'Downloaded successfully!' });
-    } catch(e) { console.error(e); }
-};
-
-// =============================================
-// SHARE PRESCRIPTION VIA WHATSAPP  (lh = 'ck' | 'pratnya')
-// =============================================
-window.sharePrescriptionPDF = async (lh = 'ck') => {
-    const usePratnya = lh === 'pratnya';
-    if (!fillPrescriptionTemplate(usePratnya)) {
-        topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); return;
-    }
-    const name = document.getElementById('prescName').value || "Client";
-    const templateId = usePratnya ? 'prescriptionTemplatePratnya' : 'prescriptionTemplate';
-
-    topToast.fire({ text: 'Preparing file for sharing...' });
-    try {
-        const { jsPDF } = window.jspdf;
-        const element = document.getElementById(templateId);
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
-        const height = (canvas.height * width) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-
-        const pdfBlob = pdf.output('blob');
-        const file = new File([pdfBlob], `${name}_Prescription.pdf`, { type: 'application/pdf' });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'Prescription', text: 'Here is your prescription from Pratnya Astro.' });
-            topToast.fire({ text: 'Opened share menu!' });
-        } else {
-            Swal.fire({
-                title: 'Unsupported Browser',
-                text: 'Your device/browser does not support direct file sharing. Please click "PDF" to download it, then attach it in WhatsApp manually.',
-                icon: 'info'
-            });
-        }
-    } catch(e) {
-        console.error(e);
-        topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' });
-    }
-};
-
-// =============================================
-// GENERATE CLIENT FULL REPORT PDF  (lh = 'ck' | 'pratnya')
-// =============================================
-window.generatePDF = async (lh = 'ck') => {
-    const usePratnya = lh === 'pratnya';
+// --- DYNAMIC PDF POPULATORS ---
+async function populateMainPDFContent() {
     const name = document.getElementById('name').value;
     const star = document.getElementById('star').value;
-    const dob  = document.getElementById('dob').value;
+    const dob = document.getElementById('dob').value;
     const time = document.getElementById('birthTime').value;
 
     let displayTime = time;
@@ -636,33 +496,183 @@ window.generatePDF = async (lh = 'ck') => {
         }
     }
     htmlContent += `</table>`;
+    document.getElementById('pdfContent').innerHTML = htmlContent;
+    return name || "Client";
+}
 
-    // Fill the appropriate template
-    if (usePratnya) {
-        document.getElementById('pdfContentPratnya').innerHTML = htmlContent;
-    } else {
-        document.getElementById('pdfContent').innerHTML = htmlContent;
-    }
+function fillPrescriptionTemplate() {
+    const name = document.getElementById('prescName').value || "";
+    const star = document.getElementById('prescStar').value || "";
+    const place = document.getElementById('prescPlace').value || "";
+    const rasi = document.getElementById('prescRasi').value || "";
+    const udhaya = document.getElementById('prescUdhaya').value || "";
+    const body = document.getElementById('prescBody').value || "";
 
-    const templateId = usePratnya ? 'pdfTemplatePratnya' : 'pdfTemplate';
+    if(!name && !body) return false;
+
+    document.getElementById('pdfPrescName').innerText = name;
+    document.getElementById('pdfPrescDate').innerText = new Date().toLocaleDateString('en-IN');
+    document.getElementById('pdfPrescStar').innerText = star;
+    document.getElementById('pdfPrescPlace').innerText = place;
+    document.getElementById('pdfPrescRasi').innerText = rasi;
+    document.getElementById('pdfPrescUdhaya').innerText = udhaya;
+    document.getElementById('pdfPrescBody').innerText = body;
+    return true;
+}
+
+// --- MAIN CLIENT PDF & SHARE FUNCTIONS ---
+window.generatePDF = async () => {
+    const letterhead = await chooseLetterhead();
+    if (!letterhead) return; // User cancelled
+
+    const name = await populateMainPDFContent();
+    
+    // Apply chosen letterhead template dynamically
+    document.getElementById('pdfTemplateHeader').innerHTML = 
+        letterhead === 'ck' ? document.getElementById('headerTemplateCK').innerHTML : document.getElementById('headerTemplatePratnya').innerHTML;
 
     topToast.fire({ text: 'Generating PDF...' });
     try {
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
         const width = pdf.internal.pageSize.getWidth();
-        const element1 = document.getElementById(templateId);
+
+        const element1 = document.getElementById('pdfTemplate');
         const canvas1 = await html2canvas(element1, { scale: 2 });
         const imgData1 = canvas1.toDataURL('image/png');
         const height1 = (canvas1.height * width) / canvas1.width;
         pdf.addImage(imgData1, 'PNG', 0, 0, width, height1);
+
         pdf.save(`${name}_Full_Report.pdf`);
         topToast.fire({ text: 'Downloaded successfully!' });
     } catch (error) { topToast.fire({ text: 'PDF Failed', background: '#E0245E' }); }
 };
 
-searchInput.oninput = () => updateList();
+window.shareMainPDF = async () => {
+    const letterhead = await chooseLetterhead();
+    if (!letterhead) return;
 
+    const name = await populateMainPDFContent();
+    
+    document.getElementById('pdfTemplateHeader').innerHTML = 
+        letterhead === 'ck' ? document.getElementById('headerTemplateCK').innerHTML : document.getElementById('headerTemplatePratnya').innerHTML;
+
+    topToast.fire({ text: 'Preparing file for sharing...' });
+    try {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const width = pdf.internal.pageSize.getWidth();
+
+        const element1 = document.getElementById('pdfTemplate');
+        const canvas1 = await html2canvas(element1, { scale: 2 });
+        const imgData1 = canvas1.toDataURL('image/png');
+        const height1 = (canvas1.height * width) / canvas1.width;
+        pdf.addImage(imgData1, 'PNG', 0, 0, width, height1);
+
+        // Convert to a File object for sharing
+        const pdfBlob = pdf.output('blob');
+        const file = new File([pdfBlob], `${name}_Full_Report.pdf`, { type: 'application/pdf' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: 'Consultation Report',
+                text: 'Here is your report from Pratnya Astro.'
+            });
+            topToast.fire({ text: 'Opened share menu!' });
+        } else {
+            Swal.fire({
+                title: 'Unsupported Browser',
+                text: 'Your device/browser does not support direct file sharing. Please click "PDF" to download it, then attach it in WhatsApp manually.',
+                icon: 'info'
+            });
+        }
+    } catch(e) { 
+        console.error(e); 
+        topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' }); 
+    }
+};
+
+// --- PRESCRIPTION PDF & SHARE FUNCTIONS ---
+window.generatePrescriptionPDF = async () => {
+    if (!fillPrescriptionTemplate()) { topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); return; }
+    
+    const letterhead = await chooseLetterhead();
+    if (!letterhead) return; 
+
+    const name = document.getElementById('prescName').value || "Client";
+
+    // Apply chosen letterhead template dynamically
+    document.getElementById('prescTemplateHeader').innerHTML = 
+        letterhead === 'ck' ? document.getElementById('headerTemplateCK').innerHTML : document.getElementById('headerTemplatePratnya').innerHTML;
+
+    topToast.fire({ text: 'Generating PDF...' });
+    try {
+        const { jsPDF } = window.jspdf;
+        const element = document.getElementById('prescriptionTemplate');
+        const canvas = await html2canvas(element, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const width = pdf.internal.pageSize.getWidth();
+        const height = (canvas.height * width) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        pdf.save(`${name}_Prescription.pdf`);
+        topToast.fire({ text: 'Downloaded successfully!' });
+    } catch(e) { console.error(e); }
+};
+
+window.sharePrescriptionPDF = async () => {
+    if (!fillPrescriptionTemplate()) { topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); return; }
+    
+    const letterhead = await chooseLetterhead();
+    if (!letterhead) return; 
+
+    const name = document.getElementById('prescName').value || "Client";
+
+    // Apply chosen letterhead template dynamically
+    document.getElementById('prescTemplateHeader').innerHTML = 
+        letterhead === 'ck' ? document.getElementById('headerTemplateCK').innerHTML : document.getElementById('headerTemplatePratnya').innerHTML;
+
+    topToast.fire({ text: 'Preparing file for sharing...' });
+    try {
+        const { jsPDF } = window.jspdf;
+        const element = document.getElementById('prescriptionTemplate');
+        const canvas = await html2canvas(element, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const width = pdf.internal.pageSize.getWidth();
+        const height = (canvas.height * width) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        
+        // Convert to a File object for sharing
+        const pdfBlob = pdf.output('blob');
+        const file = new File([pdfBlob], `${name}_Prescription.pdf`, { type: 'application/pdf' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: 'Prescription',
+                text: 'Here is your prescription from Pratnya Astro.'
+            });
+            topToast.fire({ text: 'Opened share menu!' });
+        } else {
+            Swal.fire({
+                title: 'Unsupported Browser',
+                text: 'Your device/browser does not support direct file sharing. Please click "PDF" to download it, then attach it in WhatsApp manually.',
+                icon: 'info'
+            });
+        }
+    } catch(e) { 
+        console.error(e); 
+        topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' }); 
+    }
+};
+
+
+// --- UTILITY ---
+searchInput.oninput = () => updateList();
 function calculateAge() {
     const dobInput = document.getElementById('dob').value;
     if (!dobInput) return;
@@ -680,7 +690,6 @@ async function deleteCurrentClient() {
         if (result.isConfirmed) { await db.clients.delete(parseInt(id)); closeForm(); await updateList(); topToast.fire({ text: 'Deleted' }); }
     });
 }
-
 async function deleteCurrentPrescClient() {
     const id = document.getElementById('prescClientId').value;
     if (!id) return;
@@ -690,20 +699,20 @@ async function deleteCurrentPrescClient() {
 }
 
 function transferToPrescription() {
-    const id       = document.getElementById('clientId').value;
-    const name     = document.getElementById('name').value;
-    const phone    = document.getElementById('phone').value;
-    const star     = document.getElementById('star').value;
-    const place    = document.getElementById('place').value;
+    const id = document.getElementById('clientId').value; 
+    const name = document.getElementById('name').value;
+    const phone = document.getElementById('phone').value;
+    const star = document.getElementById('star').value;
+    const place = document.getElementById('place').value;
     const solution = document.getElementById('currentSolution').value;
 
     if (!name) { topToast.fire({ text: 'Please enter a Name first', background: '#E0245E' }); return; }
 
     showPrescriptionForm();
     document.getElementById('prescClientId').value = id;
-    document.getElementById('prescName').value     = name;
-    document.getElementById('prescPhone').value    = phone;
-    document.getElementById('prescStar').value     = star;
-    document.getElementById('prescPlace').value    = place;
-    document.getElementById('prescBody').value     = solution;
+    document.getElementById('prescName').value = name;
+    document.getElementById('prescPhone').value = phone;
+    document.getElementById('prescStar').value = star;
+    document.getElementById('prescPlace').value = place;
+    document.getElementById('prescBody').value = solution;
 }
