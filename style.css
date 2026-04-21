@@ -309,3 +309,18 @@ input, textarea {
     .form-grid { grid-template-columns: 1fr 1fr 1fr; }
     #historySection, .new-consultation { grid-column: span 3; }
 }
+/* Global template selector in header */
+.global-template-selector select {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid #2E7D32;
+    background: white;
+    font-size: 14px;
+    font-weight: 500;
+    color: #2E7D32;
+    cursor: pointer;
+    outline: none;
+}
+.global-template-selector select:hover {
+    background: #f0f9f0;
+}

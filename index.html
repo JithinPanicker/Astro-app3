@@ -24,20 +24,22 @@
         .watermark { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); opacity: 0.08; z-index: 0; pointer-events: none; }
         .letterhead-footer { position: absolute; bottom: 30px; left: 40px; right: 40px; text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; font-size: 16px; }
         .footer-text { font-family: 'Brush Script MT', cursive; font-size: 22px; }
-        /* template selector styling */
-        .template-selector {
+        /* global template selector styling */
+        .global-template-selector {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-left: auto;
             margin-right: 10px;
         }
-        .template-selector select {
+        .global-template-selector select {
             padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
+            border-radius: 20px;
+            border: 1px solid #2E7D32;
             background: white;
             font-size: 14px;
+            font-weight: 500;
+            color: #2E7D32;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -55,12 +57,20 @@
         <p id="licenseError" style="color: #ff5252; font-size: 14px; margin-top: 15px; display: none;">Invalid License Key</p>
     </div>
 
-    <!-- Main Header -->
-    <header style="position: sticky; top: 0; z-index: 100; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 10px; display: flex; justify-content: center; align-items: center;">
-        <img src="logo.png" alt="Pratnya Astro" class="logo">
-        <div id="updateIcon" onclick="showUpdateInfo()" style="display: none; position: absolute; right: 20px; cursor: pointer;">
-            <span style="font-size: 24px;">🔔</span>
-            <span style="position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: red; border-radius: 50%;"></span>
+    <!-- Main Header with Global Template Selector -->
+    <header style="position: sticky; top: 0; z-index: 100; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <img src="logo.png" alt="Pratnya Astro" class="logo" style="margin-left: 10px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="global-template-selector">
+                <select id="globalTemplateSelect">
+                    <option value="ck">CK Saji Panicker</option>
+                    <option value="pratnya">Pratnya</option>
+                </select>
+            </div>
+            <div id="updateIcon" onclick="showUpdateInfo()" style="display: none; cursor: pointer; margin-right: 10px;">
+                <span style="font-size: 24px;">🔔</span>
+                <span style="position: absolute; top: 5px; right: 5px; width: 10px; height: 10px; background: red; border-radius: 50%;"></span>
+            </div>
         </div>
     </header>
 
@@ -76,7 +86,7 @@
 
         <div id="clientList" class="client-list"></div>
 
-        <!-- Client Form Modal -->
+        <!-- Client Form Modal (no template selector inside) -->
         <div id="clientFormModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
@@ -139,15 +149,9 @@
                         <textarea id="currentSolution" style="flex: 1; min-height: 200px; border: 1px solid #ddd; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5; resize: vertical;" placeholder="Write solution here..."></textarea>
                     </div>
 
-                    <!-- Template selector for Client PDF -->
+                    <!-- Form actions (no template selector here) -->
                     <div class="form-actions">
                         <button type="submit" style="background-color: #2E7D32; color: white; font-weight: bold;">Save</button>
-                        <div class="template-selector">
-                            <select id="clientTemplateSelect">
-                                <option value="ck">CK Saji Panicker</option>
-                                <option value="pratnya">Pratnya</option>
-                            </select>
-                        </div>
                         <button type="button" onclick="generatePDF()" style="background-color: #1976D2; color: white; font-weight: bold;">PDF</button>
                         <button type="button" onclick="deleteCurrentClient()" style="background-color: #D32F2F; color: white; font-weight: bold;">Delete</button>
                     </div>
@@ -155,7 +159,7 @@
             </div>
         </div>
 
-        <!-- Prescription Modal -->
+        <!-- Prescription Modal (no template selector inside) -->
         <div id="prescriptionModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header" style="background: #FFF3E0;">
@@ -189,15 +193,9 @@
                     </div>
                     <textarea id="prescBody" style="flex: 1; min-height: 250px; border: 1px solid #ccc; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5;" placeholder="Write full prescription here..."></textarea>
 
-                    <!-- Template selector for Prescription PDF -->
+                    <!-- Form actions (no template selector) -->
                     <div class="form-actions" style="background: #FFF3E0;">
                         <button type="button" onclick="savePrescription()" style="background-color: #4CAF50; color: white; font-weight: bold;">Save</button>
-                        <div class="template-selector">
-                            <select id="prescTemplateSelect">
-                                <option value="ck">CK Saji Panicker</option>
-                                <option value="pratnya">Pratnya</option>
-                            </select>
-                        </div>
                         <button type="button" onclick="generatePrescriptionPDF()" style="background-color: #FF9800; color: white; font-weight: bold;">PDF</button>
                         <button type="button" onclick="sharePrescriptionPDF()" style="background-color: #25D366; color: white; font-weight: bold;"><i class="fab fa-whatsapp"></i> Share</button>
                         <button type="button" onclick="deleteCurrentPrescClient()" style="background-color: #D32F2F; color: white; font-weight: bold;">Delete</button>
@@ -207,7 +205,7 @@
         </div>
     </div>
 
-    <!-- Hidden PDF Templates -->
+    <!-- Hidden PDF Templates (dual) -->
     <!-- CK Saji Panicker Template -->
     <div id="pdfTemplateCK" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
         <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
@@ -249,7 +247,7 @@
         </div>
     </div>
 
-    <!-- Prescription Templates (similar dual) -->
+    <!-- Prescription Templates (dual) -->
     <div id="prescriptionTemplateCK" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
         <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
         <div class="letterhead-header">
@@ -312,7 +310,7 @@
     <script src="app.js"></script>
     <script>
         // ----- SERVICE WORKER UPDATE HANDLING (FIXED) -----
-        const LATEST_CHANGES = "Added dual letterhead templates (CK Saji Panicker / Pratnya)";
+        const LATEST_CHANGES = "Added global template selector in header";
         let newWorker = null;
 
         if ('serviceWorker' in navigator) {

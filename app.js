@@ -79,6 +79,11 @@ const searchInput = document.getElementById('searchInput');
 
 updateList();
 
+// --- GLOBAL TEMPLATE SELECTOR HELPER ---
+function getSelectedTemplate() {
+    return document.getElementById('globalTemplateSelect').value; // 'ck' or 'pratnya'
+}
+
 // --- MODAL FUNCTIONS ---
 function showForm() { modal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
 function closeForm() { 
@@ -434,8 +439,9 @@ async function updateList() {
     document.getElementById('clientList').innerHTML = html;
 }
 
-// --- FILL PRESCRIPTION TEMPLATE (supports template selection) ---
-function fillPrescriptionTemplate(templateType) {
+// --- FILL PRESCRIPTION TEMPLATE (uses global selector) ---
+function fillPrescriptionTemplate() {
+    const template = getSelectedTemplate();
     const name = document.getElementById('prescName').value || "";
     const star = document.getElementById('prescStar').value || "";
     const place = document.getElementById('prescPlace').value || "";
@@ -446,7 +452,7 @@ function fillPrescriptionTemplate(templateType) {
 
     if(!name && !body) return false;
 
-    const suffix = templateType === 'ck' ? 'CK' : 'Pratnya';
+    const suffix = template === 'ck' ? 'CK' : 'Pratnya';
     document.getElementById(`pdfPrescName${suffix}`).innerText = name;
     document.getElementById(`pdfPrescDate${suffix}`).innerText = currentDate;
     document.getElementById(`pdfPrescStar${suffix}`).innerText = star;
@@ -457,10 +463,10 @@ function fillPrescriptionTemplate(templateType) {
     return true;
 }
 
-// --- GENERATE PRESCRIPTION PDF WITH SELECTED TEMPLATE ---
+// --- GENERATE PRESCRIPTION PDF (global selector) ---
 window.generatePrescriptionPDF = async () => {
-    const template = document.getElementById('prescTemplateSelect').value; // 'ck' or 'pratnya'
-    if (!fillPrescriptionTemplate(template)) {
+    const template = getSelectedTemplate();
+    if (!fillPrescriptionTemplate()) {
         topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
         return;
     }
@@ -483,10 +489,10 @@ window.generatePrescriptionPDF = async () => {
     } catch(e) { console.error(e); }
 };
 
-// --- SHARE PRESCRIPTION PDF WITH SELECTED TEMPLATE ---
+// --- SHARE PRESCRIPTION PDF (global selector) ---
 window.sharePrescriptionPDF = async () => {
-    const template = document.getElementById('prescTemplateSelect').value;
-    if (!fillPrescriptionTemplate(template)) {
+    const template = getSelectedTemplate();
+    if (!fillPrescriptionTemplate()) {
         topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
         return;
     }
@@ -528,9 +534,9 @@ window.sharePrescriptionPDF = async () => {
     }
 };
 
-// --- GENERATE CLIENT FULL REPORT PDF WITH SELECTED TEMPLATE ---
+// --- GENERATE CLIENT FULL REPORT PDF (global selector) ---
 window.generatePDF = async () => {
-    const template = document.getElementById('clientTemplateSelect').value;
+    const template = getSelectedTemplate();
     const name = document.getElementById('name').value;
     const star = document.getElementById('star').value;
     const dob = document.getElementById('dob').value;
