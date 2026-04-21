@@ -72,7 +72,6 @@ button {
     font-size: 13px; 
 }
 
-/* Updated for Font Awesome WhatsApp Icon */
 .btn-wa {
     background: #25D366;
     color: white;
@@ -282,7 +281,6 @@ input, textarea {
     
     #clientForm { padding: 30px; padding-bottom: 0px; }
     
-    /* Desktop specific fix for floating footer background color */
     .form-actions { 
         background: white; 
         margin: auto -30px 0 -30px; 

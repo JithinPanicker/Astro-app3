@@ -26,7 +26,7 @@ const topToast = Swal.mixin({
     position: 'top',
     showConfirmButton: false,
     timer: 2500,
-    background: '#1DA1F2', // Twitter Blue
+    background: '#1DA1F2',
     color: '#fff',
     customClass: { popup: 'x-toast' }
 });
@@ -36,10 +36,10 @@ const warnToast = Swal.mixin({
     position: 'top',
     showConfirmButton: true,
     showCancelButton: true,
-    confirmButtonColor: '#E0245E', // Twitter Red
-    cancelButtonColor: '#657786',  // Twitter Gray
+    confirmButtonColor: '#E0245E',
+    cancelButtonColor: '#657786',
     confirmButtonText: 'Confirm',
-    background: '#15202B', // Twitter Dark
+    background: '#15202B',
     color: '#fff',
     customClass: { popup: 'x-toast-confirm' }
 });
@@ -402,7 +402,6 @@ async function updateList() {
         const hasPresc = client.prescriptions && client.prescriptions.length > 0;
         const noHistory = !hasConsults && !hasPresc;
 
-        // Generate WA button with Font Awesome icon if phone exists
         let waBtn = '';
         if (client.phone) {
             let waPhone = client.phone.replace(/\D/g, '');
@@ -435,7 +434,6 @@ async function updateList() {
     document.getElementById('clientList').innerHTML = html;
 }
 
-// Helper to fill the PDF template
 function fillPrescriptionTemplate() {
     const name = document.getElementById('prescName').value || "";
     const star = document.getElementById('prescStar').value || "";
@@ -476,7 +474,6 @@ window.generatePrescriptionPDF = async () => {
     } catch(e) { console.error(e); }
 };
 
-// --- SHARE WA BUTTON LOGIC ---
 window.sharePrescriptionPDF = async () => {
     if (!fillPrescriptionTemplate()) { topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); return; }
     const name = document.getElementById('prescName').value || "Client";
@@ -493,7 +490,6 @@ window.sharePrescriptionPDF = async () => {
         
         pdf.addImage(imgData, 'PNG', 0, 0, width, height);
         
-        // Convert to a File object for sharing
         const pdfBlob = pdf.output('blob');
         const file = new File([pdfBlob], `${name}_Prescription.pdf`, { type: 'application/pdf' });
 
@@ -505,7 +501,6 @@ window.sharePrescriptionPDF = async () => {
             });
             topToast.fire({ text: 'Opened share menu!' });
         } else {
-            // Fallback for desktop browsers that don't support file sharing
             Swal.fire({
                 title: 'Unsupported Browser',
                 text: 'Your device/browser does not support direct file sharing. Please click "PDF" to download it, then attach it in WhatsApp manually.',
@@ -517,7 +512,6 @@ window.sharePrescriptionPDF = async () => {
         topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' }); 
     }
 };
-
 
 window.generatePDF = async () => {
     const name = document.getElementById('name').value;

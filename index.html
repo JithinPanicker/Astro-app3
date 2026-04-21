@@ -17,6 +17,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        /* inline styles kept as before */
         .letterhead-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px; font-family: 'Arial', sans-serif; }
         .letterhead-left { text-align: left; color: #333; }
         .contact-link { text-decoration: none; color: inherit; cursor: pointer; }
@@ -27,6 +28,7 @@
 </head>
 <body>
 
+    <!-- License Screen -->
     <div id="licenseScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; box-sizing: border-box;">
         <img src="logo.png" style="width: 130px; margin-bottom: 20px;">
         <h2 style="margin: 0; font-size: 24px;">Pratnya Astro Manager</h2>
@@ -38,6 +40,7 @@
         <p id="licenseError" style="color: #ff5252; font-size: 14px; margin-top: 15px; display: none;">Invalid License Key</p>
     </div>
 
+    <!-- Main Header -->
     <header style="position: sticky; top: 0; z-index: 100; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 10px; display: flex; justify-content: center; align-items: center;">
         <img src="logo.png" alt="Pratnya Astro" class="logo">
         <div id="updateIcon" onclick="showUpdateInfo()" style="display: none; position: absolute; right: 20px; cursor: pointer;">
@@ -58,6 +61,7 @@
 
         <div id="clientList" class="client-list"></div>
 
+        <!-- Client Form Modal -->
         <div id="clientFormModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
@@ -129,6 +133,7 @@
             </div>
         </div>
 
+        <!-- Prescription Modal -->
         <div id="prescriptionModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header" style="background: #FFF3E0;">
@@ -171,9 +176,9 @@
                 </form>
             </div>
         </div>
-
     </div>
 
+    <!-- PDF Templates (hidden) -->
     <div id="pdfTemplate" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
         <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
         <div class="letterhead-header">
@@ -238,10 +243,18 @@
 
     <script src="app.js"></script>
     <script>
+        // ----- SERVICE WORKER UPDATE HANDLING (FIXED) -----
         const LATEST_CHANGES = "Fixed PDF Template Font Colors and Italics";
+        let newWorker = null; // ← DECLARED PROPERLY
+
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(registration => {
-                if (registration.waiting) { newWorker = registration.waiting; showNotificationIcon(); }
+                // If a waiting worker exists, show update icon
+                if (registration.waiting) {
+                    newWorker = registration.waiting;
+                    showNotificationIcon();
+                }
+
                 registration.onupdatefound = () => {
                     const installingWorker = registration.installing;
                     installingWorker.onstatechange = () => {
@@ -252,18 +265,68 @@
                     };
                 };
             });
+
+            // Auto-reload when new service worker takes control
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    refreshing = true;
+                    window.location.reload();
+                }
+            });
         }
-        function showNotificationIcon() { document.getElementById('updateIcon').style.display = 'block'; }
+
+        function showNotificationIcon() {
+            document.getElementById('updateIcon').style.display = 'block';
+        }
+
         function showUpdateInfo() {
             Swal.fire({
-                title: '🚀 Update Available!', html: `What's New:<br><b>${LATEST_CHANGES}</b>`, icon: 'info', showCancelButton: true, confirmButtonText: 'Update Now'
-            }).then((result) => { if (result.isConfirmed) performUpdate(); });
+                title: '🚀 Update Available!',
+                html: `What's New:<br><b>${LATEST_CHANGES}</b>`,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Update Now'
+            }).then((result) => {
+                if (result.isConfirmed) performUpdate();
+            });
         }
+
         function performUpdate() {
-            if (!newWorker) { window.location.reload(); return; }
+            if (!newWorker) {
+                window.location.reload();
+                return;
+            }
             newWorker.postMessage({ type: 'SKIP_WAITING' });
-            window.location.reload();
+            // The 'controllerchange' event will trigger the reload
         }
+
+        // ----- LICENSE SYSTEM (unchanged) -----
+        checkLicense();
+        function checkLicense() {
+            const expiry = localStorage.getItem('pratnya_license_expiry');
+            const lockScreen = document.getElementById('licenseScreen');
+            if (!expiry || new Date() > new Date(expiry)) {
+                lockScreen.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            } else {
+                lockScreen.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        window.activateLicense = function() {
+            const input = document.getElementById('licenseKeyInput').value.trim();
+            try {
+                const decoded = atob(input);
+                const parts = decoded.split('|');
+                if (parts[0] !== "PRATNYA-SECRET") throw new Error("Invalid Key");
+                localStorage.setItem('pratnya_license_expiry', parts[1]);
+                location.reload();
+            } catch (e) {
+                document.getElementById('licenseError').style.display = 'block';
+            }
+        };
     </script>
 </body>
 </html>
