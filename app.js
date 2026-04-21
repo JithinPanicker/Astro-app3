@@ -435,33 +435,6 @@ async function updateList() {
     document.getElementById('clientList').innerHTML = html;
 }
 
-// HELPER: Switch Letterhead Content dynamically
-function injectLetterhead(targetId, letterheadChoice) {
-    const targetEl = document.getElementById(targetId);
-    if(letterheadChoice === 'ck') {
-        targetEl.innerHTML = `
-            <div class="letterhead-left">
-                <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Astrologer</p>
-                <h2 style="color: #2E7D32; font-size: 26px; font-weight: bold; margin: 0;">C.K. Saji Panicker</h2>
-                <div style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; line-height: 1.6; margin-top: 6px;">
-                    Chathangottupuram, Kalarikkal<br>Wandoor-Malappuram<br>Kerala : 679 328
-                </div>
-            </div>
-            <div class="letterhead-right" style="text-align: right;">
-                <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Consultation</p>
-                <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Online: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">9207 773 880</strong></p>
-                <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Office: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">7034 600 880</strong></p>
-            </div>
-        `;
-    } else {
-        targetEl.innerHTML = `
-            <div style="width: 100%; text-align: center; padding-top: 10px;">
-                <img src="logo.png" style="max-height: 100px; width: auto;">
-            </div>
-        `;
-    }
-}
-
 // Helper to fill the PDF template
 function fillPrescriptionTemplate() {
     const name = document.getElementById('prescName').value || "";
@@ -485,11 +458,6 @@ function fillPrescriptionTemplate() {
 
 window.generatePrescriptionPDF = async () => {
     if (!fillPrescriptionTemplate()) { topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); return; }
-    
-    // READ RADIO SELECTION
-    const selectedLetterhead = document.querySelector('input[name="prescLetterhead"]:checked').value;
-    injectLetterhead('prescHeaderContent', selectedLetterhead);
-
     const name = document.getElementById('prescName').value || "Client";
 
     topToast.fire({ text: 'Generating PDF...' });
@@ -511,11 +479,6 @@ window.generatePrescriptionPDF = async () => {
 // --- SHARE WA BUTTON LOGIC ---
 window.sharePrescriptionPDF = async () => {
     if (!fillPrescriptionTemplate()) { topToast.fire({ text: 'Form is empty!', background: '#E0245E' }); return; }
-    
-    // READ RADIO SELECTION
-    const selectedLetterhead = document.querySelector('input[name="prescLetterhead"]:checked').value;
-    injectLetterhead('prescHeaderContent', selectedLetterhead);
-
     const name = document.getElementById('prescName').value || "Client";
 
     topToast.fire({ text: 'Preparing file for sharing...' });
@@ -599,10 +562,6 @@ window.generatePDF = async () => {
     }
     htmlContent += `</table>`;
     document.getElementById('pdfContent').innerHTML = htmlContent;
-
-    // READ RADIO SELECTION
-    const selectedLetterhead = document.querySelector('input[name="mainLetterhead"]:checked').value;
-    injectLetterhead('pdfHeaderContent', selectedLetterhead);
 
     topToast.fire({ text: 'Generating PDF...' });
     try {
