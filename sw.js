@@ -1,4 +1,4 @@
-const CACHE_NAME = "astro-manager-v40"; // INCREMENT ON EVERY DEPLOY
+const CACHE_NAME = "astro-manager-v41"; // Increment on each deploy
 
 const ASSETS_TO_CACHE = [
     "./",
@@ -14,7 +14,6 @@ const ASSETS_TO_CACHE = [
     "https://cdn.jsdelivr.net/npm/sweetalert2@11"
 ];
 
-// Install Event
 self.addEventListener("install", (event) => {
     self.skipWaiting();
     event.waitUntil(
@@ -22,7 +21,6 @@ self.addEventListener("install", (event) => {
     );
 });
 
-// Activate Event (Cleanup Old Caches)
 self.addEventListener("activate", (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
@@ -36,32 +34,27 @@ self.addEventListener("activate", (event) => {
     self.clients.claim();
 });
 
-// Fetch Event: Network-first for HTML, Cache-first for others
 self.addEventListener("fetch", (event) => {
     const url = new URL(event.request.url);
 
-    // For navigation requests (the main HTML document)
     if (event.request.mode === 'navigate') {
         event.respondWith(
             fetch(event.request)
                 .then(response => {
-                    // Cache the fresh HTML
                     const clonedResponse = response.clone();
                     caches.open(CACHE_NAME).then(cache => cache.put(event.request, clonedResponse));
                     return response;
                 })
-                .catch(() => caches.match(event.request)) // fallback to cache if offline
+                .catch(() => caches.match(event.request))
         );
         return;
     }
 
-    // For all other requests: Cache-first
     event.respondWith(
         caches.match(event.request).then(response => response || fetch(event.request))
     );
 });
 
-// Listen for "Update Now" message
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();

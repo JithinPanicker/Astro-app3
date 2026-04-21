@@ -85,6 +85,24 @@ button {
 }
 
 /* =========================================
+   TEMPLATE SELECTOR
+========================================= */
+.template-selector {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.template-selector select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* =========================================
    SEARCH & LIST ITEMS
 ========================================= */
 .search-box input { 
@@ -192,6 +210,7 @@ input, textarea {
     display: flex; 
     gap: 10px; 
     justify-content: space-between;
+    align-items: center;
 }
 
 .form-actions button {
