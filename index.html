@@ -17,12 +17,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        /* inline styles kept as before */
         .letterhead-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px; font-family: 'Arial', sans-serif; }
         .letterhead-left { text-align: left; color: #333; }
         .contact-link { text-decoration: none; color: inherit; cursor: pointer; }
         .watermark { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); opacity: 0.08; z-index: 0; pointer-events: none; }
-        .letterhead-footer { text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; font-size: 16px; }
+        .letterhead-footer { position: absolute; bottom: 30px; left: 40px; right: 40px; text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; font-size: 16px; }
         .footer-text { font-family: 'Brush Script MT', cursive; font-size: 22px; }
+        /* global template selector styling */
         .global-template-selector {
             display: flex;
             align-items: center;
@@ -43,7 +45,7 @@
 </head>
 <body>
 
-    <!-- License Screen -->
+    <!-- License Screen (unchanged) -->
     <div id="licenseScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; box-sizing: border-box;">
         <img src="logo.png" style="width: 130px; margin-bottom: 20px;">
         <h2 style="margin: 0; font-size: 24px;">Pratnya Astro Manager</h2>
@@ -84,7 +86,7 @@
 
         <div id="clientList" class="client-list"></div>
 
-        <!-- Client Form Modal -->
+        <!-- Client Form Modal (no template selector inside) -->
         <div id="clientFormModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
@@ -147,6 +149,7 @@
                         <textarea id="currentSolution" style="flex: 1; min-height: 200px; border: 1px solid #ddd; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5; resize: vertical;" placeholder="Write solution here..."></textarea>
                     </div>
 
+                    <!-- Form actions (no template selector here) -->
                     <div class="form-actions">
                         <button type="submit" style="background-color: #2E7D32; color: white; font-weight: bold;">Save</button>
                         <button type="button" onclick="generatePDF()" style="background-color: #1976D2; color: white; font-weight: bold;">PDF</button>
@@ -156,7 +159,7 @@
             </div>
         </div>
 
-        <!-- Prescription Modal -->
+        <!-- Prescription Modal (no template selector inside) -->
         <div id="prescriptionModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header" style="background: #FFF3E0;">
@@ -190,6 +193,7 @@
                     </div>
                     <textarea id="prescBody" style="flex: 1; min-height: 250px; border: 1px solid #ccc; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5;" placeholder="Write full prescription here..."></textarea>
 
+                    <!-- Form actions (no template selector) -->
                     <div class="form-actions" style="background: #FFF3E0;">
                         <button type="button" onclick="savePrescription()" style="background-color: #4CAF50; color: white; font-weight: bold;">Save</button>
                         <button type="button" onclick="generatePrescriptionPDF()" style="background-color: #FF9800; color: white; font-weight: bold;">PDF</button>
@@ -201,14 +205,18 @@
         </div>
     </div>
 
-    <!-- Hidden Header Templates (for canvas capture) -->
-    <div id="pdfHeaderCK" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 40px 40px 10px 40px; box-sizing: border-box;">
+    <!-- Hidden PDF Templates (dual) -->
+    <!-- CK Saji Panicker Template -->
+    <div id="pdfTemplateCK" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
+        <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
         <div class="letterhead-header">
             <div class="letterhead-left">
                 <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Astrologer</p>
                 <h2 style="color: #2E7D32; font-size: 26px; font-weight: bold; margin: 0;">C.K. Saji Panicker</h2>
                 <div style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; line-height: 1.6; margin-top: 6px;">
-                    Chathangottupuram, Kalarikkal<br>Wandoor-Malappuram<br>Kerala : 679 328
+                    Chathangottupuram, Kalarikkal<br>
+                    Wandoor-Malappuram<br>
+                    Kerala : 679 328
                 </div>
             </div>
             <div class="letterhead-right" style="text-align: right;">
@@ -217,32 +225,92 @@
                 <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Office: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">7034 600 880</strong></p>
             </div>
         </div>
-    </div>
-
-    <div id="pdfHeaderPratnya" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 40px 40px 10px 40px; box-sizing: border-box;">
-        <div class="letterhead-header" style="justify-content: center; border-bottom: 2px solid #2E7D32;">
-            <div style="text-align: center;">
-                <img src="logo.png" style="height: 70px; width: auto;">
-            </div>
-        </div>
-    </div>
-
-    <div id="pdfFooter" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 15px 40px 30px 40px; box-sizing: border-box;">
+        <div id="pdfContentCK" style="position: relative; z-index: 1;"></div>
         <div class="letterhead-footer">
             <span class="footer-text">Fix your appointment through the call</span><br>
             <span style="font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #2E7D32; font-weight: bold;">www.pratnya.in</span>
         </div>
     </div>
 
-    <!-- Watermark image (for canvas reuse) -->
-    <div id="watermarkImg" style="position: fixed; top: -9999px; left: -9999px;">
-        <img src="logo.png" style="width: 350px; opacity: 0.08;">
+    <!-- Pratnya Template (Logo only) -->
+    <div id="pdfTemplatePratnya" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
+        <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
+        <div class="letterhead-header" style="justify-content: center; border-bottom: 2px solid #2E7D32;">
+            <div style="text-align: center;">
+                <img src="logo.png" style="height: 70px; width: auto;">
+            </div>
+        </div>
+        <div id="pdfContentPratnya" style="position: relative; z-index: 1;"></div>
+        <div class="letterhead-footer">
+            <span class="footer-text">Fix your appointment through the call</span><br>
+            <span style="font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #2E7D32; font-weight: bold;">www.pratnya.in</span>
+        </div>
+    </div>
+
+    <!-- Prescription Templates (dual) -->
+    <div id="prescriptionTemplateCK" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
+        <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
+        <div class="letterhead-header">
+            <div class="letterhead-left">
+                <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Astrologer</p>
+                <h2 style="color: #2E7D32; font-size: 26px; font-weight: bold; margin: 0;">C.K. Saji Panicker</h2>
+                <div style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; line-height: 1.6; margin-top: 6px;">
+                    Chathangottupuram, Kalarikkal<br>
+                    Wandoor-Malappuram<br>
+                    Kerala : 679 328
+                </div>
+            </div>
+            <div class="letterhead-right" style="text-align: right;">
+                <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Consultation</p>
+                <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Online: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">9207 773 880</strong></p>
+                <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Office: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">7034 600 880</strong></p>
+            </div>
+        </div>
+        <div style="position: relative; z-index: 1; font-family: 'Georgia', serif; color: black;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 30px;">
+                <div><strong>Name:</strong> <span id="pdfPrescNameCK"></span></div>
+                <div><strong>Date:</strong> <span id="pdfPrescDateCK"></span></div>
+                <div><strong>Star:</strong> <span id="pdfPrescStarCK"></span></div>
+                <div><strong>Place:</strong> <span id="pdfPrescPlaceCK"></span></div>
+                <div><strong>Rasi:</strong> <span id="pdfPrescRasiCK"></span></div>
+                <div><strong>Udhaya Rasi:</strong> <span id="pdfPrescUdhayaCK"></span></div>
+            </div>
+            <div id="pdfPrescBodyCK" style="font-size: 16px; line-height: 1.8; min-height: 400px; white-space: pre-wrap;"></div>
+        </div>
+        <div class="letterhead-footer">
+            <span class="footer-text">Fix your appointment through the call</span><br>
+            <span style="font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #2E7D32; font-weight: bold;">www.pratnya.in</span>
+        </div>
+    </div>
+
+    <div id="prescriptionTemplatePratnya" style="position: fixed; top: -9999px; left: -9999px; width: 595px; height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: hidden;">
+        <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
+        <div class="letterhead-header" style="justify-content: center; border-bottom: 2px solid #2E7D32;">
+            <div style="text-align: center;">
+                <img src="logo.png" style="height: 70px; width: auto;">
+            </div>
+        </div>
+        <div style="position: relative; z-index: 1; font-family: 'Georgia', serif; color: black;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 30px;">
+                <div><strong>Name:</strong> <span id="pdfPrescNamePratnya"></span></div>
+                <div><strong>Date:</strong> <span id="pdfPrescDatePratnya"></span></div>
+                <div><strong>Star:</strong> <span id="pdfPrescStarPratnya"></span></div>
+                <div><strong>Place:</strong> <span id="pdfPrescPlacePratnya"></span></div>
+                <div><strong>Rasi:</strong> <span id="pdfPrescRasiPratnya"></span></div>
+                <div><strong>Udhaya Rasi:</strong> <span id="pdfPrescUdhayaPratnya"></span></div>
+            </div>
+            <div id="pdfPrescBodyPratnya" style="font-size: 16px; line-height: 1.8; min-height: 400px; white-space: pre-wrap;"></div>
+        </div>
+        <div class="letterhead-footer">
+            <span class="footer-text">Fix your appointment through the call</span><br>
+            <span style="font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #2E7D32; font-weight: bold;">www.pratnya.in</span>
+        </div>
     </div>
 
     <script src="app.js"></script>
     <script>
-        // Service Worker update handling
-        const LATEST_CHANGES = "Fixed prescription PDF multi-page issue";
+        // ----- SERVICE WORKER UPDATE HANDLING (FIXED) -----
+        const LATEST_CHANGES = "Added global template selector in header";
         let newWorker = null;
 
         if ('serviceWorker' in navigator) {
@@ -295,7 +363,7 @@
             newWorker.postMessage({ type: 'SKIP_WAITING' });
         }
 
-        // License check
+        // ----- LICENSE SYSTEM (unchanged) -----
         checkLicense();
         function checkLicense() {
             const expiry = localStorage.getItem('pratnya_license_expiry');
