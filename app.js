@@ -20,54 +20,34 @@ window.activateLicense = function() {
     } catch (e) { document.getElementById('licenseError').style.display = 'block'; }
 };
 
-// --- X / TWITTER STYLE TOASTS ---
+// --- TOASTS ---
 const topToast = Swal.mixin({
-    toast: true,
-    position: 'top',
-    showConfirmButton: false,
-    timer: 2500,
-    background: '#1DA1F2',
-    color: '#fff',
-    customClass: { popup: 'x-toast' }
+    toast: true, position: 'top', showConfirmButton: false, timer: 2500,
+    background: '#1DA1F2', color: '#fff', customClass: { popup: 'x-toast' }
 });
-
 const warnToast = Swal.mixin({
-    toast: true,
-    position: 'top',
-    showConfirmButton: true,
-    showCancelButton: true,
-    confirmButtonColor: '#E0245E',
-    cancelButtonColor: '#657786',
-    confirmButtonText: 'Confirm',
-    background: '#15202B',
-    color: '#fff',
-    customClass: { popup: 'x-toast-confirm' }
+    toast: true, position: 'top', showConfirmButton: true, showCancelButton: true,
+    confirmButtonColor: '#E0245E', cancelButtonColor: '#657786', confirmButtonText: 'Confirm',
+    background: '#15202B', color: '#fff', customClass: { popup: 'x-toast-confirm' }
 });
 
-// --- TEXTAREA UNDO / CLEAR LOGIC ---
+// --- TEXTAREA UNDO / CLEAR ---
 window.textHistory = {};
 window.clearText = (id) => {
     const el = document.getElementById(id);
-    if(el) {
-        window.textHistory[id] = el.value;
-        el.value = '';
-        el.focus();
-    }
+    if(el) { window.textHistory[id] = el.value; el.value = ''; el.focus(); }
 };
 window.undoText = (id) => {
     const el = document.getElementById(id);
     if(el) {
         if(window.textHistory[id] !== undefined) {
-            el.value = window.textHistory[id];
-            delete window.textHistory[id];
-        } else {
-            document.execCommand('undo'); 
-        }
+            el.value = window.textHistory[id]; delete window.textHistory[id];
+        } else { document.execCommand('undo'); }
         el.focus();
     }
 };
 
-// --- DATABASE & CORE ---
+// --- DATABASE ---
 const db = new Dexie('AstroAppDB');
 db.version(4).stores({ clients: '++id, name, star, phone, location, age, dob, birthTime, profession' });
 
@@ -79,9 +59,9 @@ const searchInput = document.getElementById('searchInput');
 
 updateList();
 
-// --- GLOBAL TEMPLATE SELECTOR HELPER ---
+// --- GLOBAL TEMPLATE SELECTOR ---
 function getSelectedTemplate() {
-    return document.getElementById('globalTemplateSelect').value; // 'ck' or 'pratnya'
+    return document.getElementById('globalTemplateSelect').value;
 }
 
 // --- MODAL FUNCTIONS ---
@@ -92,7 +72,6 @@ function closeForm() {
     document.getElementById('historyList').innerHTML = ""; 
     document.getElementById('clientPrescList').innerHTML = ""; 
 }
-
 function showPrescriptionForm() { prescModal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
 function closePrescriptionForm() { 
     prescModal.classList.add('hidden'); document.body.style.overflow = 'auto'; 
@@ -104,7 +83,6 @@ function closePrescriptionForm() {
 form.onsubmit = async (event) => {
     event.preventDefault();
     const id = document.getElementById('clientId').value;
-    
     const basicData = {
         name: document.getElementById('name').value,
         star: document.getElementById('star').value,
@@ -118,7 +96,6 @@ form.onsubmit = async (event) => {
     };
     const problem = document.getElementById('currentProblem').value.trim();
     const solution = document.getElementById('currentSolution').value.trim();
-    
     let consultationEntry = null;
     if (problem || solution) {
         consultationEntry = {
@@ -128,7 +105,6 @@ form.onsubmit = async (event) => {
             solution: solution
         };
     }
-
     if (id) {
         const client = await db.clients.get(parseInt(id));
         let history = client.consultations || [];
@@ -148,7 +124,6 @@ window.savePrescription = async () => {
     const id = document.getElementById('prescClientId').value;
     const name = document.getElementById('prescName').value.trim();
     if(!name) { topToast.fire({ text: 'Name is required', background: '#E0245E' }); return; }
-
     const prescData = {
         name: name,
         phone: document.getElementById('prescPhone').value,
@@ -156,11 +131,9 @@ window.savePrescription = async () => {
         location: document.getElementById('prescPlace').value,
         updated: new Date()
     };
-    
     const rasi = document.getElementById('prescRasi').value.trim();
     const udhaya = document.getElementById('prescUdhaya').value.trim();
     const notes = document.getElementById('prescBody').value.trim();
-
     let newPresc = null;
     if(rasi || udhaya || notes) {
         newPresc = {
@@ -171,7 +144,6 @@ window.savePrescription = async () => {
             notes: notes
         };
     }
-
     if (id) {
         const client = await db.clients.get(parseInt(id));
         let pHistory = client.prescriptions || [];
@@ -181,7 +153,6 @@ window.savePrescription = async () => {
         const pHistory = newPresc ? [newPresc] : [];
         await db.clients.add({ ...prescData, consultations: [], prescriptions: pHistory });
     }
-    
     closePrescriptionForm();
     await updateList();
     topToast.fire({ text: 'Prescription saved successfully' });
@@ -240,7 +211,6 @@ window.loadClient = async (id) => {
                 </div>`;
         });
     } else { prescDiv.innerHTML = "<p style='color:#888; text-align:center; font-size: 13px;'>No previous prescriptions.</p>"; }
-
     showForm();
 };
 
@@ -248,17 +218,14 @@ window.loadClient = async (id) => {
 window.loadPrescription = async (id) => {
     const client = await db.clients.get(id);
     if(!client) return;
-    
     document.getElementById('prescClientId').value = client.id;
     document.getElementById('prescName').value = client.name || "";
     document.getElementById('prescPhone').value = client.phone || "";
     document.getElementById('prescStar').value = client.star || "";
     document.getElementById('prescPlace').value = client.location || "";
-    
     document.getElementById('prescRasi').value = "";
     document.getElementById('prescUdhaya').value = "";
     document.getElementById('prescBody').value = "";
-
     const listDiv = document.getElementById('prescHistoryList');
     listDiv.innerHTML = "";
     if (client.prescriptions && client.prescriptions.length > 0) {
@@ -280,78 +247,38 @@ window.loadPrescription = async (id) => {
                 </div>`;
         });
     } else { listDiv.innerHTML = "<p style='color:#888; text-align:center; font-size: 13px;'>No previous history.</p>"; }
-    
     showPrescriptionForm();
 };
 
-// --- HISTORY EDIT & DELETE LOGIC (unchanged) ---
+// --- HISTORY EDIT & DELETE LOGIC ---
 window.editHist = (clientId, timestamp) => {
     const probEl = document.getElementById(`prob-text-${timestamp}`);
     const solEl = document.getElementById(`sol-text-${timestamp}`);
     const probText = probEl.innerText;
     const solText = solEl.innerText;
-
-    probEl.innerHTML = `
-        <div class="mini-toolbar">
-            <span onclick="undoText('edit-prob-${timestamp}')">Undo</span>
-            <span onclick="clearText('edit-prob-${timestamp}')">Clear</span>
-        </div>
-        <textarea id="edit-prob-${timestamp}" rows="3" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${probText === '-' ? '' : probText}</textarea>`;
-    
-    solEl.innerHTML = `
-        <div class="mini-toolbar">
-            <span onclick="undoText('edit-sol-${timestamp}')">Undo</span>
-            <span onclick="clearText('edit-sol-${timestamp}')">Clear</span>
-        </div>
-        <textarea id="edit-sol-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${solText === '-' ? '' : solText}</textarea>`;
-    
+    probEl.innerHTML = `<div class="mini-toolbar"><span onclick="undoText('edit-prob-${timestamp}')">Undo</span><span onclick="clearText('edit-prob-${timestamp}')">Clear</span></div><textarea id="edit-prob-${timestamp}" rows="3" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${probText === '-' ? '' : probText}</textarea>`;
+    solEl.innerHTML = `<div class="mini-toolbar"><span onclick="undoText('edit-sol-${timestamp}')">Undo</span><span onclick="clearText('edit-sol-${timestamp}')">Clear</span></div><textarea id="edit-sol-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${solText === '-' ? '' : solText}</textarea>`;
     const actionsDiv = document.querySelector(`#hist-${timestamp} .history-actions`);
-    actionsDiv.innerHTML = `
-        <button type="button" onclick="saveHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Save</button>
-        <button type="button" onclick="loadClient(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Cancel</button>
-    `;
+    actionsDiv.innerHTML = `<button type="button" onclick="saveHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Save</button><button type="button" onclick="loadClient(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Cancel</button>`;
 };
 
 window.saveHist = async (clientId, timestamp) => {
     const client = await db.clients.get(clientId);
     const probVal = document.getElementById(`edit-prob-${timestamp}`).value;
     const solVal = document.getElementById(`edit-sol-${timestamp}`).value;
-
     const histIndex = client.consultations.findIndex(c => c.timestamp === timestamp);
-    if(histIndex !== -1) {
-        client.consultations[histIndex].problem = probVal;
-        client.consultations[histIndex].solution = solVal;
-        await db.clients.put(client);
-        loadClient(clientId);
-        topToast.fire({ text: 'Consultation updated' });
-    }
+    if(histIndex !== -1) { client.consultations[histIndex].problem = probVal; client.consultations[histIndex].solution = solVal; await db.clients.put(client); loadClient(clientId); topToast.fire({ text: 'Consultation updated' }); }
 };
 
 window.editPrescHist = (clientId, timestamp) => {
     const rasiEl = document.getElementById(`p-rasi-${timestamp}`);
     const udhayaEl = document.getElementById(`p-udhaya-${timestamp}`);
     const notesEl = document.getElementById(`p-notes-${timestamp}`);
-
-    const rasiText = rasiEl.innerText;
-    const udhayaText = udhayaEl.innerText;
-    const notesText = notesEl.innerText;
-
-    rasiEl.innerHTML = `<input type="text" id="edit-p-rasi-${timestamp}" value="${rasiText}" style="width: 70px; padding: 2px; font-size: 12px;">`;
-    udhayaEl.innerHTML = `<input type="text" id="edit-p-udhaya-${timestamp}" value="${udhayaText}" style="width: 70px; padding: 2px; font-size: 12px;">`;
-    
-    notesEl.innerHTML = `
-        <div class="mini-toolbar" style="margin-top: 8px;">
-            <span onclick="undoText('edit-p-notes-${timestamp}')">Undo</span>
-            <span onclick="clearText('edit-p-notes-${timestamp}')">Clear</span>
-        </div>
-        <textarea id="edit-p-notes-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${notesText}</textarea>
-    `;
-
+    rasiEl.innerHTML = `<input type="text" id="edit-p-rasi-${timestamp}" value="${rasiEl.innerText}" style="width: 70px; padding: 2px; font-size: 12px;">`;
+    udhayaEl.innerHTML = `<input type="text" id="edit-p-udhaya-${timestamp}" value="${udhayaEl.innerText}" style="width: 70px; padding: 2px; font-size: 12px;">`;
+    notesEl.innerHTML = `<div class="mini-toolbar" style="margin-top: 8px;"><span onclick="undoText('edit-p-notes-${timestamp}')">Undo</span><span onclick="clearText('edit-p-notes-${timestamp}')">Clear</span></div><textarea id="edit-p-notes-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${notesEl.innerText}</textarea>`;
     const actionsDiv = document.querySelector(`#p-hist-${timestamp} .history-actions`);
-    actionsDiv.innerHTML = `
-        <button type="button" onclick="savePrescHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Save</button>
-        <button type="button" onclick="loadPrescription(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Cancel</button>
-    `;
+    actionsDiv.innerHTML = `<button type="button" onclick="savePrescHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Save</button><button type="button" onclick="loadPrescription(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Cancel</button>`;
 };
 
 window.savePrescHist = async (clientId, timestamp) => {
@@ -359,39 +286,19 @@ window.savePrescHist = async (clientId, timestamp) => {
     const rasiVal = document.getElementById(`edit-p-rasi-${timestamp}`).value;
     const udhayaVal = document.getElementById(`edit-p-udhaya-${timestamp}`).value;
     const notesVal = document.getElementById(`edit-p-notes-${timestamp}`).value;
-
     const histIndex = client.prescriptions.findIndex(c => c.timestamp === timestamp);
-    if(histIndex !== -1) {
-        client.prescriptions[histIndex].rasi = rasiVal;
-        client.prescriptions[histIndex].udhaya = udhayaVal;
-        client.prescriptions[histIndex].notes = notesVal;
-        await db.clients.put(client);
-        loadPrescription(clientId);
-        topToast.fire({ text: 'Prescription updated' });
-    }
+    if(histIndex !== -1) { client.prescriptions[histIndex].rasi = rasiVal; client.prescriptions[histIndex].udhaya = udhayaVal; client.prescriptions[histIndex].notes = notesVal; await db.clients.put(client); loadPrescription(clientId); topToast.fire({ text: 'Prescription updated' }); }
 };
 
 window.deleteHist = async (clientId, timestamp) => {
     warnToast.fire({ text: 'Delete this consultation?' }).then(async (result) => {
-        if (result.isConfirmed) {
-            const client = await db.clients.get(clientId);
-            client.consultations = client.consultations.filter(c => c.timestamp !== timestamp);
-            await db.clients.put(client);
-            loadClient(clientId);
-            topToast.fire({ text: 'Deleted' });
-        }
+        if (result.isConfirmed) { const client = await db.clients.get(clientId); client.consultations = client.consultations.filter(c => c.timestamp !== timestamp); await db.clients.put(client); loadClient(clientId); topToast.fire({ text: 'Deleted' }); }
     });
 };
 
 window.deletePrescHist = async (clientId, timestamp) => {
     warnToast.fire({ text: 'Delete this prescription?' }).then(async (result) => {
-        if (result.isConfirmed) {
-            const client = await db.clients.get(clientId);
-            client.prescriptions = client.prescriptions.filter(c => c.timestamp !== timestamp);
-            await db.clients.put(client);
-            loadPrescription(clientId);
-            topToast.fire({ text: 'Deleted' });
-        }
+        if (result.isConfirmed) { const client = await db.clients.get(clientId); client.prescriptions = client.prescriptions.filter(c => c.timestamp !== timestamp); await db.clients.put(client); loadPrescription(clientId); topToast.fire({ text: 'Deleted' }); }
     });
 };
 
@@ -400,206 +307,252 @@ async function updateList() {
     let clients = await db.clients.toArray();
     if (query) clients = clients.filter(c => c.name.toLowerCase().includes(query));
     clients.reverse();
-    
     let html = "";
     clients.forEach(client => {
         const hasConsults = client.consultations && client.consultations.length > 0;
         const hasPresc = client.prescriptions && client.prescriptions.length > 0;
         const noHistory = !hasConsults && !hasPresc;
-
         let waBtn = '';
         if (client.phone) {
             let waPhone = client.phone.replace(/\D/g, '');
             if(waPhone.length === 10) waPhone = '91' + waPhone;
-            waBtn = `<a href="https://wa.me/${waPhone}" target="_blank" class="btn-wa" onclick="event.stopPropagation();" title="Contact on WhatsApp"><i class="fab fa-whatsapp"></i></a>`;
+            waBtn = `<a href="https://wa.me/${waPhone}" target="_blank" class="btn-wa" onclick="event.stopPropagation();"><i class="fab fa-whatsapp"></i></a>`;
         }
-
         if (hasConsults || noHistory || client.dob) {
-            html += `
-            <div class="client-item" onclick="loadClient(${client.id})">
-                <div class="client-info">
-                    <h4>${client.name} <span style="background: #e3f2fd; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle;">Client</span></h4>
-                    <p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p>
-                </div>
-                <div class="actions">${waBtn}<button class="btn-view">View</button></div>
-            </div>`;
+            html += `<div class="client-item" onclick="loadClient(${client.id})"><div class="client-info"><h4>${client.name} <span style="background: #e3f2fd; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 10px;">Client</span></h4><p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p></div><div class="actions">${waBtn}<button class="btn-view">View</button></div></div>`;
         }
         if (hasPresc) {
-            html += `
-            <div class="client-item" style="border-left: 4px solid #FF9800;" onclick="loadPrescription(${client.id})">
-                <div class="client-info">
-                    <h4>${client.name} <span style="background: #FFF3E0; color: #E65100; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle;">Prescription</span></h4>
-                    <p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p>
-                </div>
-                <div class="actions">${waBtn}<button class="btn-view" style="background: #FFF3E0; color: #E65100;">View</button></div>
-            </div>`;
+            html += `<div class="client-item" style="border-left: 4px solid #FF9800;" onclick="loadPrescription(${client.id})"><div class="client-info"><h4>${client.name} <span style="background: #FFF3E0; color: #E65100; padding: 2px 6px; border-radius: 4px; font-size: 10px;">Prescription</span></h4><p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p></div><div class="actions">${waBtn}<button class="btn-view" style="background: #FFF3E0; color: #E65100;">View</button></div></div>`;
         }
     });
-
     document.getElementById('clientList').innerHTML = html;
 }
 
-// --- FILL PRESCRIPTION TEMPLATE (uses global selector) ---
-function fillPrescriptionTemplate() {
-    const template = getSelectedTemplate();
-    const name = document.getElementById('prescName').value || "";
-    const star = document.getElementById('prescStar').value || "";
-    const place = document.getElementById('prescPlace').value || "";
-    const rasi = document.getElementById('prescRasi').value || "";
-    const udhaya = document.getElementById('prescUdhaya').value || "";
-    const body = document.getElementById('prescBody').value || "";
-    const currentDate = new Date().toLocaleDateString('en-IN');
-
-    if(!name && !body) return false;
-
-    const suffix = template === 'ck' ? 'CK' : 'Pratnya';
-    document.getElementById(`pdfPrescName${suffix}`).innerText = name;
-    document.getElementById(`pdfPrescDate${suffix}`).innerText = currentDate;
-    document.getElementById(`pdfPrescStar${suffix}`).innerText = star;
-    document.getElementById(`pdfPrescPlace${suffix}`).innerText = place;
-    document.getElementById(`pdfPrescRasi${suffix}`).innerText = rasi;
-    document.getElementById(`pdfPrescUdhaya${suffix}`).innerText = udhaya;
-    document.getElementById(`pdfPrescBody${suffix}`).innerText = body;
-    return true;
+// --- HELPER: Render header/footer to canvas ---
+async function renderHeaderFooterToCanvas(templateId) {
+    const element = document.getElementById(templateId);
+    element.style.position = 'fixed';
+    element.style.top = '0';
+    element.style.left = '0';
+    element.style.zIndex = '-1';
+    element.style.visibility = 'visible';
+    const canvas = await html2canvas(element, { scale: 2 });
+    element.style.position = 'fixed';
+    element.style.top = '-9999px';
+    element.style.left = '-9999px';
+    element.style.zIndex = '';
+    element.style.visibility = '';
+    return canvas;
 }
 
-// --- GENERATE PRESCRIPTION PDF (global selector) ---
+// --- MULTI-PAGE PRESCRIPTION PDF GENERATION ---
+async function generatePrescriptionPDFContent(pdf, data, template) {
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 15;
+
+    const headerTemplateId = template === 'ck' ? 'pdfHeaderCK' : 'pdfHeaderPratnya';
+    const headerCanvas = await renderHeaderFooterToCanvas(headerTemplateId);
+    const footerCanvas = await renderHeaderFooterToCanvas('pdfFooter');
+
+    const headerImg = headerCanvas.toDataURL('image/png');
+    const footerImg = footerCanvas.toDataURL('image/png');
+
+    const headerHeight = (headerCanvas.height * pageWidth) / headerCanvas.width;
+    const footerHeight = (footerCanvas.height * pageWidth) / footerCanvas.width;
+
+    pdf.addImage(headerImg, 'PNG', 0, 0, pageWidth, headerHeight);
+    let y = headerHeight + 5;
+
+    pdf.setFontSize(12);
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont('helvetica', 'normal');
+    const col1X = margin;
+    const col2X = pageWidth / 2 + 10;
+    pdf.text(`Name: ${data.name}`, col1X, y);
+    pdf.text(`Date: ${data.date}`, col2X, y);
+    y += 8;
+    pdf.text(`Star: ${data.star}`, col1X, y);
+    pdf.text(`Place: ${data.place}`, col2X, y);
+    y += 8;
+    pdf.text(`Rasi: ${data.rasi}`, col1X, y);
+    pdf.text(`Udhaya Rasi: ${data.udhaya}`, col2X, y);
+    y += 15;
+
+    pdf.setFontSize(12);
+    const textLines = pdf.splitTextToSize(data.body, pageWidth - 2 * margin);
+    const lineHeight = 7;
+    const maxY = pageHeight - footerHeight - 10;
+
+    for (let i = 0; i < textLines.length; i++) {
+        if (y > maxY) {
+            pdf.addImage(footerImg, 'PNG', 0, pageHeight - footerHeight, pageWidth, footerHeight);
+            pdf.addPage();
+            pdf.addImage(headerImg, 'PNG', 0, 0, pageWidth, headerHeight);
+            y = headerHeight + 10;
+        }
+        pdf.text(textLines[i], margin, y);
+        y += lineHeight;
+    }
+    pdf.addImage(footerImg, 'PNG', 0, pageHeight - footerHeight, pageWidth, footerHeight);
+}
+
 window.generatePrescriptionPDF = async () => {
-    const template = getSelectedTemplate();
-    if (!fillPrescriptionTemplate()) {
+    const name = document.getElementById('prescName').value || "";
+    const body = document.getElementById('prescBody').value || "";
+    if (!name && !body) {
         topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
         return;
     }
-    const name = document.getElementById('prescName').value || "Client";
-
+    const template = getSelectedTemplate();
     topToast.fire({ text: 'Generating PDF...' });
+
+    const data = {
+        name: name,
+        date: new Date().toLocaleDateString('en-IN'),
+        star: document.getElementById('prescStar').value || "",
+        place: document.getElementById('prescPlace').value || "",
+        rasi: document.getElementById('prescRasi').value || "",
+        udhaya: document.getElementById('prescUdhaya').value || "",
+        body: body
+    };
+
     try {
         const { jsPDF } = window.jspdf;
-        const elementId = template === 'ck' ? 'prescriptionTemplateCK' : 'prescriptionTemplatePratnya';
-        const element = document.getElementById(elementId);
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
-        const height = (canvas.height * width) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        await generatePrescriptionPDFContent(pdf, data, template);
         pdf.save(`${name}_Prescription.pdf`);
         topToast.fire({ text: 'Downloaded successfully!' });
-    } catch(e) { console.error(e); }
+    } catch(e) {
+        console.error(e);
+        topToast.fire({ text: 'PDF generation failed', background: '#E0245E' });
+    }
 };
 
-// --- SHARE PRESCRIPTION PDF (global selector) ---
 window.sharePrescriptionPDF = async () => {
-    const template = getSelectedTemplate();
-    if (!fillPrescriptionTemplate()) {
+    const name = document.getElementById('prescName').value || "";
+    const body = document.getElementById('prescBody').value || "";
+    if (!name && !body) {
         topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
         return;
     }
-    const name = document.getElementById('prescName').value || "Client";
-
+    const template = getSelectedTemplate();
     topToast.fire({ text: 'Preparing file for sharing...' });
+
+    const data = {
+        name: name,
+        date: new Date().toLocaleDateString('en-IN'),
+        star: document.getElementById('prescStar').value || "",
+        place: document.getElementById('prescPlace').value || "",
+        rasi: document.getElementById('prescRasi').value || "",
+        udhaya: document.getElementById('prescUdhaya').value || "",
+        body: body
+    };
+
     try {
         const { jsPDF } = window.jspdf;
-        const elementId = template === 'ck' ? 'prescriptionTemplateCK' : 'prescriptionTemplatePratnya';
-        const element = document.getElementById(elementId);
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
-        const height = (canvas.height * width) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-        
+        await generatePrescriptionPDFContent(pdf, data, template);
         const pdfBlob = pdf.output('blob');
         const file = new File([pdfBlob], `${name}_Prescription.pdf`, { type: 'application/pdf' });
-
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-                files: [file],
-                title: 'Prescription',
-                text: 'Here is your prescription from Pratnya Astro.'
-            });
+            await navigator.share({ files: [file], title: 'Prescription', text: 'Here is your prescription from Pratnya Astro.' });
             topToast.fire({ text: 'Opened share menu!' });
         } else {
-            Swal.fire({
-                title: 'Unsupported Browser',
-                text: 'Your device/browser does not support direct file sharing. Please click "PDF" to download it, then attach it in WhatsApp manually.',
-                icon: 'info'
-            });
+            Swal.fire({ title: 'Unsupported Browser', text: 'Direct sharing not supported. Use PDF button to download.', icon: 'info' });
         }
-    } catch(e) { 
-        console.error(e); 
-        topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' }); 
+    } catch(e) {
+        console.error(e);
+        topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' });
     }
 };
 
-// --- GENERATE CLIENT FULL REPORT PDF (global selector) ---
+// --- CLIENT CONSULTATION PDF (with autoTable) ---
 window.generatePDF = async () => {
-    const template = getSelectedTemplate();
     const name = document.getElementById('name').value;
     const star = document.getElementById('star').value;
     const dob = document.getElementById('dob').value;
     const time = document.getElementById('birthTime').value;
-
     let displayTime = time;
-    if(time) {
+    if (time) {
         const [h, m] = time.split(':');
         const hour = parseInt(h);
         displayTime = `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`;
     }
-
-    let htmlContent = `
-        <table style="width: 100%; margin-bottom: 20px; font-size: 14px;">
-            <tr><td><strong>Name:</strong> ${name}</td><td><strong>Star:</strong> ${star}</td></tr>
-            <tr><td><strong>DOB:</strong> ${dob}</td><td><strong>Time:</strong> ${displayTime}</td></tr>
-        </table>
-        <h3>Consultation History</h3>
-        <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
-            <tr style="background-color: #f2f2f2;">
-                <th style="border: 1px solid #ddd; padding: 8px;">Date</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Details</th>
-            </tr>`;
-
+    const template = getSelectedTemplate();
     const id = document.getElementById('clientId').value;
-    if(id) {
-        const client = await db.clients.get(parseInt(id));
-        if(client && client.consultations) {
-            client.consultations.forEach(c => {
-                htmlContent += `
-                    <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px; width: 25%; vertical-align: top;">${c.date}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">
-                            <strong>Problem:</strong><br>${c.problem || '-'}<br><br>
-                            <strong style="color: #2E7D32;">Solution:</strong><br>${c.solution || '-'}
-                        </td>
-                    </tr>`;
-            });
-        }
-    }
-    htmlContent += `</table>`;
-
-    const contentId = template === 'ck' ? 'pdfContentCK' : 'pdfContentPratnya';
-    document.getElementById(contentId).innerHTML = htmlContent;
+    let client;
+    if (id) client = await db.clients.get(parseInt(id));
 
     topToast.fire({ text: 'Generating PDF...' });
+
     try {
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 15;
 
-        const elementId = template === 'ck' ? 'pdfTemplateCK' : 'pdfTemplatePratnya';
-        const element = document.getElementById(elementId);
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const height = (canvas.height * width) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        const headerTemplateId = template === 'ck' ? 'pdfHeaderCK' : 'pdfHeaderPratnya';
+        const headerCanvas = await renderHeaderFooterToCanvas(headerTemplateId);
+        const footerCanvas = await renderHeaderFooterToCanvas('pdfFooter');
+        const headerImg = headerCanvas.toDataURL('image/png');
+        const footerImg = footerCanvas.toDataURL('image/png');
+        const headerHeight = (headerCanvas.height * pageWidth) / headerCanvas.width;
+        const footerHeight = (footerCanvas.height * pageWidth) / footerCanvas.width;
 
+        const addHeaderFooter = (pdf) => {
+            const totalPages = pdf.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                pdf.setPage(i);
+                pdf.addImage(headerImg, 'PNG', 0, 0, pageWidth, headerHeight);
+                pdf.addImage(footerImg, 'PNG', 0, pageHeight - footerHeight, pageWidth, footerHeight);
+            }
+        };
+
+        pdf.addImage(headerImg, 'PNG', 0, 0, pageWidth, headerHeight);
+        let y = headerHeight + 5;
+
+        pdf.setFontSize(12);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`Name: ${name}`, margin, y);
+        pdf.text(`Star: ${star}`, pageWidth / 2 + 10, y);
+        y += 8;
+        pdf.text(`DOB: ${dob}`, margin, y);
+        pdf.text(`Time: ${displayTime}`, pageWidth / 2 + 10, y);
+        y += 15;
+
+        const tableData = [];
+        if (client && client.consultations) {
+            client.consultations.forEach(c => {
+                tableData.push([c.date, `Problem:\n${c.problem || '-'}\n\nSolution:\n${c.solution || '-'}`]);
+            });
+        }
+
+        if (tableData.length > 0) {
+            pdf.autoTable({
+                startY: y,
+                head: [['Date', 'Details']],
+                body: tableData,
+                margin: { left: margin, right: margin },
+                styles: { fontSize: 10, cellPadding: 4 },
+                columnStyles: { 0: { cellWidth: 40 } }
+            });
+        } else {
+            pdf.text('No consultation history.', margin, y);
+        }
+
+        addHeaderFooter(pdf);
         pdf.save(`${name}_Full_Report.pdf`);
         topToast.fire({ text: 'Downloaded successfully!' });
-    } catch (error) { topToast.fire({ text: 'PDF Failed', background: '#E0245E' }); }
+    } catch (error) {
+        console.error(error);
+        topToast.fire({ text: 'PDF Failed', background: '#E0245E' });
+    }
 };
 
+// --- SEARCH & MISC ---
 searchInput.oninput = () => updateList();
 function calculateAge() {
     const dobInput = document.getElementById('dob').value;
@@ -610,7 +563,6 @@ function calculateAge() {
     if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) age--;
     document.getElementById('age').value = age;
 }
-
 async function deleteCurrentClient() {
     const id = document.getElementById('clientId').value;
     if (!id) return;
@@ -625,7 +577,6 @@ async function deleteCurrentPrescClient() {
         if (result.isConfirmed) { await db.clients.delete(parseInt(id)); closePrescriptionForm(); await updateList(); topToast.fire({ text: 'Deleted' }); }
     });
 }
-
 function transferToPrescription() {
     const id = document.getElementById('clientId').value; 
     const name = document.getElementById('name').value;
@@ -633,9 +584,7 @@ function transferToPrescription() {
     const star = document.getElementById('star').value;
     const place = document.getElementById('place').value;
     const solution = document.getElementById('currentSolution').value;
-
     if (!name) { topToast.fire({ text: 'Please enter a Name first', background: '#E0245E' }); return; }
-
     showPrescriptionForm();
     document.getElementById('prescClientId').value = id;
     document.getElementById('prescName').value = name;
