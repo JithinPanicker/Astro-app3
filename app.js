@@ -20,34 +20,54 @@ window.activateLicense = function() {
     } catch (e) { document.getElementById('licenseError').style.display = 'block'; }
 };
 
-// --- TOASTS ---
+// --- X / TWITTER STYLE TOASTS ---
 const topToast = Swal.mixin({
-    toast: true, position: 'top', showConfirmButton: false, timer: 2500,
-    background: '#1DA1F2', color: '#fff', customClass: { popup: 'x-toast' }
-});
-const warnToast = Swal.mixin({
-    toast: true, position: 'top', showConfirmButton: true, showCancelButton: true,
-    confirmButtonColor: '#E0245E', cancelButtonColor: '#657786', confirmButtonText: 'Confirm',
-    background: '#15202B', color: '#fff', customClass: { popup: 'x-toast-confirm' }
+    toast: true,
+    position: 'top',
+    showConfirmButton: false,
+    timer: 2500,
+    background: '#1DA1F2',
+    color: '#fff',
+    customClass: { popup: 'x-toast' }
 });
 
-// --- TEXTAREA UNDO / CLEAR ---
+const warnToast = Swal.mixin({
+    toast: true,
+    position: 'top',
+    showConfirmButton: true,
+    showCancelButton: true,
+    confirmButtonColor: '#E0245E',
+    cancelButtonColor: '#657786',
+    confirmButtonText: 'Confirm',
+    background: '#15202B',
+    color: '#fff',
+    customClass: { popup: 'x-toast-confirm' }
+});
+
+// --- TEXTAREA UNDO / CLEAR LOGIC ---
 window.textHistory = {};
 window.clearText = (id) => {
     const el = document.getElementById(id);
-    if(el) { window.textHistory[id] = el.value; el.value = ''; el.focus(); }
+    if(el) {
+        window.textHistory[id] = el.value;
+        el.value = '';
+        el.focus();
+    }
 };
 window.undoText = (id) => {
     const el = document.getElementById(id);
     if(el) {
         if(window.textHistory[id] !== undefined) {
-            el.value = window.textHistory[id]; delete window.textHistory[id];
-        } else { document.execCommand('undo'); }
+            el.value = window.textHistory[id];
+            delete window.textHistory[id];
+        } else {
+            document.execCommand('undo'); 
+        }
         el.focus();
     }
 };
 
-// --- DATABASE ---
+// --- DATABASE & CORE ---
 const db = new Dexie('AstroAppDB');
 db.version(4).stores({ clients: '++id, name, star, phone, location, age, dob, birthTime, profession' });
 
@@ -59,7 +79,7 @@ const searchInput = document.getElementById('searchInput');
 
 updateList();
 
-// --- GLOBAL TEMPLATE SELECTOR ---
+// --- GLOBAL TEMPLATE SELECTOR HELPER ---
 function getSelectedTemplate() {
     return document.getElementById('globalTemplateSelect').value; // 'ck' or 'pratnya'
 }
@@ -72,6 +92,7 @@ function closeForm() {
     document.getElementById('historyList').innerHTML = ""; 
     document.getElementById('clientPrescList').innerHTML = ""; 
 }
+
 function showPrescriptionForm() { prescModal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
 function closePrescriptionForm() { 
     prescModal.classList.add('hidden'); document.body.style.overflow = 'auto'; 
@@ -83,6 +104,7 @@ function closePrescriptionForm() {
 form.onsubmit = async (event) => {
     event.preventDefault();
     const id = document.getElementById('clientId').value;
+    
     const basicData = {
         name: document.getElementById('name').value,
         star: document.getElementById('star').value,
@@ -96,6 +118,7 @@ form.onsubmit = async (event) => {
     };
     const problem = document.getElementById('currentProblem').value.trim();
     const solution = document.getElementById('currentSolution').value.trim();
+    
     let consultationEntry = null;
     if (problem || solution) {
         consultationEntry = {
@@ -105,6 +128,7 @@ form.onsubmit = async (event) => {
             solution: solution
         };
     }
+
     if (id) {
         const client = await db.clients.get(parseInt(id));
         let history = client.consultations || [];
@@ -124,6 +148,7 @@ window.savePrescription = async () => {
     const id = document.getElementById('prescClientId').value;
     const name = document.getElementById('prescName').value.trim();
     if(!name) { topToast.fire({ text: 'Name is required', background: '#E0245E' }); return; }
+
     const prescData = {
         name: name,
         phone: document.getElementById('prescPhone').value,
@@ -131,9 +156,11 @@ window.savePrescription = async () => {
         location: document.getElementById('prescPlace').value,
         updated: new Date()
     };
+    
     const rasi = document.getElementById('prescRasi').value.trim();
     const udhaya = document.getElementById('prescUdhaya').value.trim();
     const notes = document.getElementById('prescBody').value.trim();
+
     let newPresc = null;
     if(rasi || udhaya || notes) {
         newPresc = {
@@ -144,6 +171,7 @@ window.savePrescription = async () => {
             notes: notes
         };
     }
+
     if (id) {
         const client = await db.clients.get(parseInt(id));
         let pHistory = client.prescriptions || [];
@@ -153,6 +181,7 @@ window.savePrescription = async () => {
         const pHistory = newPresc ? [newPresc] : [];
         await db.clients.add({ ...prescData, consultations: [], prescriptions: pHistory });
     }
+    
     closePrescriptionForm();
     await updateList();
     topToast.fire({ text: 'Prescription saved successfully' });
@@ -219,14 +248,17 @@ window.loadClient = async (id) => {
 window.loadPrescription = async (id) => {
     const client = await db.clients.get(id);
     if(!client) return;
+    
     document.getElementById('prescClientId').value = client.id;
     document.getElementById('prescName').value = client.name || "";
     document.getElementById('prescPhone').value = client.phone || "";
     document.getElementById('prescStar').value = client.star || "";
     document.getElementById('prescPlace').value = client.location || "";
+    
     document.getElementById('prescRasi').value = "";
     document.getElementById('prescUdhaya').value = "";
     document.getElementById('prescBody').value = "";
+
     const listDiv = document.getElementById('prescHistoryList');
     listDiv.innerHTML = "";
     if (client.prescriptions && client.prescriptions.length > 0) {
@@ -248,41 +280,78 @@ window.loadPrescription = async (id) => {
                 </div>`;
         });
     } else { listDiv.innerHTML = "<p style='color:#888; text-align:center; font-size: 13px;'>No previous history.</p>"; }
+    
     showPrescriptionForm();
 };
 
-// --- HISTORY EDIT & DELETE LOGIC ---
+// --- HISTORY EDIT & DELETE LOGIC (unchanged) ---
 window.editHist = (clientId, timestamp) => {
     const probEl = document.getElementById(`prob-text-${timestamp}`);
     const solEl = document.getElementById(`sol-text-${timestamp}`);
     const probText = probEl.innerText;
     const solText = solEl.innerText;
-    probEl.innerHTML = `<div class="mini-toolbar"><span onclick="undoText('edit-prob-${timestamp}')">Undo</span><span onclick="clearText('edit-prob-${timestamp}')">Clear</span></div><textarea id="edit-prob-${timestamp}" rows="3" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${probText === '-' ? '' : probText}</textarea>`;
-    solEl.innerHTML = `<div class="mini-toolbar"><span onclick="undoText('edit-sol-${timestamp}')">Undo</span><span onclick="clearText('edit-sol-${timestamp}')">Clear</span></div><textarea id="edit-sol-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${solText === '-' ? '' : solText}</textarea>`;
+
+    probEl.innerHTML = `
+        <div class="mini-toolbar">
+            <span onclick="undoText('edit-prob-${timestamp}')">Undo</span>
+            <span onclick="clearText('edit-prob-${timestamp}')">Clear</span>
+        </div>
+        <textarea id="edit-prob-${timestamp}" rows="3" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${probText === '-' ? '' : probText}</textarea>`;
+    
+    solEl.innerHTML = `
+        <div class="mini-toolbar">
+            <span onclick="undoText('edit-sol-${timestamp}')">Undo</span>
+            <span onclick="clearText('edit-sol-${timestamp}')">Clear</span>
+        </div>
+        <textarea id="edit-sol-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${solText === '-' ? '' : solText}</textarea>`;
+    
     const actionsDiv = document.querySelector(`#hist-${timestamp} .history-actions`);
-    actionsDiv.innerHTML = `<button type="button" onclick="saveHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Save</button><button type="button" onclick="loadClient(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Cancel</button>`;
+    actionsDiv.innerHTML = `
+        <button type="button" onclick="saveHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Save</button>
+        <button type="button" onclick="loadClient(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Cancel</button>
+    `;
 };
 
 window.saveHist = async (clientId, timestamp) => {
     const client = await db.clients.get(clientId);
     const probVal = document.getElementById(`edit-prob-${timestamp}`).value;
     const solVal = document.getElementById(`edit-sol-${timestamp}`).value;
+
     const histIndex = client.consultations.findIndex(c => c.timestamp === timestamp);
-    if(histIndex !== -1) { client.consultations[histIndex].problem = probVal; client.consultations[histIndex].solution = solVal; await db.clients.put(client); loadClient(clientId); topToast.fire({ text: 'Consultation updated' }); }
+    if(histIndex !== -1) {
+        client.consultations[histIndex].problem = probVal;
+        client.consultations[histIndex].solution = solVal;
+        await db.clients.put(client);
+        loadClient(clientId);
+        topToast.fire({ text: 'Consultation updated' });
+    }
 };
 
 window.editPrescHist = (clientId, timestamp) => {
     const rasiEl = document.getElementById(`p-rasi-${timestamp}`);
     const udhayaEl = document.getElementById(`p-udhaya-${timestamp}`);
     const notesEl = document.getElementById(`p-notes-${timestamp}`);
+
     const rasiText = rasiEl.innerText;
     const udhayaText = udhayaEl.innerText;
     const notesText = notesEl.innerText;
+
     rasiEl.innerHTML = `<input type="text" id="edit-p-rasi-${timestamp}" value="${rasiText}" style="width: 70px; padding: 2px; font-size: 12px;">`;
     udhayaEl.innerHTML = `<input type="text" id="edit-p-udhaya-${timestamp}" value="${udhayaText}" style="width: 70px; padding: 2px; font-size: 12px;">`;
-    notesEl.innerHTML = `<div class="mini-toolbar" style="margin-top: 8px;"><span onclick="undoText('edit-p-notes-${timestamp}')">Undo</span><span onclick="clearText('edit-p-notes-${timestamp}')">Clear</span></div><textarea id="edit-p-notes-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${notesText}</textarea>`;
+    
+    notesEl.innerHTML = `
+        <div class="mini-toolbar" style="margin-top: 8px;">
+            <span onclick="undoText('edit-p-notes-${timestamp}')">Undo</span>
+            <span onclick="clearText('edit-p-notes-${timestamp}')">Clear</span>
+        </div>
+        <textarea id="edit-p-notes-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${notesText}</textarea>
+    `;
+
     const actionsDiv = document.querySelector(`#p-hist-${timestamp} .history-actions`);
-    actionsDiv.innerHTML = `<button type="button" onclick="savePrescHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Save</button><button type="button" onclick="loadPrescription(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Cancel</button>`;
+    actionsDiv.innerHTML = `
+        <button type="button" onclick="savePrescHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Save</button>
+        <button type="button" onclick="loadPrescription(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Cancel</button>
+    `;
 };
 
 window.savePrescHist = async (clientId, timestamp) => {
@@ -290,19 +359,39 @@ window.savePrescHist = async (clientId, timestamp) => {
     const rasiVal = document.getElementById(`edit-p-rasi-${timestamp}`).value;
     const udhayaVal = document.getElementById(`edit-p-udhaya-${timestamp}`).value;
     const notesVal = document.getElementById(`edit-p-notes-${timestamp}`).value;
+
     const histIndex = client.prescriptions.findIndex(c => c.timestamp === timestamp);
-    if(histIndex !== -1) { client.prescriptions[histIndex].rasi = rasiVal; client.prescriptions[histIndex].udhaya = udhayaVal; client.prescriptions[histIndex].notes = notesVal; await db.clients.put(client); loadPrescription(clientId); topToast.fire({ text: 'Prescription updated' }); }
+    if(histIndex !== -1) {
+        client.prescriptions[histIndex].rasi = rasiVal;
+        client.prescriptions[histIndex].udhaya = udhayaVal;
+        client.prescriptions[histIndex].notes = notesVal;
+        await db.clients.put(client);
+        loadPrescription(clientId);
+        topToast.fire({ text: 'Prescription updated' });
+    }
 };
 
 window.deleteHist = async (clientId, timestamp) => {
     warnToast.fire({ text: 'Delete this consultation?' }).then(async (result) => {
-        if (result.isConfirmed) { const client = await db.clients.get(clientId); client.consultations = client.consultations.filter(c => c.timestamp !== timestamp); await db.clients.put(client); loadClient(clientId); topToast.fire({ text: 'Deleted' }); }
+        if (result.isConfirmed) {
+            const client = await db.clients.get(clientId);
+            client.consultations = client.consultations.filter(c => c.timestamp !== timestamp);
+            await db.clients.put(client);
+            loadClient(clientId);
+            topToast.fire({ text: 'Deleted' });
+        }
     });
 };
 
 window.deletePrescHist = async (clientId, timestamp) => {
     warnToast.fire({ text: 'Delete this prescription?' }).then(async (result) => {
-        if (result.isConfirmed) { const client = await db.clients.get(clientId); client.prescriptions = client.prescriptions.filter(c => c.timestamp !== timestamp); await db.clients.put(client); loadPrescription(clientId); topToast.fire({ text: 'Deleted' }); }
+        if (result.isConfirmed) {
+            const client = await db.clients.get(clientId);
+            client.prescriptions = client.prescriptions.filter(c => c.timestamp !== timestamp);
+            await db.clients.put(client);
+            loadPrescription(clientId);
+            topToast.fire({ text: 'Deleted' });
+        }
     });
 };
 
@@ -311,152 +400,282 @@ async function updateList() {
     let clients = await db.clients.toArray();
     if (query) clients = clients.filter(c => c.name.toLowerCase().includes(query));
     clients.reverse();
+    
     let html = "";
     clients.forEach(client => {
         const hasConsults = client.consultations && client.consultations.length > 0;
         const hasPresc = client.prescriptions && client.prescriptions.length > 0;
         const noHistory = !hasConsults && !hasPresc;
+
         let waBtn = '';
         if (client.phone) {
             let waPhone = client.phone.replace(/\D/g, '');
             if(waPhone.length === 10) waPhone = '91' + waPhone;
-            waBtn = `<a href="https://wa.me/${waPhone}" target="_blank" class="btn-wa" onclick="event.stopPropagation();"><i class="fab fa-whatsapp"></i></a>`;
+            waBtn = `<a href="https://wa.me/${waPhone}" target="_blank" class="btn-wa" onclick="event.stopPropagation();" title="Contact on WhatsApp"><i class="fab fa-whatsapp"></i></a>`;
         }
+
         if (hasConsults || noHistory || client.dob) {
-            html += `<div class="client-item" onclick="loadClient(${client.id})"><div class="client-info"><h4>${client.name} <span style="background: #e3f2fd; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 10px;">Client</span></h4><p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p></div><div class="actions">${waBtn}<button class="btn-view">View</button></div></div>`;
+            html += `
+            <div class="client-item" onclick="loadClient(${client.id})">
+                <div class="client-info">
+                    <h4>${client.name} <span style="background: #e3f2fd; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle;">Client</span></h4>
+                    <p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p>
+                </div>
+                <div class="actions">${waBtn}<button class="btn-view">View</button></div>
+            </div>`;
         }
         if (hasPresc) {
-            html += `<div class="client-item" style="border-left: 4px solid #FF9800;" onclick="loadPrescription(${client.id})"><div class="client-info"><h4>${client.name} <span style="background: #FFF3E0; color: #E65100; padding: 2px 6px; border-radius: 4px; font-size: 10px;">Prescription</span></h4><p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p></div><div class="actions">${waBtn}<button class="btn-view" style="background: #FFF3E0; color: #E65100;">View</button></div></div>`;
+            html += `
+            <div class="client-item" style="border-left: 4px solid #FF9800;" onclick="loadPrescription(${client.id})">
+                <div class="client-info">
+                    <h4>${client.name} <span style="background: #FFF3E0; color: #E65100; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle;">Prescription</span></h4>
+                    <p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p>
+                </div>
+                <div class="actions">${waBtn}<button class="btn-view" style="background: #FFF3E0; color: #E65100;">View</button></div>
+            </div>`;
         }
     });
+
     document.getElementById('clientList').innerHTML = html;
 }
 
-// ========== PDF GENERATION (NATIVE JSPDF) ==========
-
-function drawCKHeader(pdf) {
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const margin = 15;
-    pdf.setFontSize(14);
-    pdf.setTextColor(46, 125, 50);
-    pdf.setFont('Georgia', 'italic');
-    pdf.text('Astrologer', margin, 25);
-    pdf.setFontSize(22);
-    pdf.setFont('Georgia', 'bold');
-    pdf.text('C.K. Saji Panicker', margin, 35);
-    pdf.setFontSize(11);
-    pdf.setFont('Georgia', 'italic');
-    pdf.text('Chathangottupuram, Kalarikkal', margin, 45);
-    pdf.text('Wandoor-Malappuram', margin, 52);
-    pdf.text('Kerala : 679 328', margin, 59);
-    pdf.setFontSize(12);
-    pdf.setFont('Georgia', 'italic');
-    pdf.text('Consultation', pageWidth - margin - 40, 25, { align: 'right' });
-    pdf.text('Online: 9207 773 880', pageWidth - margin - 40, 35, { align: 'right' });
-    pdf.text('Office: 7034 600 880', pageWidth - margin - 40, 42, { align: 'right' });
-    pdf.setDrawColor(46, 125, 50);
-    pdf.setLineWidth(0.5);
-    pdf.line(margin, 65, pageWidth - margin, 65);
-    return 75;
+// ========== PDF GENERATION HELPERS ==========
+// Logo cache
+let logoDataURL = null;
+async function getLogoDataURL() {
+    if (logoDataURL) return logoDataURL;
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = 'logo.png';
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            logoDataURL = canvas.toDataURL('image/png');
+            resolve(logoDataURL);
+        };
+        img.onerror = () => resolve('');
+    });
 }
 
-function drawPratnyaHeader(pdf) {
-    const pageWidth = pdf.internal.pageSize.getWidth();
+// Draw CK Saji Panicker header
+async function drawCKHeader(doc, logoData, pageNumber, isFirstPage = true) {
+    const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 15;
-    pdf.setFontSize(28);
-    pdf.setTextColor(46, 125, 50);
-    pdf.setFont('Georgia', 'bold');
-    pdf.text('PRATNYA', pageWidth/2, 35, { align: 'center' });
-    pdf.setFontSize(12);
-    pdf.setFont('Georgia', 'italic');
-    pdf.text('Astro Manager', pageWidth/2, 45, { align: 'center' });
-    pdf.setDrawColor(46, 125, 50);
-    pdf.setLineWidth(0.5);
-    pdf.line(margin, 55, pageWidth - margin, 55);
-    return 65;
-}
-
-function drawFooter(pdf) {
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 15;
-    pdf.setDrawColor(46, 125, 50);
-    pdf.setLineWidth(0.5);
-    pdf.line(margin, pageHeight - 30, pageWidth - margin, pageHeight - 30);
-    pdf.setFontSize(18);
-    pdf.setTextColor(46, 125, 50);
-    pdf.setFont('Brush Script MT', 'cursive');
-    pdf.text('Fix your appointment through the call', pageWidth/2, pageHeight - 18, { align: 'center' });
-    pdf.setFontSize(12);
-    pdf.setFont('Arial', 'bold');
-    pdf.text('www.pratnya.in', pageWidth/2, pageHeight - 8, { align: 'center' });
-}
-
-async function generatePrescriptionPDFContent(pdf, data, template) {
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 15;
-
-    let y = (template === 'ck') ? drawCKHeader(pdf) : drawPratnyaHeader(pdf);
-
-    pdf.setFontSize(12);
-    pdf.setTextColor(0, 0, 0);
-    pdf.setFont('helvetica', 'normal');
-    const col1X = margin;
-    const col2X = pageWidth / 2 + 10;
-    pdf.text(`Name: ${data.name}`, col1X, y);
-    pdf.text(`Date: ${data.date}`, col2X, y);
-    y += 8;
-    pdf.text(`Star: ${data.star}`, col1X, y);
-    pdf.text(`Place: ${data.place}`, col2X, y);
-    y += 8;
-    pdf.text(`Rasi: ${data.rasi}`, col1X, y);
-    pdf.text(`Udhaya Rasi: ${data.udhaya}`, col2X, y);
-    y += 15;
-
-    pdf.setFontSize(12);
-    const textLines = pdf.splitTextToSize(data.body, pageWidth - 2 * margin);
-    const lineHeight = 7;
-    const maxY = pageHeight - 35;
-
-    for (let i = 0; i < textLines.length; i++) {
-        if (y > maxY) {
-            drawFooter(pdf);
-            pdf.addPage();
-            y = (template === 'ck') ? drawCKHeader(pdf) : drawPratnyaHeader(pdf);
-            y += 5;
+    
+    if (isFirstPage) {
+        // Logo and title
+        if (logoData) {
+            doc.addImage(logoData, 'PNG', margin, 10, 25, 25);
         }
-        pdf.text(textLines[i], margin, y);
-        y += lineHeight;
+        doc.setFontSize(16);
+        doc.setFont('Georgia', 'italic');
+        doc.setTextColor(46, 125, 50);
+        doc.text('Astrologer', margin + 30, 20);
+        
+        doc.setFontSize(26);
+        doc.setFont('Georgia', 'bold');
+        doc.text('C.K. Saji Panicker', margin + 30, 32);
+        
+        doc.setFontSize(12);
+        doc.setFont('Georgia', 'normal');
+        doc.text('Chathangottupuram, Kalarikkal', margin + 30, 42);
+        doc.text('Wandoor-Malappuram', margin + 30, 48);
+        doc.text('Kerala : 679 328', margin + 30, 54);
+        
+        // Right side contact
+        doc.setFontSize(14);
+        doc.text('Consultation', pageWidth - margin - 60, 20);
+        doc.setFontSize(12);
+        doc.text('Online: 9207 773 880', pageWidth - margin - 60, 30);
+        doc.text('Office: 7034 600 880', pageWidth - margin - 60, 38);
+        
+        // Line
+        doc.setDrawColor(46, 125, 50);
+        doc.setLineWidth(0.5);
+        doc.line(margin, 60, pageWidth - margin, 60);
+    } else {
+        // Simplified header for subsequent pages
+        doc.setFontSize(14);
+        doc.setFont('Georgia', 'bold');
+        doc.setTextColor(46, 125, 50);
+        doc.text('C.K. Saji Panicker - Prescription', margin, 20);
+        doc.setDrawColor(46, 125, 50);
+        doc.line(margin, 25, pageWidth - margin, 25);
     }
-    drawFooter(pdf);
 }
 
+// Draw Pratnya header
+async function drawPratnyaHeader(doc, logoData, pageNumber, isFirstPage = true) {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 15;
+    
+    if (isFirstPage) {
+        if (logoData) {
+            const logoWidth = 60;
+            const logoHeight = 60 * (25/25); // assuming square
+            doc.addImage(logoData, 'PNG', (pageWidth - logoWidth)/2, 15, logoWidth, logoHeight);
+        }
+        doc.setFontSize(22);
+        doc.setFont('Georgia', 'bold');
+        doc.setTextColor(46, 125, 50);
+        doc.text('Pratnya', pageWidth/2, 55, { align: 'center' });
+        doc.setFontSize(12);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Astrology & Wellness', pageWidth/2, 62, { align: 'center' });
+        
+        doc.setDrawColor(46, 125, 50);
+        doc.line(margin, 70, pageWidth - margin, 70);
+    } else {
+        doc.setFontSize(14);
+        doc.setFont('Georgia', 'bold');
+        doc.setTextColor(46, 125, 50);
+        doc.text('Pratnya - Prescription', margin, 20);
+        doc.setDrawColor(46, 125, 50);
+        doc.line(margin, 25, pageWidth - margin, 25);
+    }
+}
+
+// Draw footer
+function drawFooter(doc, pageNumber, totalPages) {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    
+    doc.setDrawColor(46, 125, 50);
+    doc.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25);
+    
+    doc.setFontSize(16);
+    doc.setFont('Brush Script MT', 'cursive');
+    doc.setTextColor(46, 125, 50);
+    doc.text('Fix your appointment through the call', pageWidth/2, pageHeight - 15, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setFont('Arial', 'normal');
+    doc.text('www.pratnya.in', pageWidth/2, pageHeight - 8, { align: 'center' });
+    
+    // Page number
+    doc.setFontSize(10);
+    doc.text(`Page ${pageNumber} of ${totalPages}`, pageWidth - margin, pageHeight - 8, { align: 'right' });
+}
+
+// ========== MULTI-PAGE PRESCRIPTION PDF ==========
 window.generatePrescriptionPDF = async () => {
-    const name = document.getElementById('prescName').value || "";
+    const template = getSelectedTemplate();
+    const name = document.getElementById('prescName').value || "Client";
+    const star = document.getElementById('prescStar').value || "";
+    const place = document.getElementById('prescPlace').value || "";
+    const rasi = document.getElementById('prescRasi').value || "";
+    const udhaya = document.getElementById('prescUdhaya').value || "";
     const body = document.getElementById('prescBody').value || "";
+    const currentDate = new Date().toLocaleDateString('en-IN');
+
     if (!name && !body) {
         topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
         return;
     }
-    const template = getSelectedTemplate();
+
     topToast.fire({ text: 'Generating PDF...' });
-
-    const data = {
-        name: name,
-        date: new Date().toLocaleDateString('en-IN'),
-        star: document.getElementById('prescStar').value || "",
-        place: document.getElementById('prescPlace').value || "",
-        rasi: document.getElementById('prescRasi').value || "",
-        udhaya: document.getElementById('prescUdhaya').value || "",
-        body: body
-    };
-
     try {
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        await generatePrescriptionPDFContent(pdf, data, template);
-        pdf.save(`${name}_Prescription.pdf`);
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 15;
+        const contentWidth = pageWidth - 2 * margin;
+        
+        const logoData = await getLogoDataURL();
+        
+        // Variables for pagination
+        let currentPage = 1;
+        let totalPages = 1; // will be updated later
+        
+        // Draw first page header
+        if (template === 'ck') {
+            await drawCKHeader(doc, logoData, currentPage, true);
+        } else {
+            await drawPratnyaHeader(doc, logoData, currentPage, true);
+        }
+        
+        // Client info grid
+        let yPos = template === 'ck' ? 75 : 85;
+        doc.setFontSize(12);
+        doc.setFont('Arial', 'normal');
+        doc.setTextColor(0, 0, 0);
+        
+        const leftColX = margin;
+        const rightColX = pageWidth/2 + 5;
+        const lineHeight = 7;
+        
+        doc.setFont('Arial', 'bold');
+        doc.text('Name:', leftColX, yPos);
+        doc.setFont('Arial', 'normal');
+        doc.text(name, leftColX + 25, yPos);
+        
+        doc.setFont('Arial', 'bold');
+        doc.text('Date:', rightColX, yPos);
+        doc.setFont('Arial', 'normal');
+        doc.text(currentDate, rightColX + 25, yPos);
+        yPos += lineHeight;
+        
+        doc.setFont('Arial', 'bold');
+        doc.text('Star:', leftColX, yPos);
+        doc.setFont('Arial', 'normal');
+        doc.text(star, leftColX + 25, yPos);
+        
+        doc.setFont('Arial', 'bold');
+        doc.text('Place:', rightColX, yPos);
+        doc.setFont('Arial', 'normal');
+        doc.text(place, rightColX + 25, yPos);
+        yPos += lineHeight;
+        
+        doc.setFont('Arial', 'bold');
+        doc.text('Rasi:', leftColX, yPos);
+        doc.setFont('Arial', 'normal');
+        doc.text(rasi, leftColX + 25, yPos);
+        
+        doc.setFont('Arial', 'bold');
+        doc.text('Udhaya Rasi:', rightColX, yPos);
+        doc.setFont('Arial', 'normal');
+        doc.text(udhaya, rightColX + 35, yPos);
+        yPos += lineHeight + 5;
+        
+        // Prescription body
+        doc.setFontSize(12);
+        doc.setFont('Arial', 'normal');
+        
+        const lines = doc.splitTextToSize(body, contentWidth);
+        const footerMargin = 30;
+        const maxY = pageHeight - footerMargin;
+        
+        for (let i = 0; i < lines.length; i++) {
+            if (yPos > maxY) {
+                // Add new page
+                doc.addPage();
+                currentPage++;
+                // Draw header for new page (simplified)
+                if (template === 'ck') {
+                    await drawCKHeader(doc, logoData, currentPage, false);
+                } else {
+                    await drawPratnyaHeader(doc, logoData, currentPage, false);
+                }
+                yPos = 35; // below simplified header
+            }
+            doc.text(lines[i], margin, yPos);
+            yPos += lineHeight;
+        }
+        
+        // Add footers and total pages
+        totalPages = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            drawFooter(doc, i, totalPages);
+        }
+        
+        doc.save(`${name}_Prescription.pdf`);
         topToast.fire({ text: 'Downloaded successfully!' });
     } catch(e) {
         console.error(e);
@@ -464,111 +683,243 @@ window.generatePrescriptionPDF = async () => {
     }
 };
 
+// ========== SHARE PRESCRIPTION PDF (WhatsApp) ==========
 window.sharePrescriptionPDF = async () => {
-    const name = document.getElementById('prescName').value || "";
+    const template = getSelectedTemplate();
+    const name = document.getElementById('prescName').value || "Client";
+    const star = document.getElementById('prescStar').value || "";
+    const place = document.getElementById('prescPlace').value || "";
+    const rasi = document.getElementById('prescRasi').value || "";
+    const udhaya = document.getElementById('prescUdhaya').value || "";
     const body = document.getElementById('prescBody').value || "";
+    const currentDate = new Date().toLocaleDateString('en-IN');
+
     if (!name && !body) {
         topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
         return;
     }
-    const template = getSelectedTemplate();
+
     topToast.fire({ text: 'Preparing file for sharing...' });
-
-    const data = {
-        name: name,
-        date: new Date().toLocaleDateString('en-IN'),
-        star: document.getElementById('prescStar').value || "",
-        place: document.getElementById('prescPlace').value || "",
-        rasi: document.getElementById('prescRasi').value || "",
-        udhaya: document.getElementById('prescUdhaya').value || "",
-        body: body
-    };
-
     try {
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        await generatePrescriptionPDFContent(pdf, data, template);
-        const pdfBlob = pdf.output('blob');
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 15;
+        const contentWidth = pageWidth - 2 * margin;
+        
+        const logoData = await getLogoDataURL();
+        
+        let currentPage = 1;
+        
+        if (template === 'ck') {
+            await drawCKHeader(doc, logoData, currentPage, true);
+        } else {
+            await drawPratnyaHeader(doc, logoData, currentPage, true);
+        }
+        
+        let yPos = template === 'ck' ? 75 : 85;
+        doc.setFontSize(12);
+        doc.setFont('Arial', 'normal');
+        doc.setTextColor(0, 0, 0);
+        
+        const leftColX = margin;
+        const rightColX = pageWidth/2 + 5;
+        const lineHeight = 7;
+        
+        doc.setFont('Arial', 'bold');
+        doc.text('Name:', leftColX, yPos);
+        doc.setFont('Arial', 'normal');
+        doc.text(name, leftColX + 25, yPos);
+        
+        doc.setFont('Arial', 'bold');
+        doc.text('Date:', rightColX, yPos);
+        doc.setFont('Arial', 'normal');
+        doc.text(currentDate, rightColX + 25, yPos);
+        yPos += lineHeight;
+        
+        doc.setFont('Arial', 'bold');
+        doc.text('Star:', leftColX, yPos);
+        doc.setFont('Arial', 'normal');
+        doc.text(star, leftColX + 25, yPos);
+        
+        doc.setFont('Arial', 'bold');
+        doc.text('Place:', rightColX, yPos);
+        doc.setFont('Arial', 'normal');
+        doc.text(place, rightColX + 25, yPos);
+        yPos += lineHeight;
+        
+        doc.setFont('Arial', 'bold');
+        doc.text('Rasi:', leftColX, yPos);
+        doc.setFont('Arial', 'normal');
+        doc.text(rasi, leftColX + 25, yPos);
+        
+        doc.setFont('Arial', 'bold');
+        doc.text('Udhaya Rasi:', rightColX, yPos);
+        doc.setFont('Arial', 'normal');
+        doc.text(udhaya, rightColX + 35, yPos);
+        yPos += lineHeight + 5;
+        
+        const lines = doc.splitTextToSize(body, contentWidth);
+        const footerMargin = 30;
+        const maxY = pageHeight - footerMargin;
+        
+        for (let i = 0; i < lines.length; i++) {
+            if (yPos > maxY) {
+                doc.addPage();
+                currentPage++;
+                if (template === 'ck') {
+                    await drawCKHeader(doc, logoData, currentPage, false);
+                } else {
+                    await drawPratnyaHeader(doc, logoData, currentPage, false);
+                }
+                yPos = 35;
+            }
+            doc.text(lines[i], margin, yPos);
+            yPos += lineHeight;
+        }
+        
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            drawFooter(doc, i, totalPages);
+        }
+        
+        const pdfBlob = doc.output('blob');
         const file = new File([pdfBlob], `${name}_Prescription.pdf`, { type: 'application/pdf' });
+
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'Prescription', text: 'Here is your prescription from Pratnya Astro.' });
+            await navigator.share({
+                files: [file],
+                title: 'Prescription',
+                text: 'Here is your prescription from Pratnya Astro.'
+            });
             topToast.fire({ text: 'Opened share menu!' });
         } else {
-            Swal.fire({ title: 'Unsupported Browser', text: 'Direct sharing not supported. Use PDF button to download.', icon: 'info' });
+            Swal.fire({
+                title: 'Unsupported Browser',
+                text: 'Your device/browser does not support direct file sharing. Please click "PDF" to download it, then attach it in WhatsApp manually.',
+                icon: 'info'
+            });
         }
-    } catch(e) {
-        console.error(e);
-        topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' });
+    } catch(e) { 
+        console.error(e); 
+        topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' }); 
     }
 };
 
+// ========== MULTI-PAGE CONSULTATION REPORT PDF ==========
 window.generatePDF = async () => {
-    const name = document.getElementById('name').value;
-    const star = document.getElementById('star').value;
-    const dob = document.getElementById('dob').value;
-    const time = document.getElementById('birthTime').value;
-    let displayTime = time;
+    const template = getSelectedTemplate();
+    const name = document.getElementById('name').value || 'Client';
+    const star = document.getElementById('star').value || '';
+    const dob = document.getElementById('dob').value || '';
+    let time = document.getElementById('birthTime').value || '';
+    
     if (time) {
         const [h, m] = time.split(':');
         const hour = parseInt(h);
-        displayTime = `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`;
+        time = `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`;
     }
-    const template = getSelectedTemplate();
-    const id = document.getElementById('clientId').value;
-    let client;
-    if (id) client = await db.clients.get(parseInt(id));
-
+    
+    const clientId = document.getElementById('clientId').value;
+    let consultations = [];
+    if (clientId) {
+        const client = await db.clients.get(parseInt(clientId));
+        if (client && client.consultations) {
+            consultations = client.consultations;
+        }
+    }
+    
+    if (!name && consultations.length === 0) {
+        topToast.fire({ text: 'No data to generate PDF', background: '#E0245E' });
+        return;
+    }
+    
     topToast.fire({ text: 'Generating PDF...' });
-
     try {
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
         const margin = 15;
-
-        let y = (template === 'ck') ? drawCKHeader(pdf) : drawPratnyaHeader(pdf);
-
-        pdf.setFontSize(12);
-        pdf.setTextColor(0, 0, 0);
-        pdf.setFont('helvetica', 'normal');
-        pdf.text(`Name: ${name}`, margin, y);
-        pdf.text(`Star: ${star}`, pageWidth / 2 + 10, y);
-        y += 8;
-        pdf.text(`DOB: ${dob}`, margin, y);
-        pdf.text(`Time: ${displayTime}`, pageWidth / 2 + 10, y);
-        y += 15;
-
-        const tableData = [];
-        if (client && client.consultations) {
-            client.consultations.forEach(c => {
-                tableData.push([c.date, `Problem:\n${c.problem || '-'}\n\nSolution:\n${c.solution || '-'}`]);
-            });
-        }
-
-        if (tableData.length > 0) {
-            pdf.autoTable({
-                startY: y,
-                head: [['Date', 'Details']],
-                body: tableData,
-                margin: { left: margin, right: margin },
-                styles: { fontSize: 10, cellPadding: 4 },
-                columnStyles: { 0: { cellWidth: 40 } },
-                didDrawPage: (data) => {
-                    const currentPage = pdf.internal.getCurrentPageInfo().pageNumber;
-                    if (currentPage > 1) {
-                        if (template === 'ck') drawCKHeader(pdf);
-                        else drawPratnyaHeader(pdf);
+        
+        const logoData = await getLogoDataURL();
+        
+        // Prepare table rows
+        const rows = [];
+        consultations.forEach(c => {
+            rows.push([
+                c.date,
+                `Problem:\n${c.problem || '-'}\n\nSolution:\n${c.solution || '-'}`
+            ]);
+        });
+        
+        // Use autoTable with didDrawPage hook
+        doc.autoTable({
+            startY: template === 'ck' ? 75 : 85,
+            margin: { left: margin, right: margin },
+            head: [['Date', 'Details']],
+            body: rows,
+            theme: 'grid',
+            headStyles: { fillColor: [46, 125, 50], textColor: 255 },
+            columnStyles: {
+                0: { cellWidth: 40 },
+                1: { cellWidth: 'auto' }
+            },
+            didDrawPage: async (data) => {
+                const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
+                const totalPages = doc.internal.getNumberOfPages();
+                
+                // Draw header on each page
+                if (pageNumber === 1) {
+                    if (template === 'ck') {
+                        await drawCKHeader(doc, logoData, pageNumber, true);
+                    } else {
+                        await drawPratnyaHeader(doc, logoData, pageNumber, true);
                     }
-                    drawFooter(pdf);
+                    // Client info above table
+                    doc.setFontSize(12);
+                    doc.setFont('Arial', 'normal');
+                    doc.setTextColor(0, 0, 0);
+                    let yInfo = template === 'ck' ? 65 : 75;
+                    doc.text(`Name: ${name}    Star: ${star}    DOB: ${dob}    Time: ${time}`, margin, yInfo);
+                } else {
+                    // Simplified header for subsequent pages
+                    if (template === 'ck') {
+                        await drawCKHeader(doc, logoData, pageNumber, false);
+                    } else {
+                        await drawPratnyaHeader(doc, logoData, pageNumber, false);
+                    }
                 }
-            });
-        } else {
-            pdf.text('No consultation history.', margin, y);
+                // Draw footer
+                drawFooter(doc, pageNumber, totalPages);
+            },
+            willDrawCell: (data) => {
+                // Ensure text wraps properly in the second column
+                if (data.column.index === 1 && data.cell.raw) {
+                    // autoTable handles wrapping automatically
+                }
+            }
+        });
+        
+        // If no consultations, still add header/footer and a message
+        if (consultations.length === 0) {
+            let yPos = template === 'ck' ? 75 : 85;
+            // Draw header manually
+            if (template === 'ck') {
+                await drawCKHeader(doc, logoData, 1, true);
+            } else {
+                await drawPratnyaHeader(doc, logoData, 1, true);
+            }
+            doc.setFontSize(12);
+            doc.text(`Name: ${name}    Star: ${star}    DOB: ${dob}    Time: ${time}`, margin, yPos);
+            yPos += 10;
+            doc.text('No consultation history available.', margin, yPos);
+            drawFooter(doc, 1, 1);
         }
-
-        drawFooter(pdf);
-        pdf.save(`${name}_Full_Report.pdf`);
+        
+        doc.save(`${name}_Full_Report.pdf`);
         topToast.fire({ text: 'Downloaded successfully!' });
     } catch (error) {
         console.error(error);
@@ -576,7 +927,6 @@ window.generatePDF = async () => {
     }
 };
 
-// --- SEARCH & MISC ---
 searchInput.oninput = () => updateList();
 function calculateAge() {
     const dobInput = document.getElementById('dob').value;
@@ -587,6 +937,7 @@ function calculateAge() {
     if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) age--;
     document.getElementById('age').value = age;
 }
+
 async function deleteCurrentClient() {
     const id = document.getElementById('clientId').value;
     if (!id) return;
@@ -601,6 +952,7 @@ async function deleteCurrentPrescClient() {
         if (result.isConfirmed) { await db.clients.delete(parseInt(id)); closePrescriptionForm(); await updateList(); topToast.fire({ text: 'Deleted' }); }
     });
 }
+
 function transferToPrescription() {
     const id = document.getElementById('clientId').value; 
     const name = document.getElementById('name').value;
@@ -608,7 +960,9 @@ function transferToPrescription() {
     const star = document.getElementById('star').value;
     const place = document.getElementById('place').value;
     const solution = document.getElementById('currentSolution').value;
+
     if (!name) { topToast.fire({ text: 'Please enter a Name first', background: '#E0245E' }); return; }
+
     showPrescriptionForm();
     document.getElementById('prescClientId').value = id;
     document.getElementById('prescName').value = name;
