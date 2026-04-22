@@ -461,105 +461,127 @@ async function getLogoDataURL() {
     });
 }
 
-// Draw CK Saji Panicker header
-async function drawCKHeader(doc, logoData, pageNumber, isFirstPage = true) {
+// Draw CK Saji Panicker header (exact replica of HTML)
+async function drawCKHeader(doc, logoData, pageNumber, totalPages) {
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 15;
     
-    if (isFirstPage) {
-        // Logo and title
-        if (logoData) {
-            doc.addImage(logoData, 'PNG', margin, 10, 25, 25);
-        }
+    if (pageNumber === 1) {
+        // Left side: Astrologer, Name, Address
         doc.setFontSize(16);
         doc.setFont('Georgia', 'italic');
         doc.setTextColor(46, 125, 50);
-        doc.text('Astrologer', margin + 30, 20);
+        doc.text('Astrologer', margin, 20);
         
         doc.setFontSize(26);
         doc.setFont('Georgia', 'bold');
-        doc.text('C.K. Saji Panicker', margin + 30, 32);
+        doc.text('C.K. Saji Panicker', margin, 32);
         
         doc.setFontSize(12);
         doc.setFont('Georgia', 'normal');
-        doc.text('Chathangottupuram, Kalarikkal', margin + 30, 42);
-        doc.text('Wandoor-Malappuram', margin + 30, 48);
-        doc.text('Kerala : 679 328', margin + 30, 54);
+        doc.text('Chathangottupuram, Kalarikkal', margin, 42);
+        doc.text('Wandoor-Malappuram', margin, 48);
+        doc.text('Kerala : 679 328', margin, 54);
         
-        // Right side contact
+        // Right side: Consultation and numbers
+        doc.setFontSize(16);
+        doc.setFont('Georgia', 'italic');
+        doc.text('Consultation', pageWidth - margin - 65, 20);
         doc.setFontSize(14);
-        doc.text('Consultation', pageWidth - margin - 60, 20);
-        doc.setFontSize(12);
-        doc.text('Online: 9207 773 880', pageWidth - margin - 60, 30);
-        doc.text('Office: 7034 600 880', pageWidth - margin - 60, 38);
+        doc.setFont('Georgia', 'normal');
+        doc.text('Online: 9207 773 880', pageWidth - margin - 65, 30);
+        doc.text('Office: 7034 600 880', pageWidth - margin - 65, 38);
         
-        // Line
+        // Green line
         doc.setDrawColor(46, 125, 50);
-        doc.setLineWidth(0.5);
-        doc.line(margin, 60, pageWidth - margin, 60);
+        doc.setLineWidth(0.8);
+        doc.line(margin, 62, pageWidth - margin, 62);
     } else {
         // Simplified header for subsequent pages
         doc.setFontSize(14);
         doc.setFont('Georgia', 'bold');
         doc.setTextColor(46, 125, 50);
-        doc.text('C.K. Saji Panicker - Prescription', margin, 20);
+        doc.text('C.K. Saji Panicker - Continued', margin, 20);
         doc.setDrawColor(46, 125, 50);
-        doc.line(margin, 25, pageWidth - margin, 25);
+        doc.setLineWidth(0.5);
+        doc.line(margin, 26, pageWidth - margin, 26);
     }
 }
 
-// Draw Pratnya header
-async function drawPratnyaHeader(doc, logoData, pageNumber, isFirstPage = true) {
+// Draw Pratnya header (centered logo)
+async function drawPratnyaHeader(doc, logoData, pageNumber, totalPages) {
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 15;
     
-    if (isFirstPage) {
+    if (pageNumber === 1) {
         if (logoData) {
-            const logoWidth = 60;
-            const logoHeight = 60 * (25/25); // assuming square
-            doc.addImage(logoData, 'PNG', (pageWidth - logoWidth)/2, 15, logoWidth, logoHeight);
+            // Center the logo (approx 60x60)
+            doc.addImage(logoData, 'PNG', (pageWidth - 60)/2, 15, 60, 60);
         }
-        doc.setFontSize(22);
-        doc.setFont('Georgia', 'bold');
-        doc.setTextColor(46, 125, 50);
-        doc.text('Pratnya', pageWidth/2, 55, { align: 'center' });
-        doc.setFontSize(12);
-        doc.setTextColor(100, 100, 100);
-        doc.text('Astrology & Wellness', pageWidth/2, 62, { align: 'center' });
-        
+        // No text below logo as per original (just the logo)
         doc.setDrawColor(46, 125, 50);
-        doc.line(margin, 70, pageWidth - margin, 70);
+        doc.setLineWidth(0.8);
+        doc.line(margin, 85, pageWidth - margin, 85);
     } else {
         doc.setFontSize(14);
         doc.setFont('Georgia', 'bold');
         doc.setTextColor(46, 125, 50);
-        doc.text('Pratnya - Prescription', margin, 20);
+        doc.text('Pratnya - Continued', margin, 20);
         doc.setDrawColor(46, 125, 50);
-        doc.line(margin, 25, pageWidth - margin, 25);
+        doc.setLineWidth(0.5);
+        doc.line(margin, 26, pageWidth - margin, 26);
     }
 }
 
-// Draw footer
+// Draw footer with signature line and page number
 function drawFooter(doc, pageNumber, totalPages) {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 15;
     
+    // Green line above footer
     doc.setDrawColor(46, 125, 50);
-    doc.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25);
+    doc.setLineWidth(0.5);
+    doc.line(margin, pageHeight - 28, pageWidth - margin, pageHeight - 28);
     
-    doc.setFontSize(16);
+    // Signature text
+    doc.setFontSize(18);
     doc.setFont('Brush Script MT', 'cursive');
     doc.setTextColor(46, 125, 50);
-    doc.text('Fix your appointment through the call', pageWidth/2, pageHeight - 15, { align: 'center' });
+    doc.text('Fix your appointment through the call', pageWidth/2, pageHeight - 18, { align: 'center' });
     
-    doc.setFontSize(10);
-    doc.setFont('Arial', 'normal');
-    doc.text('www.pratnya.in', pageWidth/2, pageHeight - 8, { align: 'center' });
+    // Website
+    doc.setFontSize(11);
+    doc.setFont('Arial', 'bold');
+    doc.text('www.pratnya.in', pageWidth/2, pageHeight - 10, { align: 'center' });
     
     // Page number
     doc.setFontSize(10);
-    doc.text(`Page ${pageNumber} of ${totalPages}`, pageWidth - margin, pageHeight - 8, { align: 'right' });
+    doc.setFont('Arial', 'normal');
+    doc.text(`Page ${pageNumber} of ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+}
+
+// Add watermark logo (low opacity) on every page
+async function addWatermark(doc, logoData) {
+    if (!logoData) return;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    // Center, large, low opacity
+    const imgWidth = 120;
+    const imgHeight = 120;
+    const x = (pageWidth - imgWidth) / 2;
+    const y = (pageHeight - imgHeight) / 2;
+    
+    // Set global alpha for transparency
+    const ctx = doc.canvas.getContext('2d');
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    // We need to draw image using canvas context directly
+    const img = new Image();
+    img.src = logoData;
+    await new Promise((resolve) => { img.onload = resolve; });
+    ctx.drawImage(img, x, y, imgWidth, imgHeight);
+    ctx.restore();
 }
 
 // ========== MULTI-PAGE PRESCRIPTION PDF ==========
@@ -589,19 +611,32 @@ window.generatePrescriptionPDF = async () => {
         
         const logoData = await getLogoDataURL();
         
-        // Variables for pagination
+        // Pre-calculate total pages? We'll build incrementally.
         let currentPage = 1;
-        let totalPages = 1; // will be updated later
         
-        // Draw first page header
+        // Helper to add new page with header/footer/watermark
+        const addNewPage = async () => {
+            doc.addPage();
+            currentPage++;
+            // Watermark first (behind everything)
+            await addWatermark(doc, logoData);
+            if (template === 'ck') {
+                await drawCKHeader(doc, logoData, currentPage, 0);
+            } else {
+                await drawPratnyaHeader(doc, logoData, currentPage, 0);
+            }
+            return 35; // Y position after header on new page
+        };
+        
+        // First page setup
+        await addWatermark(doc, logoData);
         if (template === 'ck') {
-            await drawCKHeader(doc, logoData, currentPage, true);
+            await drawCKHeader(doc, logoData, 1, 0);
         } else {
-            await drawPratnyaHeader(doc, logoData, currentPage, true);
+            await drawPratnyaHeader(doc, logoData, 1, 0);
         }
         
-        // Client info grid
-        let yPos = template === 'ck' ? 75 : 85;
+        let yPos = template === 'ck' ? 75 : 95; // below header
         doc.setFontSize(12);
         doc.setFont('Arial', 'normal');
         doc.setTextColor(0, 0, 0);
@@ -610,6 +645,7 @@ window.generatePrescriptionPDF = async () => {
         const rightColX = pageWidth/2 + 5;
         const lineHeight = 7;
         
+        // Client info grid
         doc.setFont('Arial', 'bold');
         doc.text('Name:', leftColX, yPos);
         doc.setFont('Arial', 'normal');
@@ -641,35 +677,25 @@ window.generatePrescriptionPDF = async () => {
         doc.text('Udhaya Rasi:', rightColX, yPos);
         doc.setFont('Arial', 'normal');
         doc.text(udhaya, rightColX + 35, yPos);
-        yPos += lineHeight + 5;
+        yPos += lineHeight + 8;
         
         // Prescription body
         doc.setFontSize(12);
         doc.setFont('Arial', 'normal');
         
         const lines = doc.splitTextToSize(body, contentWidth);
-        const footerMargin = 30;
-        const maxY = pageHeight - footerMargin;
+        const footerMargin = 32; // space for footer
         
         for (let i = 0; i < lines.length; i++) {
-            if (yPos > maxY) {
-                // Add new page
-                doc.addPage();
-                currentPage++;
-                // Draw header for new page (simplified)
-                if (template === 'ck') {
-                    await drawCKHeader(doc, logoData, currentPage, false);
-                } else {
-                    await drawPratnyaHeader(doc, logoData, currentPage, false);
-                }
-                yPos = 35; // below simplified header
+            if (yPos > pageHeight - footerMargin) {
+                yPos = await addNewPage();
             }
             doc.text(lines[i], margin, yPos);
             yPos += lineHeight;
         }
         
-        // Add footers and total pages
-        totalPages = doc.internal.getNumberOfPages();
+        // Now add footers and page numbers to all pages
+        const totalPages = doc.internal.getNumberOfPages();
         for (let i = 1; i <= totalPages; i++) {
             doc.setPage(i);
             drawFooter(doc, i, totalPages);
@@ -712,13 +738,26 @@ window.sharePrescriptionPDF = async () => {
         
         let currentPage = 1;
         
+        const addNewPage = async () => {
+            doc.addPage();
+            currentPage++;
+            await addWatermark(doc, logoData);
+            if (template === 'ck') {
+                await drawCKHeader(doc, logoData, currentPage, 0);
+            } else {
+                await drawPratnyaHeader(doc, logoData, currentPage, 0);
+            }
+            return 35;
+        };
+        
+        await addWatermark(doc, logoData);
         if (template === 'ck') {
-            await drawCKHeader(doc, logoData, currentPage, true);
+            await drawCKHeader(doc, logoData, 1, 0);
         } else {
-            await drawPratnyaHeader(doc, logoData, currentPage, true);
+            await drawPratnyaHeader(doc, logoData, 1, 0);
         }
         
-        let yPos = template === 'ck' ? 75 : 85;
+        let yPos = template === 'ck' ? 75 : 95;
         doc.setFontSize(12);
         doc.setFont('Arial', 'normal');
         doc.setTextColor(0, 0, 0);
@@ -758,22 +797,14 @@ window.sharePrescriptionPDF = async () => {
         doc.text('Udhaya Rasi:', rightColX, yPos);
         doc.setFont('Arial', 'normal');
         doc.text(udhaya, rightColX + 35, yPos);
-        yPos += lineHeight + 5;
+        yPos += lineHeight + 8;
         
         const lines = doc.splitTextToSize(body, contentWidth);
-        const footerMargin = 30;
-        const maxY = pageHeight - footerMargin;
+        const footerMargin = 32;
         
         for (let i = 0; i < lines.length; i++) {
-            if (yPos > maxY) {
-                doc.addPage();
-                currentPage++;
-                if (template === 'ck') {
-                    await drawCKHeader(doc, logoData, currentPage, false);
-                } else {
-                    await drawPratnyaHeader(doc, logoData, currentPage, false);
-                }
-                yPos = 35;
+            if (yPos > pageHeight - footerMargin) {
+                yPos = await addNewPage();
             }
             doc.text(lines[i], margin, yPos);
             yPos += lineHeight;
@@ -843,6 +874,7 @@ window.generatePDF = async () => {
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
         const margin = 15;
+        const contentWidth = pageWidth - 2 * margin;
         
         const logoData = await getLogoDataURL();
         
@@ -855,14 +887,14 @@ window.generatePDF = async () => {
             ]);
         });
         
-        // Use autoTable with didDrawPage hook
+        // Use autoTable with custom header/footer drawing
         doc.autoTable({
-            startY: template === 'ck' ? 75 : 85,
+            startY: template === 'ck' ? 75 : 95,
             margin: { left: margin, right: margin },
             head: [['Date', 'Details']],
             body: rows,
             theme: 'grid',
-            headStyles: { fillColor: [46, 125, 50], textColor: 255 },
+            headStyles: { fillColor: [46, 125, 50], textColor: 255, fontStyle: 'bold' },
             columnStyles: {
                 0: { cellWidth: 40 },
                 1: { cellWidth: 'auto' }
@@ -871,48 +903,44 @@ window.generatePDF = async () => {
                 const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
                 const totalPages = doc.internal.getNumberOfPages();
                 
-                // Draw header on each page
+                // Watermark on every page
+                await addWatermark(doc, logoData);
+                
+                // Draw header
                 if (pageNumber === 1) {
                     if (template === 'ck') {
-                        await drawCKHeader(doc, logoData, pageNumber, true);
+                        await drawCKHeader(doc, logoData, 1, totalPages);
                     } else {
-                        await drawPratnyaHeader(doc, logoData, pageNumber, true);
+                        await drawPratnyaHeader(doc, logoData, 1, totalPages);
                     }
                     // Client info above table
                     doc.setFontSize(12);
                     doc.setFont('Arial', 'normal');
                     doc.setTextColor(0, 0, 0);
-                    let yInfo = template === 'ck' ? 65 : 75;
+                    let yInfo = template === 'ck' ? 65 : 85;
                     doc.text(`Name: ${name}    Star: ${star}    DOB: ${dob}    Time: ${time}`, margin, yInfo);
                 } else {
-                    // Simplified header for subsequent pages
                     if (template === 'ck') {
-                        await drawCKHeader(doc, logoData, pageNumber, false);
+                        await drawCKHeader(doc, logoData, pageNumber, totalPages);
                     } else {
-                        await drawPratnyaHeader(doc, logoData, pageNumber, false);
+                        await drawPratnyaHeader(doc, logoData, pageNumber, totalPages);
                     }
                 }
                 // Draw footer
                 drawFooter(doc, pageNumber, totalPages);
-            },
-            willDrawCell: (data) => {
-                // Ensure text wraps properly in the second column
-                if (data.column.index === 1 && data.cell.raw) {
-                    // autoTable handles wrapping automatically
-                }
             }
         });
         
-        // If no consultations, still add header/footer and a message
+        // If no consultations, add a simple page
         if (consultations.length === 0) {
-            let yPos = template === 'ck' ? 75 : 85;
-            // Draw header manually
+            await addWatermark(doc, logoData);
             if (template === 'ck') {
-                await drawCKHeader(doc, logoData, 1, true);
+                await drawCKHeader(doc, logoData, 1, 1);
             } else {
-                await drawPratnyaHeader(doc, logoData, 1, true);
+                await drawPratnyaHeader(doc, logoData, 1, 1);
             }
             doc.setFontSize(12);
+            let yPos = template === 'ck' ? 75 : 95;
             doc.text(`Name: ${name}    Star: ${star}    DOB: ${dob}    Time: ${time}`, margin, yPos);
             yPos += 10;
             doc.text('No consultation history available.', margin, yPos);
