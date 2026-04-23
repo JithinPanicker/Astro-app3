@@ -469,7 +469,7 @@ function fillPrescriptionTemplate() {
 }
 
 // ============================================================
-// PRESCRIPTION PDF GENERATION (HTML2CANVAS, NO DUPLICATE HEADER)
+// PRESCRIPTION PDF GENERATION (IMPROVED MARGINS, FOOTER ONLY LAST PAGE)
 // ============================================================
 
 async function createPrescriptionPDFBlob() {
@@ -485,12 +485,12 @@ async function createPrescriptionPDFBlob() {
 
     if (!name && !body) throw new Error('Form is empty');
 
-    // Build the exact HTML that will be rendered (header included)
+    // Create a hidden container – header is part of the image
     const container = document.createElement('div');
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '0';
-    container.style.width = '595px';       // A4 width for good scaling
+    container.style.width = '595px';        // A4 width for scaling
     container.style.backgroundColor = 'white';
     container.style.padding = '40px';
     container.style.boxSizing = 'border-box';
@@ -519,7 +519,6 @@ async function createPrescriptionPDFBlob() {
             </div>
         `;
     } else {
-        // Pratnya template: only logo, no extra text
         headerHtml = `
             <div style="display: flex; justify-content: center; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px;">
                 <img src="logo.png" style="height: 70px; width: auto;">
@@ -551,17 +550,18 @@ async function createPrescriptionPDFBlob() {
 
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const margin = 15; // mm
+        const pageWidth = pdf.internal.pageSize.getWidth();   // 210 mm
+        const pageHeight = pdf.internal.pageSize.getHeight(); // 297 mm
+        const margin = 20; // wider margins for reduced header/footer width
 
         const pxPerMm = contentWidth / pageWidth;
         const footerHeightMm = 25;
-        const maxContentHeightMm = pageHeight - margin - footerHeightMm; // available height for image on each page
+        // Available height for image (leaving space for footer on last page)
+        const maxContentHeightMm = pageHeight - margin - footerHeightMm;
 
         const fullImageHeightMm = contentHeight / pxPerMm;
 
-        // Footer drawing (last page only)
+        // Footer drawing (only on last page)
         const drawFooter = (doc) => {
             const footerY = pageHeight - footerHeightMm;
             doc.setDrawColor(46, 125, 50);
@@ -602,7 +602,7 @@ async function createPrescriptionPDFBlob() {
             pageNum++;
         }
 
-        // Add footer on the last page
+        // Footer only on the last page
         drawFooter(pdf);
 
         return pdf.output('blob');
@@ -656,7 +656,7 @@ window.sharePrescriptionPDF = async () => {
     }
 };
 
-// --- GENERATE CLIENT FULL REPORT PDF (unchanged but functional) ---
+// --- GENERATE CLIENT FULL REPORT PDF (unchanged but still works) ---
 window.generatePDF = async () => {
     const template = getSelectedTemplate();
     const name = document.getElementById('name').value || 'Client';
@@ -683,7 +683,7 @@ window.generatePDF = async () => {
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
-        const margin = 15;
+        const margin = 20; // increased margin for consistency
 
         const drawHeader = (doc, templateType) => {
             doc.setTextColor(46, 125, 50);
@@ -706,7 +706,6 @@ window.generatePDF = async () => {
                 doc.text('Online: 9207 773 880', pageWidth - margin - 40, margin + 12);
                 doc.text('Office: 7034 600 880', pageWidth - margin - 40, margin + 19);
             } else {
-                // For full report, we can keep the text or just logo; using text for simplicity
                 doc.setFontSize(24);
                 doc.setFont('times', 'bold');
                 doc.text('Pratnya Astro', pageWidth / 2, margin + 15, { align: 'center' });
