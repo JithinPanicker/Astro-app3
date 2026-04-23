@@ -284,15 +284,116 @@ window.loadPrescription = async (id) => {
     showPrescriptionForm();
 };
 
-// --- HISTORY EDIT & DELETE LOGIC (unchanged) ---
-window.editHist = (clientId, timestamp) => { /* ... unchanged ... */ };
-window.saveHist = async (clientId, timestamp) => { /* ... unchanged ... */ };
-window.editPrescHist = (clientId, timestamp) => { /* ... unchanged ... */ };
-window.savePrescHist = async (clientId, timestamp) => { /* ... unchanged ... */ };
-window.deleteHist = async (clientId, timestamp) => { /* ... unchanged ... */ };
-window.deletePrescHist = async (clientId, timestamp) => { /* ... unchanged ... */ };
+// --- HISTORY EDIT & DELETE LOGIC ---
+window.editHist = (clientId, timestamp) => {
+    const probEl = document.getElementById(`prob-text-${timestamp}`);
+    const solEl = document.getElementById(`sol-text-${timestamp}`);
+    const probText = probEl.innerText;
+    const solText = solEl.innerText;
 
-// (The above six functions are kept exactly as you provided; omitted for brevity here.)
+    probEl.innerHTML = `
+        <div class="mini-toolbar">
+            <span onclick="undoText('edit-prob-${timestamp}')">Undo</span>
+            <span onclick="clearText('edit-prob-${timestamp}')">Clear</span>
+        </div>
+        <textarea id="edit-prob-${timestamp}" rows="3" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${probText === '-' ? '' : probText}</textarea>`;
+    
+    solEl.innerHTML = `
+        <div class="mini-toolbar">
+            <span onclick="undoText('edit-sol-${timestamp}')">Undo</span>
+            <span onclick="clearText('edit-sol-${timestamp}')">Clear</span>
+        </div>
+        <textarea id="edit-sol-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${solText === '-' ? '' : solText}</textarea>`;
+    
+    const actionsDiv = document.querySelector(`#hist-${timestamp} .history-actions`);
+    actionsDiv.innerHTML = `
+        <button type="button" onclick="saveHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Save</button>
+        <button type="button" onclick="loadClient(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Cancel</button>
+    `;
+};
+
+window.saveHist = async (clientId, timestamp) => {
+    const client = await db.clients.get(clientId);
+    const probVal = document.getElementById(`edit-prob-${timestamp}`).value;
+    const solVal = document.getElementById(`edit-sol-${timestamp}`).value;
+
+    const histIndex = client.consultations.findIndex(c => c.timestamp === timestamp);
+    if(histIndex !== -1) {
+        client.consultations[histIndex].problem = probVal;
+        client.consultations[histIndex].solution = solVal;
+        await db.clients.put(client);
+        loadClient(clientId);
+        topToast.fire({ text: 'Consultation updated' });
+    }
+};
+
+window.editPrescHist = (clientId, timestamp) => {
+    const rasiEl = document.getElementById(`p-rasi-${timestamp}`);
+    const udhayaEl = document.getElementById(`p-udhaya-${timestamp}`);
+    const notesEl = document.getElementById(`p-notes-${timestamp}`);
+
+    const rasiText = rasiEl.innerText;
+    const udhayaText = udhayaEl.innerText;
+    const notesText = notesEl.innerText;
+
+    rasiEl.innerHTML = `<input type="text" id="edit-p-rasi-${timestamp}" value="${rasiText}" style="width: 70px; padding: 2px; font-size: 12px;">`;
+    udhayaEl.innerHTML = `<input type="text" id="edit-p-udhaya-${timestamp}" value="${udhayaText}" style="width: 70px; padding: 2px; font-size: 12px;">`;
+    
+    notesEl.innerHTML = `
+        <div class="mini-toolbar" style="margin-top: 8px;">
+            <span onclick="undoText('edit-p-notes-${timestamp}')">Undo</span>
+            <span onclick="clearText('edit-p-notes-${timestamp}')">Clear</span>
+        </div>
+        <textarea id="edit-p-notes-${timestamp}" rows="4" style="width: 100%; margin-top: 5px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;">${notesText}</textarea>
+    `;
+
+    const actionsDiv = document.querySelector(`#p-hist-${timestamp} .history-actions`);
+    actionsDiv.innerHTML = `
+        <button type="button" onclick="savePrescHist(${clientId}, ${timestamp})" style="background: #4CAF50; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Save</button>
+        <button type="button" onclick="loadPrescription(${clientId})" style="background: #9e9e9e; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Cancel</button>
+    `;
+};
+
+window.savePrescHist = async (clientId, timestamp) => {
+    const client = await db.clients.get(clientId);
+    const rasiVal = document.getElementById(`edit-p-rasi-${timestamp}`).value;
+    const udhayaVal = document.getElementById(`edit-p-udhaya-${timestamp}`).value;
+    const notesVal = document.getElementById(`edit-p-notes-${timestamp}`).value;
+
+    const histIndex = client.prescriptions.findIndex(c => c.timestamp === timestamp);
+    if(histIndex !== -1) {
+        client.prescriptions[histIndex].rasi = rasiVal;
+        client.prescriptions[histIndex].udhaya = udhayaVal;
+        client.prescriptions[histIndex].notes = notesVal;
+        await db.clients.put(client);
+        loadPrescription(clientId);
+        topToast.fire({ text: 'Prescription updated' });
+    }
+};
+
+window.deleteHist = async (clientId, timestamp) => {
+    warnToast.fire({ text: 'Delete this consultation?' }).then(async (result) => {
+        if (result.isConfirmed) {
+            const client = await db.clients.get(clientId);
+            client.consultations = client.consultations.filter(c => c.timestamp !== timestamp);
+            await db.clients.put(client);
+            loadClient(clientId);
+            topToast.fire({ text: 'Deleted' });
+        }
+    });
+};
+
+window.deletePrescHist = async (clientId, timestamp) => {
+    warnToast.fire({ text: 'Delete this prescription?' }).then(async (result) => {
+        if (result.isConfirmed) {
+            const client = await db.clients.get(clientId);
+            client.prescriptions = client.prescriptions.filter(c => c.timestamp !== timestamp);
+            await db.clients.put(client);
+            loadPrescription(clientId);
+            topToast.fire({ text: 'Deleted' });
+        }
+    });
+};
 
 async function updateList() {
     const query = searchInput.value.toLowerCase();
@@ -368,13 +469,12 @@ function fillPrescriptionTemplate() {
 }
 
 // ============================================================
-// NEW: PRESCRIPTION PDF GENERATION WITH HTML2CANVAS (MALAYALAM SUPPORT)
+// PRESCRIPTION PDF GENERATION (HTML2CANVAS, NO DUPLICATE HEADER)
 // ============================================================
 
 async function createPrescriptionPDFBlob() {
     const template = getSelectedTemplate();
     
-    // Get form values
     const name = document.getElementById('prescName').value.trim();
     const star = document.getElementById('prescStar').value.trim();
     const place = document.getElementById('prescPlace').value.trim();
@@ -385,20 +485,19 @@ async function createPrescriptionPDFBlob() {
 
     if (!name && !body) throw new Error('Form is empty');
 
-    // Create a hidden container that mimics the final PDF look
+    // Build the exact HTML that will be rendered (header included)
     const container = document.createElement('div');
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '0';
-    container.style.width = '595px';      // A4 width at 96dpi (approx 794px, but 595 is good for scaling)
+    container.style.width = '595px';       // A4 width for good scaling
     container.style.backgroundColor = 'white';
     container.style.padding = '40px';
     container.style.boxSizing = 'border-box';
-    container.style.fontFamily = "'Arial', 'Noto Sans Malayalam', sans-serif";
+    container.style.fontFamily = "'Arial', 'Noto Sans', sans-serif";
     container.style.color = '#000';
     container.style.lineHeight = '1.5';
 
-    // Build header HTML (same as original template)
     let headerHtml = '';
     if (template === 'ck') {
         headerHtml = `
@@ -420,16 +519,14 @@ async function createPrescriptionPDFBlob() {
             </div>
         `;
     } else {
+        // Pratnya template: only logo, no extra text
         headerHtml = `
             <div style="display: flex; justify-content: center; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px;">
-                <div style="text-align: center;">
-                    <img src="logo.png" style="height: 70px; width: auto;">
-                </div>
+                <img src="logo.png" style="height: 70px; width: auto;">
             </div>
         `;
     }
 
-    // Body fields (grid)
     const fieldsHtml = `
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: Arial, sans-serif; font-size: 14px; margin-bottom: 20px;">
             <div><strong>Name:</strong> ${name}</div>
@@ -441,73 +538,30 @@ async function createPrescriptionPDFBlob() {
         </div>
     `;
 
-    // Body content
     const bodyHtml = `<div style="font-size: 16px; white-space: pre-wrap; margin-bottom: 30px;">${body.replace(/\n/g, '<br>')}</div>`;
-
-    // Footer (will be drawn later via jsPDF, but we include a spacer)
-    const spacer = `<div style="height: 30px;"></div>`;
+    const spacer = `<div style="height: 10px;"></div>`;
 
     container.innerHTML = headerHtml + fieldsHtml + bodyHtml + spacer;
     document.body.appendChild(container);
 
     try {
-        // Render container with html2canvas
         const canvas = await html2canvas(container, { scale: 2, backgroundColor: '#ffffff' });
-        const contentHeight = canvas.height;
         const contentWidth = canvas.width;
+        const contentHeight = canvas.height;
 
-        // A4 dimensions in mm and conversion
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
         const margin = 15; // mm
 
-        // Calculate how many pixels per mm (canvas width / A4 width in mm)
         const pxPerMm = contentWidth / pageWidth;
-
-        // Height of header + margin (approximate) that we will draw manually
-        const headerHeightMm = template === 'ck' ? 42 : 42; // same for both
         const footerHeightMm = 25;
-        
-        // Available height for content image on first page (after header) and subsequent pages
-        const firstPageContentHeightMm = pageHeight - headerHeightMm - footerHeightMm - margin; // margin bottom for spacing
-        const otherPageContentHeightMm = pageHeight - margin * 2 - footerHeightMm;
+        const maxContentHeightMm = pageHeight - margin - footerHeightMm; // available height for image on each page
 
-        // Convert content image height to mm
         const fullImageHeightMm = contentHeight / pxPerMm;
 
-        // Function to draw header (first page only)
-        const drawHeader = (doc) => {
-            doc.setTextColor(46, 125, 50);
-            if (template === 'ck') {
-                doc.setFontSize(16);
-                doc.setFont('times', 'italic');
-                doc.text('Astrologer', margin, margin + 5);
-                doc.setFontSize(26);
-                doc.setFont('times', 'bold');
-                doc.text('C.K. Saji Panicker', margin, margin + 15);
-                doc.setFontSize(12);
-                doc.setFont('times', 'italic');
-                doc.text('Chathangottupuram, Kalarikkal', margin, margin + 23);
-                doc.text('Wandoor-Malappuram', margin, margin + 29);
-                doc.text('Kerala : 679 328', margin, margin + 35);
-                doc.setFontSize(14);
-                doc.setFont('times', 'normal');
-                doc.text('Consultation', pageWidth - margin - 40, margin + 5);
-                doc.setFontSize(12);
-                doc.text('Online: 9207 773 880', pageWidth - margin - 40, margin + 12);
-                doc.text('Office: 7034 600 880', pageWidth - margin - 40, margin + 19);
-            } else {
-                doc.setFontSize(24);
-                doc.setFont('times', 'bold');
-                doc.text('Pratnya Astro', pageWidth / 2, margin + 15, { align: 'center' });
-            }
-            doc.setDrawColor(46, 125, 50);
-            doc.setLineWidth(0.5);
-            doc.line(margin, margin + headerHeightMm, pageWidth - margin, margin + headerHeightMm);
-        };
-
+        // Footer drawing (last page only)
         const drawFooter = (doc) => {
             const footerY = pageHeight - footerHeightMm;
             doc.setDrawColor(46, 125, 50);
@@ -522,60 +576,34 @@ async function createPrescriptionPDFBlob() {
             doc.text('www.pratnya.in', pageWidth / 2, footerY + 8, { align: 'center' });
         };
 
-        // Slice the image and add to PDF
-        let pageNum = 1;
+        // Slice the canvas and add pages
         let remainingHeightMm = fullImageHeightMm;
-        let sourceY = 0; // pixel offset in canvas
+        let sourceY = 0;
+        let pageNum = 1;
 
         while (remainingHeightMm > 0) {
-            if (pageNum === 1) {
-                drawHeader(pdf);
-                const contentYStartMm = margin + headerHeightMm + 5; // a bit of padding
-                const availableHeightMm = firstPageContentHeightMm;
-                const sliceHeightMm = Math.min(availableHeightMm, remainingHeightMm);
-                const sliceHeightPx = sliceHeightMm * pxPerMm;
+            const sliceHeightMm = Math.min(maxContentHeightMm, remainingHeightMm);
+            const sliceHeightPx = sliceHeightMm * pxPerMm;
 
-                if (sliceHeightPx > 0) {
-                    // Create a canvas for this slice
-                    const sliceCanvas = document.createElement('canvas');
-                    sliceCanvas.width = contentWidth;
-                    sliceCanvas.height = sliceHeightPx;
-                    const ctx = sliceCanvas.getContext('2d');
-                    ctx.drawImage(canvas, 0, sourceY, contentWidth, sliceHeightPx, 0, 0, contentWidth, sliceHeightPx);
-                    const sliceData = sliceCanvas.toDataURL('image/png');
-                    pdf.addImage(sliceData, 'PNG', margin, contentYStartMm, pageWidth - 2*margin, sliceHeightMm);
-                }
-
-                sourceY += sliceHeightPx;
-                remainingHeightMm -= sliceHeightMm;
-            } else {
-                pdf.addPage();
-                const contentYStartMm = margin;
-                const availableHeightMm = otherPageContentHeightMm;
-                const sliceHeightMm = Math.min(availableHeightMm, remainingHeightMm);
-                const sliceHeightPx = sliceHeightMm * pxPerMm;
-
-                if (sliceHeightPx > 0) {
-                    const sliceCanvas = document.createElement('canvas');
-                    sliceCanvas.width = contentWidth;
-                    sliceCanvas.height = sliceHeightPx;
-                    const ctx = sliceCanvas.getContext('2d');
-                    ctx.drawImage(canvas, 0, sourceY, contentWidth, sliceHeightPx, 0, 0, contentWidth, sliceHeightPx);
-                    const sliceData = sliceCanvas.toDataURL('image/png');
-                    pdf.addImage(sliceData, 'PNG', margin, contentYStartMm, pageWidth - 2*margin, sliceHeightMm);
-                }
-
-                sourceY += sliceHeightPx;
-                remainingHeightMm -= sliceHeightMm;
+            if (sliceHeightPx > 0) {
+                const sliceCanvas = document.createElement('canvas');
+                sliceCanvas.width = contentWidth;
+                sliceCanvas.height = sliceHeightPx;
+                const ctx = sliceCanvas.getContext('2d');
+                ctx.drawImage(canvas, 0, sourceY, contentWidth, sliceHeightPx, 0, 0, contentWidth, sliceHeightPx);
+                const sliceData = sliceCanvas.toDataURL('image/png');
+                
+                if (pageNum > 1) pdf.addPage();
+                pdf.addImage(sliceData, 'PNG', margin, margin, pageWidth - 2 * margin, sliceHeightMm);
             }
 
-            // Draw footer only on the last page
-            if (remainingHeightMm <= 0) {
-                drawFooter(pdf);
-            }
-
+            sourceY += sliceHeightPx;
+            remainingHeightMm -= sliceHeightMm;
             pageNum++;
         }
+
+        // Add footer on the last page
+        drawFooter(pdf);
 
         return pdf.output('blob');
     } finally {
@@ -583,7 +611,6 @@ async function createPrescriptionPDFBlob() {
     }
 }
 
-// --- GENERATE PRESCRIPTION PDF ---
 window.generatePrescriptionPDF = async () => {
     try {
         topToast.fire({ text: 'Generating PDF...' });
@@ -600,7 +627,6 @@ window.generatePrescriptionPDF = async () => {
     }
 };
 
-// --- SHARE PRESCRIPTION PDF ---
 window.sharePrescriptionPDF = async () => {
     try {
         topToast.fire({ text: 'Preparing file for sharing...' });
@@ -630,7 +656,7 @@ window.sharePrescriptionPDF = async () => {
     }
 };
 
-// --- GENERATE CLIENT FULL REPORT PDF (unchanged, but can be similarly updated if needed) ---
+// --- GENERATE CLIENT FULL REPORT PDF (unchanged but functional) ---
 window.generatePDF = async () => {
     const template = getSelectedTemplate();
     const name = document.getElementById('name').value || 'Client';
@@ -680,6 +706,7 @@ window.generatePDF = async () => {
                 doc.text('Online: 9207 773 880', pageWidth - margin - 40, margin + 12);
                 doc.text('Office: 7034 600 880', pageWidth - margin - 40, margin + 19);
             } else {
+                // For full report, we can keep the text or just logo; using text for simplicity
                 doc.setFontSize(24);
                 doc.setFont('times', 'bold');
                 doc.text('Pratnya Astro', pageWidth / 2, margin + 15, { align: 'center' });
