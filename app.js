@@ -439,9 +439,16 @@ async function updateList() {
     document.getElementById('clientList').innerHTML = html;
 }
 
-// --- FILL PRESCRIPTION TEMPLATE (uses global selector) ---
+// --- FILL PRESCRIPTION TEMPLATE (safe version, no DOM errors) ---
 function fillPrescriptionTemplate() {
     const template = getSelectedTemplate();
+    const suffix = template === 'ck' ? 'CK' : 'Pratnya';
+    
+    const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = value;
+    };
+
     const name = document.getElementById('prescName').value || "";
     const star = document.getElementById('prescStar').value || "";
     const place = document.getElementById('prescPlace').value || "";
@@ -450,24 +457,31 @@ function fillPrescriptionTemplate() {
     const body = document.getElementById('prescBody').value || "";
     const currentDate = new Date().toLocaleDateString('en-IN');
 
-    if(!name && !body) return false;
+    setText(`pdfPrescName${suffix}`, name);
+    setText(`pdfPrescDate${suffix}`, currentDate);
+    setText(`pdfPrescStar${suffix}`, star);
+    setText(`pdfPrescPlace${suffix}`, place);
+    setText(`pdfPrescRasi${suffix}`, rasi);
+    setText(`pdfPrescUdhaya${suffix}`, udhaya);
+    setText(`pdfPrescBody${suffix}`, body);
 
-    const suffix = template === 'ck' ? 'CK' : 'Pratnya';
-    document.getElementById(`pdfPrescName${suffix}`).innerText = name;
-    document.getElementById(`pdfPrescDate${suffix}`).innerText = currentDate;
-    document.getElementById(`pdfPrescStar${suffix}`).innerText = star;
-    document.getElementById(`pdfPrescPlace${suffix}`).innerText = place;
-    document.getElementById(`pdfPrescRasi${suffix}`).innerText = rasi;
-    document.getElementById(`pdfPrescUdhaya${suffix}`).innerText = udhaya;
-    document.getElementById(`pdfPrescBody${suffix}`).innerText = body;
-    return true;
+    return !!(name || body);
 }
 
-// --- GENERATE PRESCRIPTION PDF (global selector) ---
-// Helper: Generate prescription PDF and return Blob
+// --- NEW: Create Prescription PDF Blob (Pure jsPDF, no DOM templating) ---
 async function createPrescriptionPDFBlob() {
     const template = getSelectedTemplate();
-    if (!fillPrescriptionTemplate()) {
+
+    // Get field values
+    const name = document.getElementById('prescName').value.trim();
+    const star = document.getElementById('prescStar').value.trim();
+    const place = document.getElementById('prescPlace').value.trim();
+    const rasi = document.getElementById('prescRasi').value.trim();
+    const udhaya = document.getElementById('prescUdhaya').value.trim();
+    const body = document.getElementById('prescBody').value || '';
+
+    // Validation
+    if (!name && !body) {
         throw new Error('Form is empty');
     }
 
@@ -477,7 +491,6 @@ async function createPrescriptionPDFBlob() {
     const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 15;
 
-    // --- Header (first page only) ---
     const drawHeader = (doc, templateType) => {
         doc.setTextColor(46, 125, 50);
         if (templateType === 'ck') {
@@ -492,7 +505,6 @@ async function createPrescriptionPDFBlob() {
             doc.text('Chathangottupuram, Kalarikkal', margin, margin + 23);
             doc.text('Wandoor-Malappuram', margin, margin + 29);
             doc.text('Kerala : 679 328', margin, margin + 35);
-            // Right side
             doc.setFontSize(14);
             doc.setFont('times', 'normal');
             doc.text('Consultation', pageWidth - margin - 40, margin + 5);
@@ -509,7 +521,6 @@ async function createPrescriptionPDFBlob() {
         doc.line(margin, margin + 42, pageWidth - margin, margin + 42);
     };
 
-    // --- Footer (last page only) ---
     const drawFooter = (doc) => {
         const footerY = pageHeight - 25;
         doc.setDrawColor(46, 125, 50);
@@ -524,13 +535,6 @@ async function createPrescriptionPDFBlob() {
         doc.text('www.pratnya.in', pageWidth / 2, footerY + 8, { align: 'center' });
     };
 
-    // Gather data
-    const name = document.getElementById('prescName').value.trim();
-    const star = document.getElementById('prescStar').value.trim();
-    const place = document.getElementById('prescPlace').value.trim();
-    const rasi = document.getElementById('prescRasi').value.trim();
-    const udhaya = document.getElementById('prescUdhaya').value.trim();
-    const body = document.getElementById('prescBody').value || '';
     const currentDate = new Date().toLocaleDateString('en-IN');
 
     // First page
@@ -543,11 +547,11 @@ async function createPrescriptionPDFBlob() {
     pdf.text(`Name: ${name}`, margin, y);
     pdf.text(`Date: ${currentDate}`, pageWidth / 2, y);
     y += 8;
-    pdf.text(`Star: ${star}`, margin, y);
-    pdf.text(`Place: ${place}`, pageWidth / 2, y);
+    pdf.text(`Star: ${star || '-'}`, margin, y);
+    pdf.text(`Place: ${place || '-'}`, pageWidth / 2, y);
     y += 8;
-    pdf.text(`Rasi: ${rasi}`, margin, y);
-    pdf.text(`Udhaya Rasi: ${udhaya}`, pageWidth / 2, y);
+    pdf.text(`Rasi: ${rasi || '-'}`, margin, y);
+    pdf.text(`Udhaya Rasi: ${udhaya || '-'}`, pageWidth / 2, y);
     y += 12;
 
     // Body text with pagination
@@ -571,13 +575,13 @@ async function createPrescriptionPDFBlob() {
 
     return pdf.output('blob');
 }
+
 // --- GENERATE PRESCRIPTION PDF (global selector) ---
 window.generatePrescriptionPDF = async () => {
     try {
         topToast.fire({ text: 'Generating PDF...' });
         const blob = await createPrescriptionPDFBlob();
-        const name = document.getElementById('prescName').value || "Client";
-        // Trigger download
+        const name = document.getElementById('prescName').value.trim() || 'Client';
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = `${name}_Prescription.pdf`;
@@ -590,12 +594,11 @@ window.generatePrescriptionPDF = async () => {
 };
 
 // --- SHARE PRESCRIPTION PDF (global selector) ---
-// --- SHARE PRESCRIPTION PDF (global selector) ---
 window.sharePrescriptionPDF = async () => {
     try {
         topToast.fire({ text: 'Preparing file for sharing...' });
         const blob = await createPrescriptionPDFBlob();
-        const name = document.getElementById('prescName').value || "Client";
+        const name = document.getElementById('prescName').value.trim() || 'Client';
         const file = new File([blob], `${name}_Prescription.pdf`, { type: 'application/pdf' });
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -619,7 +622,7 @@ window.sharePrescriptionPDF = async () => {
         }
     }
 };
-// --- GENERATE CLIENT FULL REPORT PDF (global selector) ---
+
 // --- GENERATE CLIENT FULL REPORT PDF (global selector) ---
 window.generatePDF = async () => {
     const template = getSelectedTemplate();
