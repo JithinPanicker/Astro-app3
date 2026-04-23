@@ -284,7 +284,7 @@ window.loadPrescription = async (id) => {
     showPrescriptionForm();
 };
 
-// --- HISTORY EDIT & DELETE LOGIC ---
+// --- HISTORY EDIT & DELETE LOGIC (unchanged) ---
 window.editHist = (clientId, timestamp) => {
     const probEl = document.getElementById(`prob-text-${timestamp}`);
     const solEl = document.getElementById(`sol-text-${timestamp}`);
@@ -439,7 +439,7 @@ async function updateList() {
     document.getElementById('clientList').innerHTML = html;
 }
 
-// --- FILL PRESCRIPTION TEMPLATE (Kept for HTML Preview purposes) ---
+// --- FILL PRESCRIPTION TEMPLATE (uses global selector) ---
 function fillPrescriptionTemplate() {
     const template = getSelectedTemplate();
     const name = document.getElementById('prescName').value || "";
@@ -453,213 +453,253 @@ function fillPrescriptionTemplate() {
     if(!name && !body) return false;
 
     const suffix = template === 'ck' ? 'CK' : 'Pratnya';
-    const nameEl = document.getElementById(`pdfPrescName${suffix}`);
-    if (nameEl) {
-        nameEl.innerText = name;
-        document.getElementById(`pdfPrescDate${suffix}`).innerText = currentDate;
-        document.getElementById(`pdfPrescStar${suffix}`).innerText = star;
-        document.getElementById(`pdfPrescPlace${suffix}`).innerText = place;
-        document.getElementById(`pdfPrescRasi${suffix}`).innerText = rasi;
-        document.getElementById(`pdfPrescUdhaya${suffix}`).innerText = udhaya;
-        document.getElementById(`pdfPrescBody${suffix}`).innerText = body;
-    }
+    document.getElementById(`pdfPrescName${suffix}`).innerText = name;
+    document.getElementById(`pdfPrescDate${suffix}`).innerText = currentDate;
+    document.getElementById(`pdfPrescStar${suffix}`).innerText = star;
+    document.getElementById(`pdfPrescPlace${suffix}`).innerText = place;
+    document.getElementById(`pdfPrescRasi${suffix}`).innerText = rasi;
+    document.getElementById(`pdfPrescUdhaya${suffix}`).innerText = udhaya;
+    document.getElementById(`pdfPrescBody${suffix}`).innerText = body;
     return true;
 }
 
-// ==========================================
-// NEW: MULTI-PAGE NATIVE PDF BUILDER
-// ==========================================
-function buildPrescriptionPDFDoc() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-
-    const template = getSelectedTemplate();
-    const name = document.getElementById('prescName').value.trim() || 'Client';
-    const phone = document.getElementById('prescPhone').value.trim() || 'N/A';
-    const star = document.getElementById('prescStar').value.trim() || 'N/A';
-    const place = document.getElementById('prescPlace').value.trim() || 'N/A';
-    const rasi = document.getElementById('prescRasi').value.trim() || 'N/A';
-    const udhaya = document.getElementById('prescUdhaya').value.trim() || 'N/A';
-    const prescriptionText = document.getElementById('prescBody').value.trim() || '';
-
-    const dateStr = new Date().toLocaleDateString('en-IN');
-
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 15;
-    const usableWidth = pageWidth - (2 * margin);
-
-    let yPos = margin;
-
-    // --- 1. HEADER (FIRST PAGE ONLY) ---
-    if (template === 'ck') {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(22);
-        doc.setTextColor(180, 0, 0); // Red
-        doc.text("CK SAJI PANICKER", pageWidth / 2, yPos, { align: "center" });
-        yPos += 7;
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(60, 60, 60);
-        doc.text("Vedic Astrologer, Counselor & Spiritual Guide", pageWidth / 2, yPos, { align: "center" });
-    } else {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(22);
-        doc.setTextColor(46, 125, 50); // Green
-        doc.text("PRATNYA ASTRO", pageWidth / 2, yPos, { align: "center" });
-        yPos += 7;
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(60, 60, 60);
-        doc.text("Cosmic Guidance & Specialized Remedies", pageWidth / 2, yPos, { align: "center" });
-    }
-    yPos += 8;
-
-    // Header Separator
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.5);
-    doc.line(margin, yPos, pageWidth - margin, yPos);
-    yPos += 8;
-
-    // --- 2. CLIENT DETAILS (FIRST PAGE ONLY) ---
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(11);
-    
-    doc.setFont("helvetica", "bold"); doc.text("Name:", margin, yPos);
-    doc.setFont("helvetica", "normal"); doc.text(name, margin + 15, yPos);
-    doc.setFont("helvetica", "bold"); doc.text("Date:", pageWidth - margin - 50, yPos);
-    doc.setFont("helvetica", "normal"); doc.text(dateStr, pageWidth - margin - 35, yPos);
-    yPos += 7;
-
-    doc.setFont("helvetica", "bold"); doc.text("Star:", margin, yPos);
-    doc.setFont("helvetica", "normal"); doc.text(star, margin + 15, yPos);
-    doc.setFont("helvetica", "bold"); doc.text("Phone:", pageWidth - margin - 50, yPos);
-    doc.setFont("helvetica", "normal"); doc.text(phone, pageWidth - margin - 35, yPos);
-    yPos += 7;
-
-    doc.setFont("helvetica", "bold"); doc.text("Place:", margin, yPos);
-    doc.setFont("helvetica", "normal"); doc.text(place, margin + 15, yPos);
-    yPos += 7;
-
-    doc.setFont("helvetica", "bold"); doc.text("Rasi:", margin, yPos);
-    doc.setFont("helvetica", "normal"); doc.text(rasi, margin + 15, yPos);
-    doc.setFont("helvetica", "bold"); doc.text("Udhaya:", pageWidth - margin - 50, yPos);
-    doc.setFont("helvetica", "normal"); doc.text(udhaya, pageWidth - margin - 30, yPos);
-    yPos += 10;
-
-    // Details Separator
-    doc.line(margin, yPos, pageWidth - margin, yPos);
-    yPos += 10;
-
-    // --- 3. MULTI-PAGE TEXT BODY ---
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    doc.text("Remedies & Prescription:", margin, yPos);
-    yPos += 8;
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-
-    const rawLines = prescriptionText.split('\n');
-    let textLines = [];
-    rawLines.forEach(line => {
-        const wrapped = doc.splitTextToSize(line, usableWidth);
-        textLines = textLines.concat(wrapped);
-    });
-
-    const lineHeight = 6;
-    const bottomMarginLimit = 25; 
-
-    for (let i = 0; i < textLines.length; i++) {
-        // Jump to new page if at the bottom
-        if (yPos > pageHeight - bottomMarginLimit) {
-            doc.addPage();
-            yPos = margin + 5; // Resets cleanly without printing header
-        }
-        doc.text(textLines[i], margin, yPos);
-        yPos += lineHeight;
-    }
-
-    // --- 4. FOOTER (LAST PAGE ONLY) ---
-    const footerRequiredSpace = 30; 
-    
-    if (yPos > pageHeight - footerRequiredSpace) {
-        doc.addPage();
-        yPos = pageHeight - footerRequiredSpace; 
-    } else {
-        yPos = pageHeight - footerRequiredSpace + 10; 
-    }
-
-    doc.setDrawColor(200, 200, 200);
-    doc.line(margin, yPos, pageWidth - margin, yPos);
-    yPos += 8;
-
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "italic");
-    doc.setTextColor(100, 100, 100);
-
-    if (template === 'ck') {
-        doc.text("May the cosmic alignments bring you clarity, peace, and prosperity.", pageWidth / 2, yPos, { align: "center" });
-        yPos += 10;
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(0, 0, 0);
-        doc.text("CK Saji Panicker", pageWidth - margin, yPos, { align: "right" });
-    } else {
-        doc.text("Trust the process of the universe. Wishing you harmony and spiritual growth.", pageWidth / 2, yPos, { align: "center" });
-        yPos += 10;
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(0, 0, 0);
-        doc.text("Authorized Signatory, Pratnya", pageWidth - margin, yPos, { align: "right" });
-    }
-
-    return doc;
-}
-
-// --- GENERATE PRESCRIPTION PDF (Updated to Native jsPDF) ---
+// --- GENERATE PRESCRIPTION PDF (global selector) ---
 window.generatePrescriptionPDF = async () => {
-    const name = document.getElementById('prescName').value.trim();
-    const body = document.getElementById('prescBody').value.trim();
-    
-    if (!name && !body) {
+    const template = getSelectedTemplate();
+    if (!fillPrescriptionTemplate()) {
         topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
         return;
     }
+    const name = document.getElementById('prescName').value || "Client";
 
     topToast.fire({ text: 'Generating PDF...' });
     try {
-        const doc = buildPrescriptionPDFDoc();
-        const safeName = (name || "Client").replace(/[^a-zA-Z0-9]/g, '_');
-        doc.save(`${safeName}_Prescription.pdf`);
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 15;
+        let currentPage = 1;
+        let totalPages = 1; // will be updated later
+
+        // Helper: draw header (only first page)
+        const drawHeader = (doc, templateType) => {
+            if (templateType === 'ck') {
+                doc.setFontSize(16);
+                doc.setTextColor(46, 125, 50);
+                doc.setFont('Georgia', 'italic');
+                doc.text('Astrologer', margin, margin + 5);
+                doc.setFontSize(26);
+                doc.setFont('Georgia', 'bold');
+                doc.text('C.K. Saji Panicker', margin, margin + 15);
+                doc.setFontSize(12);
+                doc.setFont('Georgia', 'italic');
+                doc.text('Chathangottupuram, Kalarikkal', margin, margin + 23);
+                doc.text('Wandoor-Malappuram', margin, margin + 29);
+                doc.text('Kerala : 679 328', margin, margin + 35);
+                // Right side contact
+                doc.setFontSize(14);
+                doc.text('Consultation', pageWidth - margin - 40, margin + 5);
+                doc.setFontSize(12);
+                doc.text('Online: 9207 773 880', pageWidth - margin - 40, margin + 12);
+                doc.text('Office: 7034 600 880', pageWidth - margin - 40, margin + 19);
+            } else { // pratnya
+                // centered logo would be drawn as text or image; we'll draw a simple text header
+                doc.setFontSize(24);
+                doc.setTextColor(46, 125, 50);
+                doc.setFont('Georgia', 'bold');
+                doc.text('Pratnya Astro', pageWidth / 2, margin + 15, { align: 'center' });
+            }
+            // Green line
+            doc.setDrawColor(46, 125, 50);
+            doc.setLineWidth(0.5);
+            doc.line(margin, margin + 42, pageWidth - margin, margin + 42);
+            return margin + 48; // y position after header
+        };
+
+        // Helper: draw footer (only last page)
+        const drawFooter = (doc, templateType, lastPageY) => {
+            // Footer only on last page
+            const footerY = pageHeight - 25;
+            doc.setDrawColor(46, 125, 50);
+            doc.setLineWidth(0.5);
+            doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+            doc.setFontSize(18);
+            doc.setTextColor(46, 125, 50);
+            doc.setFont('Brush Script MT', 'cursive');
+            doc.text('Fix your appointment through the call', pageWidth / 2, footerY, { align: 'center' });
+            doc.setFontSize(12);
+            doc.setFont('Arial', 'bold');
+            doc.text('www.pratnya.in', pageWidth / 2, footerY + 8, { align: 'center' });
+        };
+
+        // Get data
+        const star = document.getElementById('prescStar').value || '';
+        const place = document.getElementById('prescPlace').value || '';
+        const rasi = document.getElementById('prescRasi').value || '';
+        const udhaya = document.getElementById('prescUdhaya').value || '';
+        const body = document.getElementById('prescBody').value || '';
+        const currentDate = new Date().toLocaleDateString('en-IN');
+
+        // ---- First page creation ----
+        let y = drawHeader(pdf, template);
+        
+        // Client details grid
+        pdf.setFontSize(12);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont('Arial', 'normal');
+        pdf.text(`Name: ${name}`, margin, y);
+        pdf.text(`Date: ${currentDate}`, pageWidth / 2, y);
+        y += 8;
+        pdf.text(`Star: ${star}`, margin, y);
+        pdf.text(`Place: ${place}`, pageWidth / 2, y);
+        y += 8;
+        pdf.text(`Rasi: ${rasi}`, margin, y);
+        pdf.text(`Udhaya Rasi: ${udhaya}`, pageWidth / 2, y);
+        y += 15;
+
+        // Body text with pagination
+        pdf.setFontSize(13);
+        pdf.setFont('Georgia', 'normal');
+        const lines = pdf.splitTextToSize(body, pageWidth - 2 * margin);
+        const lineHeight = 7;
+        const maxY = pageHeight - 35; // leave space for footer
+
+        for (let i = 0; i < lines.length; i++) {
+            if (y + lineHeight > maxY) {
+                pdf.addPage();
+                currentPage++;
+                y = margin; // no header on subsequent pages
+                // (if you want a small continuation header, you can add it here)
+            }
+            pdf.text(lines[i], margin, y);
+            y += lineHeight;
+        }
+
+        // After all text, add footer only on last page
+        totalPages = currentPage;
+        drawFooter(pdf, template, y);
+
+        pdf.save(`${name}_Prescription.pdf`);
         topToast.fire({ text: 'Downloaded successfully!' });
     } catch(e) { 
         console.error(e); 
-        topToast.fire({ text: 'PDF Failed', background: '#E0245E' });
+        topToast.fire({ text: 'PDF generation failed', background: '#E0245E' });
     }
 };
 
-// --- SHARE PRESCRIPTION PDF (Updated to Native jsPDF) ---
+// --- SHARE PRESCRIPTION PDF (global selector) ---
 window.sharePrescriptionPDF = async () => {
-    const name = document.getElementById('prescName').value.trim();
-    const body = document.getElementById('prescBody').value.trim();
-    
-    if (!name && !body) {
+    const template = getSelectedTemplate();
+    if (!fillPrescriptionTemplate()) {
         topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
         return;
     }
+    const name = document.getElementById('prescName').value || 'Client';
 
     topToast.fire({ text: 'Preparing file for sharing...' });
     try {
-        const doc = buildPrescriptionPDFDoc();
-        const safeName = (name || "Client").replace(/[^a-zA-Z0-9]/g, '_');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 15;
+        let currentPage = 1;
+
+        // Helper: draw header (only first page)
+        const drawHeader = (doc, templateType) => {
+            if (templateType === 'ck') {
+                doc.setFontSize(16);
+                doc.setTextColor(46, 125, 50);
+                doc.setFont('Georgia', 'italic');
+                doc.text('Astrologer', margin, margin + 5);
+                doc.setFontSize(26);
+                doc.setFont('Georgia', 'bold');
+                doc.text('C.K. Saji Panicker', margin, margin + 15);
+                doc.setFontSize(12);
+                doc.setFont('Georgia', 'italic');
+                doc.text('Chathangottupuram, Kalarikkal', margin, margin + 23);
+                doc.text('Wandoor-Malappuram', margin, margin + 29);
+                doc.text('Kerala : 679 328', margin, margin + 35);
+                doc.setFontSize(14);
+                doc.text('Consultation', pageWidth - margin - 40, margin + 5);
+                doc.setFontSize(12);
+                doc.text('Online: 9207 773 880', pageWidth - margin - 40, margin + 12);
+                doc.text('Office: 7034 600 880', pageWidth - margin - 40, margin + 19);
+            } else {
+                doc.setFontSize(24);
+                doc.setTextColor(46, 125, 50);
+                doc.setFont('Georgia', 'bold');
+                doc.text('Pratnya Astro', pageWidth / 2, margin + 15, { align: 'center' });
+            }
+            doc.setDrawColor(46, 125, 50);
+            doc.setLineWidth(0.5);
+            doc.line(margin, margin + 42, pageWidth - margin, margin + 42);
+            return margin + 48;
+        };
+
+        const drawFooter = (doc, templateType) => {
+            const footerY = pageHeight - 25;
+            doc.setDrawColor(46, 125, 50);
+            doc.setLineWidth(0.5);
+            doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+            doc.setFontSize(18);
+            doc.setTextColor(46, 125, 50);
+            doc.setFont('Brush Script MT', 'cursive');
+            doc.text('Fix your appointment through the call', pageWidth / 2, footerY, { align: 'center' });
+            doc.setFontSize(12);
+            doc.setFont('Arial', 'bold');
+            doc.text('www.pratnya.in', pageWidth / 2, footerY + 8, { align: 'center' });
+        };
+
+        const star = document.getElementById('prescStar').value || '';
+        const place = document.getElementById('prescPlace').value || '';
+        const rasi = document.getElementById('prescRasi').value || '';
+        const udhaya = document.getElementById('prescUdhaya').value || '';
+        const body = document.getElementById('prescBody').value || '';
+        const currentDate = new Date().toLocaleDateString('en-IN');
+
+        let y = drawHeader(pdf, template);
         
-        const pdfBlob = doc.output('blob');
-        const file = new File([pdfBlob], `${safeName}_Prescription.pdf`, { type: 'application/pdf' });
+        pdf.setFontSize(12);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont('Arial', 'normal');
+        pdf.text(`Name: ${name}`, margin, y);
+        pdf.text(`Date: ${currentDate}`, pageWidth / 2, y);
+        y += 8;
+        pdf.text(`Star: ${star}`, margin, y);
+        pdf.text(`Place: ${place}`, pageWidth / 2, y);
+        y += 8;
+        pdf.text(`Rasi: ${rasi}`, margin, y);
+        pdf.text(`Udhaya Rasi: ${udhaya}`, pageWidth / 2, y);
+        y += 15;
+
+        pdf.setFontSize(13);
+        pdf.setFont('Georgia', 'normal');
+        const lines = pdf.splitTextToSize(body, pageWidth - 2 * margin);
+        const lineHeight = 7;
+        const maxY = pageHeight - 35;
+
+        for (let i = 0; i < lines.length; i++) {
+            if (y + lineHeight > maxY) {
+                pdf.addPage();
+                currentPage++;
+                y = margin;
+            }
+            pdf.text(lines[i], margin, y);
+            y += lineHeight;
+        }
+
+        drawFooter(pdf, template);
+
+        const pdfBlob = pdf.output('blob');
+        const file = new File([pdfBlob], `${name}_Prescription.pdf`, { type: 'application/pdf' });
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({
                 files: [file],
                 title: 'Prescription',
-                text: 'Here is your prescription.'
+                text: 'Here is your prescription from Pratnya Astro.'
             });
             topToast.fire({ text: 'Opened share menu!' });
         } else {
@@ -669,76 +709,145 @@ window.sharePrescriptionPDF = async () => {
                 icon: 'info'
             });
         }
-    } catch(e) { 
-        console.error(e); 
-        topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' }); 
+    } catch(e) {
+        console.error(e);
+        topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' });
     }
 };
 
-// --- GENERATE CLIENT FULL REPORT PDF (Unchanged, relies on HTML logic) ---
+// --- GENERATE CLIENT FULL REPORT PDF (global selector) ---
 window.generatePDF = async () => {
     const template = getSelectedTemplate();
-    const name = document.getElementById('name').value;
-    const star = document.getElementById('star').value;
-    const dob = document.getElementById('dob').value;
-    const time = document.getElementById('birthTime').value;
-
-    let displayTime = time;
-    if(time) {
-        const [h, m] = time.split(':');
+    const name = document.getElementById('name').value || 'Client';
+    const star = document.getElementById('star').value || '';
+    const dob = document.getElementById('dob').value || '';
+    const rawTime = document.getElementById('birthTime').value;
+    let displayTime = rawTime;
+    if (rawTime) {
+        const [h, m] = rawTime.split(':');
         const hour = parseInt(h);
         displayTime = `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`;
     }
 
-    let htmlContent = `
-        <table style="width: 100%; margin-bottom: 20px; font-size: 14px;">
-            <tr><td><strong>Name:</strong> ${name}</td><td><strong>Star:</strong> ${star}</td></tr>
-            <tr><td><strong>DOB:</strong> ${dob}</td><td><strong>Time:</strong> ${displayTime}</td></tr>
-        </table>
-        <h3>Consultation History</h3>
-        <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
-            <tr style="background-color: #f2f2f2;">
-                <th style="border: 1px solid #ddd; padding: 8px;">Date</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Details</th>
-            </tr>`;
-
     const id = document.getElementById('clientId').value;
-    if(id) {
+    let consults = [];
+    if (id) {
         const client = await db.clients.get(parseInt(id));
-        if(client && client.consultations) {
-            client.consultations.forEach(c => {
-                htmlContent += `
-                    <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px; width: 25%; vertical-align: top;">${c.date}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">
-                            <strong>Problem:</strong><br>${c.problem || '-'}<br><br>
-                            <strong style="color: #2E7D32;">Solution:</strong><br>${c.solution || '-'}
-                        </td>
-                    </tr>`;
-            });
-        }
+        if (client && client.consultations) consults = client.consultations;
     }
-    htmlContent += `</table>`;
-
-    const contentId = template === 'ck' ? 'pdfContentCK' : 'pdfContentPratnya';
-    document.getElementById(contentId).innerHTML = htmlContent;
 
     topToast.fire({ text: 'Generating PDF...' });
     try {
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 15;
+        let currentPage = 1;
 
-        const elementId = template === 'ck' ? 'pdfTemplateCK' : 'pdfTemplatePratnya';
-        const element = document.getElementById(elementId);
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const height = (canvas.height * width) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        // Header drawing (same as prescription, first page only)
+        const drawHeader = (doc, templateType) => {
+            if (templateType === 'ck') {
+                doc.setFontSize(16);
+                doc.setTextColor(46, 125, 50);
+                doc.setFont('Georgia', 'italic');
+                doc.text('Astrologer', margin, margin + 5);
+                doc.setFontSize(26);
+                doc.setFont('Georgia', 'bold');
+                doc.text('C.K. Saji Panicker', margin, margin + 15);
+                doc.setFontSize(12);
+                doc.setFont('Georgia', 'italic');
+                doc.text('Chathangottupuram, Kalarikkal', margin, margin + 23);
+                doc.text('Wandoor-Malappuram', margin, margin + 29);
+                doc.text('Kerala : 679 328', margin, margin + 35);
+                doc.setFontSize(14);
+                doc.text('Consultation', pageWidth - margin - 40, margin + 5);
+                doc.setFontSize(12);
+                doc.text('Online: 9207 773 880', pageWidth - margin - 40, margin + 12);
+                doc.text('Office: 7034 600 880', pageWidth - margin - 40, margin + 19);
+            } else {
+                doc.setFontSize(24);
+                doc.setTextColor(46, 125, 50);
+                doc.setFont('Georgia', 'bold');
+                doc.text('Pratnya Astro', pageWidth / 2, margin + 15, { align: 'center' });
+            }
+            doc.setDrawColor(46, 125, 50);
+            doc.setLineWidth(0.5);
+            doc.line(margin, margin + 42, pageWidth - margin, margin + 42);
+            return margin + 48;
+        };
+
+        const drawFooter = (doc, templateType) => {
+            const footerY = pageHeight - 25;
+            doc.setDrawColor(46, 125, 50);
+            doc.setLineWidth(0.5);
+            doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+            doc.setFontSize(18);
+            doc.setTextColor(46, 125, 50);
+            doc.setFont('Brush Script MT', 'cursive');
+            doc.text('Fix your appointment through the call', pageWidth / 2, footerY, { align: 'center' });
+            doc.setFontSize(12);
+            doc.setFont('Arial', 'bold');
+            doc.text('www.pratnya.in', pageWidth / 2, footerY + 8, { align: 'center' });
+        };
+
+        // ---- Start first page ----
+        let y = drawHeader(pdf, template);
+
+        // Client info
+        pdf.setFontSize(12);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont('Arial', 'normal');
+        pdf.text(`Name: ${name}`, margin, y);
+        pdf.text(`Star: ${star}`, pageWidth / 2, y);
+        y += 8;
+        pdf.text(`DOB: ${dob}`, margin, y);
+        pdf.text(`Time: ${displayTime}`, pageWidth / 2, y);
+        y += 15;
+
+        pdf.setFontSize(14);
+        pdf.setFont('Arial', 'bold');
+        pdf.text('Consultation History', margin, y);
+        y += 8;
+
+        // Build table rows
+        const tableRows = consults.map(c => [
+            c.date || '',
+            `Problem:\n${c.problem || '-'}\n\nSolution:\n${c.solution || '-'}`
+        ]);
+
+        // Use autoTable with custom header/footer handling
+        pdf.autoTable({
+            startY: y,
+            margin: { left: margin, right: margin },
+            head: [['Date', 'Details']],
+            body: tableRows,
+            theme: 'grid',
+            styles: { fontSize: 10, cellPadding: 3 },
+            headStyles: { fillColor: [46, 125, 50], textColor: 255 },
+            columnStyles: {
+                0: { cellWidth: 40 },
+                1: { cellWidth: 'auto' }
+            },
+            didDrawPage: (data) => {
+                // After autoTable draws, we manually add footer on last page
+                // autoTable increments page count; we can't easily know total pages ahead
+                // We'll draw footer in the final step after autoTable completes.
+            }
+        });
+
+        // After table is drawn, determine total pages
+        const totalPages = pdf.internal.getNumberOfPages();
+        // Draw footer on the last page only
+        pdf.setPage(totalPages);
+        drawFooter(pdf, template);
 
         pdf.save(`${name}_Full_Report.pdf`);
         topToast.fire({ text: 'Downloaded successfully!' });
-    } catch (error) { topToast.fire({ text: 'PDF Failed', background: '#E0245E' }); }
+    } catch (error) {
+        console.error(error);
+        topToast.fire({ text: 'PDF Failed', background: '#E0245E' });
+    }
 };
 
 searchInput.oninput = () => updateList();
