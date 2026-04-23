@@ -469,7 +469,7 @@ function fillPrescriptionTemplate() {
 }
 
 // ============================================================
-// PRESCRIPTION PDF GENERATION (IMPROVED MARGINS, FOOTER ONLY LAST PAGE)
+// PRESCRIPTION PDF GENERATION (PROFESSIONAL HEADER, NORMAL WIDTH)
 // ============================================================
 
 async function createPrescriptionPDFBlob() {
@@ -485,49 +485,51 @@ async function createPrescriptionPDFBlob() {
 
     if (!name && !body) throw new Error('Form is empty');
 
-    // Create a hidden container – header is part of the image
+    // Hidden container – header is now professional, compact, with standard letterhead features
     const container = document.createElement('div');
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '0';
-    container.style.width = '595px';        // A4 width for scaling
+    container.style.width = '595px';
     container.style.backgroundColor = 'white';
-    container.style.padding = '40px';
+    container.style.padding = '30px 30px 20px 30px'; // slightly reduced padding
     container.style.boxSizing = 'border-box';
     container.style.fontFamily = "'Arial', 'Noto Sans', sans-serif";
     container.style.color = '#000';
-    container.style.lineHeight = '1.5';
+    container.style.lineHeight = '1.4';
 
     let headerHtml = '';
     if (template === 'ck') {
+        // Professional, compact letterhead
         headerHtml = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 12px; margin-bottom: 24px;">
                 <div style="text-align: left;">
-                    <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Astrologer</p>
-                    <h2 style="color: #2E7D32; font-size: 26px; font-weight: bold; margin: 0;">C.K. Saji Panicker</h2>
-                    <div style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; line-height: 1.6; margin-top: 6px;">
+                    <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; margin: 0 0 2px 0;">Astrologer</p>
+                    <h2 style="color: #2E7D32; font-size: 22px; font-weight: bold; margin: 0;">C.K. Saji Panicker</h2>
+                    <div style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 12px; line-height: 1.5; margin-top: 4px;">
                         Chathangottupuram, Kalarikkal<br>
                         Wandoor-Malappuram<br>
                         Kerala : 679 328
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Consultation</p>
-                    <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Online: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">9207 773 880</strong></p>
-                    <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Office: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">7034 600 880</strong></p>
+                    <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; margin: 0 0 2px 0;">Consultation</p>
+                    <p style="color: #2E7D32; font-size: 12px; margin: 2px 0;">Online: <strong style="color: #2E7D32; font-size: 13px; font-style: italic;">9207 773 880</strong></p>
+                    <p style="color: #2E7D32; font-size: 12px; margin: 2px 0;">Office: <strong style="color: #2E7D32; font-size: 13px; font-style: italic;">7034 600 880</strong></p>
                 </div>
             </div>
         `;
     } else {
+        // Pratnya: only logo, centered, smaller
         headerHtml = `
-            <div style="display: flex; justify-content: center; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px;">
-                <img src="logo.png" style="height: 70px; width: auto;">
+            <div style="display: flex; justify-content: center; border-bottom: 2px solid #2E7D32; padding-bottom: 12px; margin-bottom: 24px;">
+                <img src="logo.png" style="height: 55px; width: auto;">
             </div>
         `;
     }
 
     const fieldsHtml = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: Arial, sans-serif; font-size: 14px; margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-family: Arial, sans-serif; font-size: 13px; margin-bottom: 16px;">
             <div><strong>Name:</strong> ${name}</div>
             <div><strong>Date:</strong> ${currentDate}</div>
             <div><strong>Star:</strong> ${star || '-'}</div>
@@ -537,8 +539,8 @@ async function createPrescriptionPDFBlob() {
         </div>
     `;
 
-    const bodyHtml = `<div style="font-size: 16px; white-space: pre-wrap; margin-bottom: 30px;">${body.replace(/\n/g, '<br>')}</div>`;
-    const spacer = `<div style="height: 10px;"></div>`;
+    const bodyHtml = `<div style="font-size: 15px; white-space: pre-wrap; margin-bottom: 20px;">${body.replace(/\n/g, '<br>')}</div>`;
+    const spacer = `<div style="height: 8px;"></div>`;
 
     container.innerHTML = headerHtml + fieldsHtml + bodyHtml + spacer;
     document.body.appendChild(container);
@@ -552,16 +554,15 @@ async function createPrescriptionPDFBlob() {
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pageWidth = pdf.internal.pageSize.getWidth();   // 210 mm
         const pageHeight = pdf.internal.pageSize.getHeight(); // 297 mm
-        const margin = 20; // wider margins for reduced header/footer width
+        const margin = 15; // normal width
 
         const pxPerMm = contentWidth / pageWidth;
         const footerHeightMm = 25;
-        // Available height for image (leaving space for footer on last page)
         const maxContentHeightMm = pageHeight - margin - footerHeightMm;
 
         const fullImageHeightMm = contentHeight / pxPerMm;
 
-        // Footer drawing (only on last page)
+        // Footer only on last page
         const drawFooter = (doc) => {
             const footerY = pageHeight - footerHeightMm;
             doc.setDrawColor(46, 125, 50);
@@ -576,7 +577,6 @@ async function createPrescriptionPDFBlob() {
             doc.text('www.pratnya.in', pageWidth / 2, footerY + 8, { align: 'center' });
         };
 
-        // Slice the canvas and add pages
         let remainingHeightMm = fullImageHeightMm;
         let sourceY = 0;
         let pageNum = 1;
@@ -602,7 +602,6 @@ async function createPrescriptionPDFBlob() {
             pageNum++;
         }
 
-        // Footer only on the last page
         drawFooter(pdf);
 
         return pdf.output('blob');
@@ -656,7 +655,7 @@ window.sharePrescriptionPDF = async () => {
     }
 };
 
-// --- GENERATE CLIENT FULL REPORT PDF (unchanged but still works) ---
+// --- GENERATE CLIENT FULL REPORT PDF (same margins, unchanged header) ---
 window.generatePDF = async () => {
     const template = getSelectedTemplate();
     const name = document.getElementById('name').value || 'Client';
@@ -683,36 +682,36 @@ window.generatePDF = async () => {
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
-        const margin = 20; // increased margin for consistency
+        const margin = 15;
 
         const drawHeader = (doc, templateType) => {
             doc.setTextColor(46, 125, 50);
             if (templateType === 'ck') {
-                doc.setFontSize(16);
+                doc.setFontSize(14);
                 doc.setFont('times', 'italic');
                 doc.text('Astrologer', margin, margin + 5);
-                doc.setFontSize(26);
+                doc.setFontSize(22);
                 doc.setFont('times', 'bold');
-                doc.text('C.K. Saji Panicker', margin, margin + 15);
+                doc.text('C.K. Saji Panicker', margin, margin + 13);
                 doc.setFontSize(12);
                 doc.setFont('times', 'italic');
-                doc.text('Chathangottupuram, Kalarikkal', margin, margin + 23);
-                doc.text('Wandoor-Malappuram', margin, margin + 29);
-                doc.text('Kerala : 679 328', margin, margin + 35);
+                doc.text('Chathangottupuram, Kalarikkal', margin, margin + 20);
+                doc.text('Wandoor-Malappuram', margin, margin + 25);
+                doc.text('Kerala : 679 328', margin, margin + 30);
                 doc.setFontSize(14);
                 doc.setFont('times', 'normal');
                 doc.text('Consultation', pageWidth - margin - 40, margin + 5);
                 doc.setFontSize(12);
                 doc.text('Online: 9207 773 880', pageWidth - margin - 40, margin + 12);
-                doc.text('Office: 7034 600 880', pageWidth - margin - 40, margin + 19);
+                doc.text('Office: 7034 600 880', pageWidth - margin - 40, margin + 17);
             } else {
-                doc.setFontSize(24);
+                doc.setFontSize(22);
                 doc.setFont('times', 'bold');
-                doc.text('Pratnya Astro', pageWidth / 2, margin + 15, { align: 'center' });
+                doc.text('Pratnya Astro', pageWidth / 2, margin + 12, { align: 'center' });
             }
             doc.setDrawColor(46, 125, 50);
             doc.setLineWidth(0.5);
-            doc.line(margin, margin + 42, pageWidth - margin, margin + 42);
+            doc.line(margin, margin + 38, pageWidth - margin, margin + 38);
         };
 
         const drawFooter = (doc) => {
@@ -730,7 +729,7 @@ window.generatePDF = async () => {
         };
 
         drawHeader(pdf, template);
-        let y = margin + 48;
+        let y = margin + 42;
 
         pdf.setTextColor(0, 0, 0);
         pdf.setFontSize(12);
