@@ -469,7 +469,7 @@ function fillPrescriptionTemplate() {
 }
 
 // ============================================================
-// PRESCRIPTION PDF GENERATION (PROFESSIONAL HEADER, NORMAL WIDTH)
+// PRESCRIPTION PDF GENERATION (WATERMARK, COMPACT EQUAL HEADER & FOOTER)
 // ============================================================
 
 async function createPrescriptionPDFBlob() {
@@ -485,51 +485,50 @@ async function createPrescriptionPDFBlob() {
 
     if (!name && !body) throw new Error('Form is empty');
 
-    // Hidden container – header is now professional, compact, with standard letterhead features
+    // Hidden container – compact header with watermark
     const container = document.createElement('div');
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '0';
     container.style.width = '595px';
     container.style.backgroundColor = 'white';
-    container.style.padding = '30px 30px 20px 30px'; // slightly reduced padding
+    container.style.padding = '18px 18px 18px 18px'; // reduced padding
     container.style.boxSizing = 'border-box';
     container.style.fontFamily = "'Arial', 'Noto Sans', sans-serif";
     container.style.color = '#000';
-    container.style.lineHeight = '1.4';
+    container.style.lineHeight = '1.3';
+    container.style.position = 'relative'; // needed for watermark absolute positioning
 
     let headerHtml = '';
     if (template === 'ck') {
-        // Professional, compact letterhead
         headerHtml = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 12px; margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #2E7D32; padding-bottom: 8px; margin-bottom: 14px;">
                 <div style="text-align: left;">
-                    <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; margin: 0 0 2px 0;">Astrologer</p>
-                    <h2 style="color: #2E7D32; font-size: 22px; font-weight: bold; margin: 0;">C.K. Saji Panicker</h2>
-                    <div style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 12px; line-height: 1.5; margin-top: 4px;">
+                    <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 12px; margin: 0 0 1px 0;">Astrologer</p>
+                    <h2 style="color: #2E7D32; font-size: 18px; font-weight: bold; margin: 0;">C.K. Saji Panicker</h2>
+                    <div style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 11px; line-height: 1.4; margin-top: 2px;">
                         Chathangottupuram, Kalarikkal<br>
                         Wandoor-Malappuram<br>
                         Kerala : 679 328
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; margin: 0 0 2px 0;">Consultation</p>
-                    <p style="color: #2E7D32; font-size: 12px; margin: 2px 0;">Online: <strong style="color: #2E7D32; font-size: 13px; font-style: italic;">9207 773 880</strong></p>
-                    <p style="color: #2E7D32; font-size: 12px; margin: 2px 0;">Office: <strong style="color: #2E7D32; font-size: 13px; font-style: italic;">7034 600 880</strong></p>
+                    <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 12px; margin: 0 0 1px 0;">Consultation</p>
+                    <p style="color: #2E7D32; font-size: 11px; margin: 1px 0;">Online: <strong style="color: #2E7D32; font-size: 12px; font-style: italic;">9207 773 880</strong></p>
+                    <p style="color: #2E7D32; font-size: 11px; margin: 1px 0;">Office: <strong style="color: #2E7D32; font-size: 12px; font-style: italic;">7034 600 880</strong></p>
                 </div>
             </div>
         `;
     } else {
-        // Pratnya: only logo, centered, smaller
         headerHtml = `
-            <div style="display: flex; justify-content: center; border-bottom: 2px solid #2E7D32; padding-bottom: 12px; margin-bottom: 24px;">
-                <img src="logo.png" style="height: 55px; width: auto;">
+            <div style="display: flex; justify-content: center; border-bottom: 1px solid #2E7D32; padding-bottom: 8px; margin-bottom: 14px;">
+                <img src="logo.png" style="height: 35px; width: auto;">
             </div>
         `;
     }
 
     const fieldsHtml = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-family: Arial, sans-serif; font-size: 13px; margin-bottom: 16px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-family: Arial, sans-serif; font-size: 12px; margin-bottom: 10px;">
             <div><strong>Name:</strong> ${name}</div>
             <div><strong>Date:</strong> ${currentDate}</div>
             <div><strong>Star:</strong> ${star || '-'}</div>
@@ -539,10 +538,16 @@ async function createPrescriptionPDFBlob() {
         </div>
     `;
 
-    const bodyHtml = `<div style="font-size: 15px; white-space: pre-wrap; margin-bottom: 20px;">${body.replace(/\n/g, '<br>')}</div>`;
-    const spacer = `<div style="height: 8px;"></div>`;
+    const bodyHtml = `<div style="font-size: 14px; white-space: pre-wrap; margin-bottom: 12px;">${body.replace(/\n/g, '<br>')}</div>`;
 
-    container.innerHTML = headerHtml + fieldsHtml + bodyHtml + spacer;
+    // Watermark overlay
+    const watermarkHtml = `
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.06; z-index: 0; pointer-events: none;">
+            <img src="logo.png" style="width: 280px; height: auto;">
+        </div>
+    `;
+
+    container.innerHTML = watermarkHtml + headerHtml + fieldsHtml + bodyHtml;
     document.body.appendChild(container);
 
     try {
@@ -554,25 +559,25 @@ async function createPrescriptionPDFBlob() {
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pageWidth = pdf.internal.pageSize.getWidth();   // 210 mm
         const pageHeight = pdf.internal.pageSize.getHeight(); // 297 mm
-        const margin = 15; // normal width
+        const margin = 12; // slightly smaller consistent margin
 
         const pxPerMm = contentWidth / pageWidth;
-        const footerHeightMm = 25;
+        const footerHeightMm = 22; // compact footer
         const maxContentHeightMm = pageHeight - margin - footerHeightMm;
 
         const fullImageHeightMm = contentHeight / pxPerMm;
 
-        // Footer only on last page
+        // Compact footer (only on last page)
         const drawFooter = (doc) => {
             const footerY = pageHeight - footerHeightMm;
             doc.setDrawColor(46, 125, 50);
-            doc.setLineWidth(0.5);
-            doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
-            doc.setFontSize(16);
+            doc.setLineWidth(0.4);
+            doc.line(margin, footerY - 3, pageWidth - margin, footerY - 3);
+            doc.setFontSize(13);
             doc.setTextColor(46, 125, 50);
             doc.setFont('times', 'italic');
-            doc.text('Fix your appointment through the call', pageWidth / 2, footerY, { align: 'center' });
-            doc.setFontSize(12);
+            doc.text('Fix your appointment through the call', pageWidth / 2, footerY + 2, { align: 'center' });
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
             doc.text('www.pratnya.in', pageWidth / 2, footerY + 8, { align: 'center' });
         };
@@ -655,7 +660,7 @@ window.sharePrescriptionPDF = async () => {
     }
 };
 
-// --- GENERATE CLIENT FULL REPORT PDF (same margins, unchanged header) ---
+// --- GENERATE CLIENT FULL REPORT PDF (unchanged, but watermark could be added later) ---
 window.generatePDF = async () => {
     const template = getSelectedTemplate();
     const name = document.getElementById('name').value || 'Client';
