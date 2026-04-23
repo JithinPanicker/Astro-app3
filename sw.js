@@ -1,4 +1,4 @@
-const CACHE_NAME = "astro-manager-v55"; // Increment on each deploy
+const CACHE_NAME = "astro-manager-v56"; // Increment on each deploy
 
 const ASSETS_TO_CACHE = [
     "./",
