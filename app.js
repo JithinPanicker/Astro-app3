@@ -439,167 +439,305 @@ async function updateList() {
     document.getElementById('clientList').innerHTML = html;
 }
 
-// --- FILL PRESCRIPTION TEMPLATE (uses global selector) ---
-function fillPrescriptionTemplate() {
-    const template = getSelectedTemplate();
-    const name = document.getElementById('prescName').value || "";
-    const star = document.getElementById('prescStar').value || "";
-    const place = document.getElementById('prescPlace').value || "";
-    const rasi = document.getElementById('prescRasi').value || "";
-    const udhaya = document.getElementById('prescUdhaya').value || "";
-    const body = document.getElementById('prescBody').value || "";
-    const currentDate = new Date().toLocaleDateString('en-IN');
+// ==================== MULTI-PAGE PDF FUNCTIONS ====================
 
-    if(!name && !body) return false;
-
-    const suffix = template === 'ck' ? 'CK' : 'Pratnya';
-    document.getElementById(`pdfPrescName${suffix}`).innerText = name;
-    document.getElementById(`pdfPrescDate${suffix}`).innerText = currentDate;
-    document.getElementById(`pdfPrescStar${suffix}`).innerText = star;
-    document.getElementById(`pdfPrescPlace${suffix}`).innerText = place;
-    document.getElementById(`pdfPrescRasi${suffix}`).innerText = rasi;
-    document.getElementById(`pdfPrescUdhaya${suffix}`).innerText = udhaya;
-    document.getElementById(`pdfPrescBody${suffix}`).innerText = body;
-    return true;
+// Helper: Capture header/footer images from dedicated hidden divs
+async function captureHeaderFooter(template) {
+    const headerId = template === 'ck' ? 'headerCK' : 'headerPratnya';
+    const footerId = template === 'ck' ? 'footerCK' : 'footerPratnya';
+    
+    const headerEl = document.getElementById(headerId);
+    const footerEl = document.getElementById(footerId);
+    
+    const headerCanvas = await html2canvas(headerEl, { scale: 2 });
+    const footerCanvas = await html2canvas(footerEl, { scale: 2 });
+    
+    return {
+        headerImg: headerCanvas.toDataURL('image/png'),
+        footerImg: footerCanvas.toDataURL('image/png'),
+        // Convert pixel heights to mm (595px = 210mm A4 width)
+        headerHeight: (headerCanvas.height * 210) / 595,
+        footerHeight: (footerCanvas.height * 210) / 595
+    };
 }
 
-// --- GENERATE PRESCRIPTION PDF (global selector) ---
-window.generatePrescriptionPDF = async () => {
+// Helper: Add header image to PDF (full width on first page, half width on others)
+function addHeader(pdf, headerImg, pageWidth, headerHeight, isFirstPage) {
+    if (isFirstPage) {
+        pdf.addImage(headerImg, 'PNG', 0, 0, pageWidth, headerHeight);
+        return headerHeight;
+    } else {
+        const halfWidth = pageWidth * 0.5;
+        const xOffset = (pageWidth - halfWidth) / 2;
+        const scaledHeight = headerHeight * (halfWidth / pageWidth);
+        pdf.addImage(headerImg, 'PNG', xOffset, 5, halfWidth, scaledHeight);
+        return scaledHeight + 5;
+    }
+}
+
+// Helper: Add footer image (full width on first page, half width on others)
+function addFooter(pdf, footerImg, pageWidth, footerHeight, pageHeight, isFirstPage) {
+    if (isFirstPage) {
+        pdf.addImage(footerImg, 'PNG', 0, pageHeight - footerHeight, pageWidth, footerHeight);
+    } else {
+        const halfWidth = pageWidth * 0.5;
+        const xOffset = (pageWidth - halfWidth) / 2;
+        const scaledHeight = footerHeight * (halfWidth / pageWidth);
+        pdf.addImage(footerImg, 'PNG', xOffset, pageHeight - scaledHeight - 5, halfWidth, scaledHeight);
+    }
+}
+
+// --- GENERATE CLIENT FULL REPORT PDF (Multi-page) ---
+window.generatePDF = async () => {
     const template = getSelectedTemplate();
-    if (!fillPrescriptionTemplate()) {
-        topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
+    const name = document.getElementById('name').value || 'Client';
+    const star = document.getElementById('star').value || '';
+    const dob = document.getElementById('dob').value || '';
+    const time = document.getElementById('birthTime').value || '';
+    const clientId = document.getElementById('clientId').value;
+
+    let consultations = [];
+    if (clientId) {
+        const client = await db.clients.get(parseInt(clientId));
+        if (client && client.consultations) consultations = client.consultations;
+    }
+
+    if (!name) {
+        topToast.fire({ text: 'No client data', background: '#E0245E' });
         return;
     }
-    const name = document.getElementById('prescName').value || "Client";
 
     topToast.fire({ text: 'Generating PDF...' });
-    try {
-        const { jsPDF } = window.jspdf;
-        const elementId = template === 'ck' ? 'prescriptionTemplateCK' : 'prescriptionTemplatePratnya';
-        const element = document.getElementById(elementId);
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
-        const height = (canvas.height * width) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-        pdf.save(`${name}_Prescription.pdf`);
-        topToast.fire({ text: 'Downloaded successfully!' });
-    } catch(e) { console.error(e); }
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+
+    const { headerImg, footerImg, headerHeight, footerHeight } = await captureHeaderFooter(template);
+
+    // Page 1: full header
+    let y = addHeader(pdf, headerImg, pageWidth, headerHeight, true) + 8;
+
+    // Client info
+    pdf.setFontSize(12);
+    pdf.setTextColor("#000000");
+    pdf.setFont("Noto Sans Malayalam", "normal");
+    pdf.text(`Name: ${name}`, margin, y);
+    pdf.text(`Star: ${star}`, margin + 80, y);
+    y += 8;
+    pdf.text(`DOB: ${dob}`, margin, y);
+    let displayTime = time;
+    if (time) {
+        const [h, m] = time.split(':');
+        const hour = parseInt(h);
+        displayTime = `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`;
+    }
+    pdf.text(`Time: ${displayTime}`, margin + 80, y);
+    y += 15;
+
+    if (consultations.length > 0) {
+        pdf.setFontSize(14);
+        pdf.setFont("Helvetica", "bold");
+        pdf.text("Consultation History", margin, y);
+        y += 8;
+
+        const tableData = consultations.map(c => [
+            c.date,
+            c.problem || '-',
+            c.solution || '-'
+        ]);
+
+        pdf.autoTable({
+            startY: y,
+            head: [['Date', 'Problem', 'Solution']],
+            body: tableData,
+            margin: { left: margin, right: margin },
+            styles: { fontSize: 10, cellPadding: 3, font: 'Noto Sans Malayalam' },
+            headStyles: { fillColor: "#2E7D32", textColor: "#FFFFFF" },
+            columnStyles: { 0: { cellWidth: 35 }, 1: { cellWidth: 65 }, 2: { cellWidth: 65 } },
+            didDrawPage: (data) => {
+                const pageNumber = pdf.internal.getCurrentPageInfo().pageNumber;
+                const isFirst = (pageNumber === 1);
+                // Redraw header on new pages
+                if (!isFirst) {
+                    addHeader(pdf, headerImg, pageWidth, headerHeight, false);
+                }
+                // Footer drawn separately after all pages
+            }
+        });
+    } else {
+        pdf.setFontSize(12);
+        pdf.text("No consultations recorded.", margin, y);
+    }
+
+    // Add footer to all pages
+    const totalPages = pdf.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        addFooter(pdf, footerImg, pageWidth, footerHeight, pageHeight, i === 1);
+    }
+
+    pdf.save(`${name}_Full_Report.pdf`);
+    topToast.fire({ text: 'PDF downloaded successfully!' });
 };
 
-// --- SHARE PRESCRIPTION PDF (global selector) ---
-window.sharePrescriptionPDF = async () => {
+// --- GENERATE PRESCRIPTION PDF (Multi-page) ---
+window.generatePrescriptionPDF = async () => {
     const template = getSelectedTemplate();
-    if (!fillPrescriptionTemplate()) {
+    const name = document.getElementById('prescName').value || 'Client';
+    const star = document.getElementById('prescStar').value || '';
+    const place = document.getElementById('prescPlace').value || '';
+    const rasi = document.getElementById('prescRasi').value || '';
+    const udhaya = document.getElementById('prescUdhaya').value || '';
+    const body = document.getElementById('prescBody').value || '';
+    const currentDate = new Date().toLocaleDateString('en-IN');
+
+    if (!name && !body) {
         topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
         return;
     }
-    const name = document.getElementById('prescName').value || "Client";
+
+    topToast.fire({ text: 'Generating PDF...' });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+
+    const { headerImg, footerImg, headerHeight, footerHeight } = await captureHeaderFooter(template);
+
+    let y = addHeader(pdf, headerImg, pageWidth, headerHeight, true) + 8;
+
+    pdf.setFontSize(12);
+    pdf.setTextColor("#000000");
+    pdf.setFont("Noto Sans Malayalam", "normal");
+    pdf.text(`Name: ${name}`, margin, y);
+    pdf.text(`Date: ${currentDate}`, margin + 80, y);
+    y += 8;
+    pdf.text(`Star: ${star}`, margin, y);
+    pdf.text(`Place: ${place}`, margin + 80, y);
+    y += 8;
+    pdf.text(`Rasi: ${rasi}`, margin, y);
+    pdf.text(`Udhaya Rasi: ${udhaya}`, margin + 80, y);
+    y += 15;
+
+    pdf.setFontSize(11);
+    pdf.setFont("Noto Sans Malayalam", "normal");
+    const lines = pdf.splitTextToSize(body, pageWidth - 2 * margin);
+    const lineHeight = 6;
+    const maxY = pageHeight - footerHeight - 15;
+
+    let pageNumber = 1;
+    for (let i = 0; i < lines.length; i++) {
+        if (y + lineHeight > maxY) {
+            pdf.addPage();
+            pageNumber++;
+            y = addHeader(pdf, headerImg, pageWidth, headerHeight, false) + 8;
+        }
+        pdf.text(lines[i], margin, y);
+        y += lineHeight;
+    }
+
+    const totalPages = pdf.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        addFooter(pdf, footerImg, pageWidth, footerHeight, pageHeight, i === 1);
+    }
+
+    pdf.save(`${name}_Prescription.pdf`);
+    topToast.fire({ text: 'Downloaded successfully!' });
+};
+
+// --- SHARE PRESCRIPTION PDF (Multi-page + sharing) ---
+window.sharePrescriptionPDF = async () => {
+    const template = getSelectedTemplate();
+    const name = document.getElementById('prescName').value || 'Client';
+    const star = document.getElementById('prescStar').value || '';
+    const place = document.getElementById('prescPlace').value || '';
+    const rasi = document.getElementById('prescRasi').value || '';
+    const udhaya = document.getElementById('prescUdhaya').value || '';
+    const body = document.getElementById('prescBody').value || '';
+    const currentDate = new Date().toLocaleDateString('en-IN');
+
+    if (!name && !body) {
+        topToast.fire({ text: 'Form is empty!', background: '#E0245E' });
+        return;
+    }
 
     topToast.fire({ text: 'Preparing file for sharing...' });
-    try {
-        const { jsPDF } = window.jspdf;
-        const elementId = template === 'ck' ? 'prescriptionTemplateCK' : 'prescriptionTemplatePratnya';
-        const element = document.getElementById(elementId);
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
-        const height = (canvas.height * width) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-        
-        const pdfBlob = pdf.output('blob');
-        const file = new File([pdfBlob], `${name}_Prescription.pdf`, { type: 'application/pdf' });
 
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+
+    const { headerImg, footerImg, headerHeight, footerHeight } = await captureHeaderFooter(template);
+
+    let y = addHeader(pdf, headerImg, pageWidth, headerHeight, true) + 8;
+
+    pdf.setFontSize(12);
+    pdf.setTextColor("#000000");
+    pdf.setFont("Noto Sans Malayalam", "normal");
+    pdf.text(`Name: ${name}`, margin, y);
+    pdf.text(`Date: ${currentDate}`, margin + 80, y);
+    y += 8;
+    pdf.text(`Star: ${star}`, margin, y);
+    pdf.text(`Place: ${place}`, margin + 80, y);
+    y += 8;
+    pdf.text(`Rasi: ${rasi}`, margin, y);
+    pdf.text(`Udhaya Rasi: ${udhaya}`, margin + 80, y);
+    y += 15;
+
+    pdf.setFontSize(11);
+    const lines = pdf.splitTextToSize(body, pageWidth - 2 * margin);
+    const lineHeight = 6;
+    const maxY = pageHeight - footerHeight - 15;
+
+    let pageNumber = 1;
+    for (let i = 0; i < lines.length; i++) {
+        if (y + lineHeight > maxY) {
+            pdf.addPage();
+            pageNumber++;
+            y = addHeader(pdf, headerImg, pageWidth, headerHeight, false) + 8;
+        }
+        pdf.text(lines[i], margin, y);
+        y += lineHeight;
+    }
+
+    const totalPages = pdf.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        addFooter(pdf, footerImg, pageWidth, footerHeight, pageHeight, i === 1);
+    }
+
+    const pdfBlob = pdf.output('blob');
+    const file = new File([pdfBlob], `${name}_Prescription.pdf`, { type: 'application/pdf' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
             await navigator.share({
                 files: [file],
                 title: 'Prescription',
                 text: 'Here is your prescription from Pratnya Astro.'
             });
             topToast.fire({ text: 'Opened share menu!' });
-        } else {
-            Swal.fire({
-                title: 'Unsupported Browser',
-                text: 'Your device/browser does not support direct file sharing. Please click "PDF" to download it, then attach it in WhatsApp manually.',
-                icon: 'info'
-            });
+        } catch (e) {
+            topToast.fire({ text: 'Sharing cancelled', background: '#E0245E' });
         }
-    } catch(e) { 
-        console.error(e); 
-        topToast.fire({ text: 'Sharing cancelled or failed', background: '#E0245E' }); 
+    } else {
+        Swal.fire({
+            title: 'Unsupported Browser',
+            text: 'Your device/browser does not support direct file sharing. Please click "PDF" to download it, then attach it in WhatsApp manually.',
+            icon: 'info'
+        });
     }
 };
 
-// --- GENERATE CLIENT FULL REPORT PDF (global selector) ---
-window.generatePDF = async () => {
-    const template = getSelectedTemplate();
-    const name = document.getElementById('name').value;
-    const star = document.getElementById('star').value;
-    const dob = document.getElementById('dob').value;
-    const time = document.getElementById('birthTime').value;
-
-    let displayTime = time;
-    if(time) {
-        const [h, m] = time.split(':');
-        const hour = parseInt(h);
-        displayTime = `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`;
-    }
-
-    let htmlContent = `
-        <table style="width: 100%; margin-bottom: 20px; font-size: 14px;">
-            <tr><td><strong>Name:</strong> ${name}</td><td><strong>Star:</strong> ${star}</td></tr>
-            <tr><td><strong>DOB:</strong> ${dob}</td><td><strong>Time:</strong> ${displayTime}</td></tr>
-        </table>
-        <h3>Consultation History</h3>
-        <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
-            <tr style="background-color: #f2f2f2;">
-                <th style="border: 1px solid #ddd; padding: 8px;">Date</th>
-                <th style="border: 1px solid #ddd; padding: 8px;">Details</th>
-            </tr>`;
-
-    const id = document.getElementById('clientId').value;
-    if(id) {
-        const client = await db.clients.get(parseInt(id));
-        if(client && client.consultations) {
-            client.consultations.forEach(c => {
-                htmlContent += `
-                    <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px; width: 25%; vertical-align: top;">${c.date}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">
-                            <strong>Problem:</strong><br>${c.problem || '-'}<br><br>
-                            <strong style="color: #2E7D32;">Solution:</strong><br>${c.solution || '-'}
-                        </td>
-                    </tr>`;
-            });
-        }
-    }
-    htmlContent += `</table>`;
-
-    const contentId = template === 'ck' ? 'pdfContentCK' : 'pdfContentPratnya';
-    document.getElementById(contentId).innerHTML = htmlContent;
-
-    topToast.fire({ text: 'Generating PDF...' });
-    try {
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
-
-        const elementId = template === 'ck' ? 'pdfTemplateCK' : 'pdfTemplatePratnya';
-        const element = document.getElementById(elementId);
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const height = (canvas.height * width) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-
-        pdf.save(`${name}_Full_Report.pdf`);
-        topToast.fire({ text: 'Downloaded successfully!' });
-    } catch (error) { topToast.fire({ text: 'PDF Failed', background: '#E0245E' }); }
-};
-
+// --- REMAINING UTILITIES (unchanged) ---
 searchInput.oninput = () => updateList();
 function calculateAge() {
     const dobInput = document.getElementById('dob').value;

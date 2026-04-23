@@ -28,11 +28,6 @@
         .footer-text { font-family: 'Brush Script MT', cursive; font-size: 22px; }
         .global-template-selector { display: flex; align-items: center; gap: 8px; margin-right: 10px; }
         .global-template-selector select { padding: 6px 10px; border-radius: 20px; border: 1px solid #2E7D32; background: white; font-size: 14px; font-weight: 500; color: #2E7D32; cursor: pointer; }
-        
-        /* Ensure Malayalam text in PDF templates uses the correct font */
-        #pdfTemplateCK, #pdfTemplatePratnya, #prescriptionTemplateCK, #prescriptionTemplatePratnya {
-            font-family: 'Noto Sans Malayalam', 'Arial', sans-serif !important;
-        }
     </style>
 </head>
 <body>
@@ -195,114 +190,38 @@
         </div>
     </div>
 
-    <!-- Hidden PDF Templates (Fixed for Malayalam and multi-page support) -->
-    
-    <!-- CK Full Report Template -->
-    <div id="pdfTemplateCK" style="position: fixed; top: -9999px; left: -9999px; width: 595px; min-height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: visible; font-family: 'Noto Sans Malayalam', 'Arial', sans-serif;">
-        <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
-        <div class="letterhead-header">
-            <div class="letterhead-left">
-                <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Astrologer</p>
-                <h2 style="color: #2E7D32; font-size: 26px; font-weight: bold; margin: 0;">C.K. Saji Panicker</h2>
-                <div style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; line-height: 1.6; margin-top: 6px;">
-                    Chathangottupuram, Kalarikkal<br>
-                    Wandoor-Malappuram<br>
-                    Kerala : 679 328
-                </div>
+    <!-- Hidden header/footer templates for PDF capture -->
+    <div id="headerCK" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 30px 40px 20px; box-sizing: border-box; font-family: 'Noto Sans Malayalam', 'Arial', sans-serif;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #2E7D32; padding-bottom: 15px;">
+            <div>
+                <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin:0;">Astrologer</p>
+                <h2 style="color: #2E7D32; font-size: 26px; margin:0;">C.K. Saji Panicker</h2>
+                <p style="color: #2E7D32; font-style: italic; font-size: 14px; margin:5px 0 0;">Chathangottupuram, Kalarikkal<br>Wandoor-Malappuram<br>Kerala : 679 328</p>
             </div>
-            <div class="letterhead-right" style="text-align: right;">
-                <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Consultation</p>
-                <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Online: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">9207 773 880</strong></p>
-                <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Office: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">7034 600 880</strong></p>
+            <div style="text-align: right;">
+                <p style="color: #2E7D32; font-style: italic; font-size: 16px; margin:0;">Consultation</p>
+                <p style="color: #2E7D32; font-size: 14px; margin:2px 0;">Online: <strong>9207 773 880</strong></p>
+                <p style="color: #2E7D32; font-size: 14px; margin:2px 0;">Office: <strong>7034 600 880</strong></p>
             </div>
-        </div>
-        <div id="pdfContentCK" style="position: relative; z-index: 1; font-family: inherit;"></div>
-        <div class="letterhead-footer">
-            <span class="footer-text">Fix your appointment through the call</span><br>
-            <span style="font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #2E7D32; font-weight: bold;">www.pratnya.in</span>
         </div>
     </div>
-
-    <!-- Pratnya Full Report Template -->
-    <div id="pdfTemplatePratnya" style="position: fixed; top: -9999px; left: -9999px; width: 595px; min-height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: visible; font-family: 'Noto Sans Malayalam', 'Arial', sans-serif;">
-        <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
-        <div class="letterhead-header" style="justify-content: center; border-bottom: 2px solid #2E7D32;">
-            <div style="text-align: center;">
-                <img src="logo.png" style="height: 70px; width: auto;">
-            </div>
-        </div>
-        <div id="pdfContentPratnya" style="position: relative; z-index: 1; font-family: inherit;"></div>
-        <div class="letterhead-footer">
-            <span class="footer-text">Fix your appointment through the call</span><br>
-            <span style="font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #2E7D32; font-weight: bold;">www.pratnya.in</span>
-        </div>
+    <div id="footerCK" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 10px 40px; box-sizing: border-box; text-align: center; border-top: 1px solid #2E7D32; font-family: 'Noto Sans Malayalam', 'Arial', sans-serif;">
+        <span style="font-family: 'Brush Script MT', cursive; font-size: 22px; color: #2E7D32;">Fix your appointment through the call</span><br>
+        <span style="font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; color: #2E7D32;">www.pratnya.in</span>
     </div>
 
-    <!-- CK Prescription Template -->
-    <div id="prescriptionTemplateCK" style="position: fixed; top: -9999px; left: -9999px; width: 595px; min-height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: visible; font-family: 'Noto Sans Malayalam', 'Arial', sans-serif;">
-        <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
-        <div class="letterhead-header">
-            <div class="letterhead-left">
-                <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Astrologer</p>
-                <h2 style="color: #2E7D32; font-size: 26px; font-weight: bold; margin: 0;">C.K. Saji Panicker</h2>
-                <div style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 14px; line-height: 1.6; margin-top: 6px;">
-                    Chathangottupuram, Kalarikkal<br>
-                    Wandoor-Malappuram<br>
-                    Kerala : 679 328
-                </div>
-            </div>
-            <div class="letterhead-right" style="text-align: right;">
-                <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin: 0 0 2px 0;">Consultation</p>
-                <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Online: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">9207 773 880</strong></p>
-                <p style="color: #2E7D32; font-size: 14px; margin: 2px 0;">Office: <strong style="color: #2E7D32; font-size: 15px; font-style: italic;">7034 600 880</strong></p>
-            </div>
-        </div>
-        <div style="position: relative; z-index: 1; color: black; font-family: inherit;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 30px;">
-                <div><strong>Name:</strong> <span id="pdfPrescNameCK"></span></div>
-                <div><strong>Date:</strong> <span id="pdfPrescDateCK"></span></div>
-                <div><strong>Star:</strong> <span id="pdfPrescStarCK"></span></div>
-                <div><strong>Place:</strong> <span id="pdfPrescPlaceCK"></span></div>
-                <div><strong>Rasi:</strong> <span id="pdfPrescRasiCK"></span></div>
-                <div><strong>Udhaya Rasi:</strong> <span id="pdfPrescUdhayaCK"></span></div>
-            </div>
-            <div id="pdfPrescBodyCK" style="font-size: 16px; line-height: 1.8; min-height: 400px; white-space: pre-wrap; font-family: inherit;"></div>
-        </div>
-        <div class="letterhead-footer">
-            <span class="footer-text">Fix your appointment through the call</span><br>
-            <span style="font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #2E7D32; font-weight: bold;">www.pratnya.in</span>
-        </div>
+    <div id="headerPratnya" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 20px 40px; box-sizing: border-box; text-align: center; border-bottom: 2px solid #2E7D32; font-family: 'Noto Sans Malayalam', 'Arial', sans-serif;">
+        <img src="logo.png" style="height: 70px;">
     </div>
-
-    <!-- Pratnya Prescription Template -->
-    <div id="prescriptionTemplatePratnya" style="position: fixed; top: -9999px; left: -9999px; width: 595px; min-height: 842px; background: white; padding: 40px; box-sizing: border-box; overflow: visible; font-family: 'Noto Sans Malayalam', 'Arial', sans-serif;">
-        <div class="watermark"><img src="logo.png" style="width: 350px; height: auto;"></div>
-        <div class="letterhead-header" style="justify-content: center; border-bottom: 2px solid #2E7D32;">
-            <div style="text-align: center;">
-                <img src="logo.png" style="height: 70px; width: auto;">
-            </div>
-        </div>
-        <div style="position: relative; z-index: 1; color: black; font-family: inherit;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 30px;">
-                <div><strong>Name:</strong> <span id="pdfPrescNamePratnya"></span></div>
-                <div><strong>Date:</strong> <span id="pdfPrescDatePratnya"></span></div>
-                <div><strong>Star:</strong> <span id="pdfPrescStarPratnya"></span></div>
-                <div><strong>Place:</strong> <span id="pdfPrescPlacePratnya"></span></div>
-                <div><strong>Rasi:</strong> <span id="pdfPrescRasiPratnya"></span></div>
-                <div><strong>Udhaya Rasi:</strong> <span id="pdfPrescUdhayaPratnya"></span></div>
-            </div>
-            <div id="pdfPrescBodyPratnya" style="font-size: 16px; line-height: 1.8; min-height: 400px; white-space: pre-wrap; font-family: inherit;"></div>
-        </div>
-        <div class="letterhead-footer">
-            <span class="footer-text">Fix your appointment through the call</span><br>
-            <span style="font-family: 'Arial', sans-serif; font-size: 14px; margin-top: 5px; display: block; color: #2E7D32; font-weight: bold;">www.pratnya.in</span>
-        </div>
+    <div id="footerPratnya" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 10px 40px; box-sizing: border-box; text-align: center; border-top: 1px solid #2E7D32; font-family: 'Noto Sans Malayalam', 'Arial', sans-serif;">
+        <span style="font-family: 'Brush Script MT', cursive; font-size: 22px; color: #2E7D32;">Fix your appointment through the call</span><br>
+        <span style="font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; color: #2E7D32;">www.pratnya.in</span>
     </div>
 
     <script src="app.js" defer></script>
     <script>
         // Service Worker Update Handling
-        const LATEST_CHANGES = "Fixed Malayalam PDF rendering and template layout";
+        const LATEST_CHANGES = "Multi-page PDF with proper headers and Malayalam support";
         let newWorker = null;
 
         if ('serviceWorker' in navigator) {
