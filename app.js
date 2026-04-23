@@ -20,7 +20,7 @@ window.activateLicense = function() {
     } catch (e) { document.getElementById('licenseError').style.display = 'block'; }
 };
 
-// --- X / TWITTER STYLE TOASTS ---
+// --- TOASTS ---
 const topToast = Swal.mixin({
     toast: true,
     position: 'top',
@@ -44,7 +44,7 @@ const warnToast = Swal.mixin({
     customClass: { popup: 'x-toast-confirm' }
 });
 
-// --- TEXTAREA UNDO / CLEAR LOGIC ---
+// --- TEXTAREA UNDO/CLEAR ---
 window.textHistory = {};
 window.clearText = (id) => {
     const el = document.getElementById(id);
@@ -61,13 +61,13 @@ window.undoText = (id) => {
             el.value = window.textHistory[id];
             delete window.textHistory[id];
         } else {
-            document.execCommand('undo'); 
+            document.execCommand('undo');
         }
         el.focus();
     }
 };
 
-// --- DATABASE & CORE ---
+// --- DATABASE ---
 const db = new Dexie('AstroAppDB');
 db.version(4).stores({ clients: '++id, name, star, phone, location, age, dob, birthTime, profession' });
 
@@ -79,28 +79,28 @@ const searchInput = document.getElementById('searchInput');
 
 updateList();
 
-// --- GLOBAL TEMPLATE SELECTOR HELPER ---
+// --- GLOBAL TEMPLATE SELECTOR ---
 function getSelectedTemplate() {
     return document.getElementById('globalTemplateSelect').value; // 'ck' or 'pratnya'
 }
 
 // --- MODAL FUNCTIONS ---
 function showForm() { modal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
-function closeForm() { 
-    modal.classList.add('hidden'); document.body.style.overflow = 'auto'; 
-    form.reset(); document.getElementById('clientId').value = ""; 
-    document.getElementById('historyList').innerHTML = ""; 
-    document.getElementById('clientPrescList').innerHTML = ""; 
+function closeForm() {
+    modal.classList.add('hidden'); document.body.style.overflow = 'auto';
+    form.reset(); document.getElementById('clientId').value = "";
+    document.getElementById('historyList').innerHTML = "";
+    document.getElementById('clientPrescList').innerHTML = "";
 }
 
 function showPrescriptionForm() { prescModal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
-function closePrescriptionForm() { 
-    prescModal.classList.add('hidden'); document.body.style.overflow = 'auto'; 
+function closePrescriptionForm() {
+    prescModal.classList.add('hidden'); document.body.style.overflow = 'auto';
     prescForm.reset(); document.getElementById('prescClientId').value = "";
     document.getElementById('prescHistoryList').innerHTML = "";
 }
 
-// --- SAVE MAIN CLIENT ---
+// --- SAVE CLIENT ---
 form.onsubmit = async (event) => {
     event.preventDefault();
     const id = document.getElementById('clientId').value;
@@ -231,9 +231,9 @@ window.loadClient = async (id) => {
     if (client.prescriptions && client.prescriptions.length > 0) {
         client.prescriptions.forEach(item => {
             prescDiv.innerHTML += `
-                <div class="history-item" style="border-left-color: #FF9800;">
+                <div class="history-item" style="border-left-color: #b45309;">
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px;">
-                        <span style="font-size: 12px; color: #E65100; font-weight: bold;">${item.date}</span>
+                        <span style="font-size: 12px; color: #92400e; font-weight: bold;">${item.date}</span>
                     </div>
                     <div style="font-size: 13px; margin-bottom: 4px;"><strong>Rasi:</strong> ${item.rasi || '-'} | <strong>Udhaya:</strong> ${item.udhaya || '-'}</div>
                     <div style="white-space: pre-wrap; font-size: 14px; margin-top: 8px;">${item.notes || '-'}</div>
@@ -264,9 +264,9 @@ window.loadPrescription = async (id) => {
     if (client.prescriptions && client.prescriptions.length > 0) {
         client.prescriptions.forEach(item => {
             listDiv.innerHTML += `
-                <div class="history-item" id="p-hist-${item.timestamp}" style="border-left-color: #FF9800;">
+                <div class="history-item" id="p-hist-${item.timestamp}" style="border-left-color: #b45309;">
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 8px;">
-                        <span style="font-size: 12px; color: #E65100; font-weight: bold;">${item.date}</span>
+                        <span style="font-size: 12px; color: #92400e; font-weight: bold;">${item.date}</span>
                         <div class="history-actions">
                             <button type="button" onclick="editPrescHist(${client.id}, ${item.timestamp})" style="background: #FFC107; padding: 4px 10px; font-size: 12px; border-radius: 4px;">Edit</button>
                             <button type="button" onclick="deletePrescHist(${client.id}, ${item.timestamp})" style="background: #F44336; color: white; padding: 4px 10px; font-size: 12px; border-radius: 4px; margin-left: 5px;">Delete</button>
@@ -284,7 +284,7 @@ window.loadPrescription = async (id) => {
     showPrescriptionForm();
 };
 
-// --- HISTORY EDIT & DELETE LOGIC (unchanged) ---
+// --- HISTORY EDIT/DELETE (unchanged) ---
 window.editHist = (clientId, timestamp) => {
     const probEl = document.getElementById(`prob-text-${timestamp}`);
     const solEl = document.getElementById(`sol-text-${timestamp}`);
@@ -418,7 +418,7 @@ async function updateList() {
             html += `
             <div class="client-item" onclick="loadClient(${client.id})">
                 <div class="client-info">
-                    <h4>${client.name} <span style="background: #e3f2fd; color: #1976D2; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle;">Client</span></h4>
+                    <h4>${client.name} <span style="background: #eef2ff; color: #1e4bd2; padding: 2px 8px; border-radius: 20px; font-size: 11px; margin-left: 8px;">Client</span></h4>
                     <p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p>
                 </div>
                 <div class="actions">${waBtn}<button class="btn-view">View</button></div>
@@ -426,12 +426,12 @@ async function updateList() {
         }
         if (hasPresc) {
             html += `
-            <div class="client-item" style="border-left: 4px solid #FF9800;" onclick="loadPrescription(${client.id})">
+            <div class="client-item" style="border-left: 4px solid #b45309;" onclick="loadPrescription(${client.id})">
                 <div class="client-info">
-                    <h4>${client.name} <span style="background: #FFF3E0; color: #E65100; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle;">Prescription</span></h4>
+                    <h4>${client.name} <span style="background: #fffbeb; color: #92400e; padding: 2px 8px; border-radius: 20px; font-size: 11px; margin-left: 8px;">Prescription</span></h4>
                     <p>${client.star || ''} ${client.location ? '• ' + client.location : ''}</p>
                 </div>
-                <div class="actions">${waBtn}<button class="btn-view" style="background: #FFF3E0; color: #E65100;">View</button></div>
+                <div class="actions">${waBtn}<button class="btn-view" style="background: #fffbeb; color: #92400e;">View</button></div>
             </div>`;
         }
     });
@@ -439,51 +439,49 @@ async function updateList() {
     document.getElementById('clientList').innerHTML = html;
 }
 
-// ==================== MULTI-PAGE PDF FUNCTIONS ====================
+// ==================== MULTI-PAGE PDF GENERATION ====================
 
-// Helper: Capture header/footer images from dedicated hidden divs
 async function captureHeaderFooter(template) {
-    const headerId = template === 'ck' ? 'headerCK' : 'headerPratnya';
-    const footerId = template === 'ck' ? 'footerCK' : 'footerPratnya';
+    const headerId = template === 'ck' ? 'pdfHeaderCK' : 'pdfHeaderPratnya';
+    const footerId = template === 'ck' ? 'pdfFooterCK' : 'pdfFooterPratnya';
     
     const headerEl = document.getElementById(headerId);
     const footerEl = document.getElementById(footerId);
     
-    const headerCanvas = await html2canvas(headerEl, { scale: 2 });
-    const footerCanvas = await html2canvas(footerEl, { scale: 2 });
+    const [headerCanvas, footerCanvas] = await Promise.all([
+        html2canvas(headerEl, { scale: 2.5, backgroundColor: '#ffffff' }),
+        html2canvas(footerEl, { scale: 2.5, backgroundColor: '#ffffff' })
+    ]);
     
     return {
         headerImg: headerCanvas.toDataURL('image/png'),
         footerImg: footerCanvas.toDataURL('image/png'),
-        // Convert pixel heights to mm (595px = 210mm A4 width)
-        headerHeight: (headerCanvas.height * 210) / 595,
+        headerHeight: (headerCanvas.height * 210) / 595, // mm
         footerHeight: (footerCanvas.height * 210) / 595
     };
 }
 
-// Helper: Add header image to PDF (full width on first page, half width on others)
-function addHeader(pdf, headerImg, pageWidth, headerHeight, isFirstPage) {
-    if (isFirstPage) {
-        pdf.addImage(headerImg, 'PNG', 0, 0, pageWidth, headerHeight);
-        return headerHeight;
+function addHeader(pdf, img, pageWidth, hHeight, isFirst) {
+    if (isFirst) {
+        pdf.addImage(img, 'PNG', 0, 0, pageWidth, hHeight);
+        return hHeight;
     } else {
-        const halfWidth = pageWidth * 0.5;
-        const xOffset = (pageWidth - halfWidth) / 2;
-        const scaledHeight = headerHeight * (halfWidth / pageWidth);
-        pdf.addImage(headerImg, 'PNG', xOffset, 5, halfWidth, scaledHeight);
-        return scaledHeight + 5;
+        const halfW = pageWidth * 0.6;
+        const x = (pageWidth - halfW) / 2;
+        const scaledH = hHeight * (halfW / pageWidth);
+        pdf.addImage(img, 'PNG', x, 8, halfW, scaledH);
+        return scaledH + 8;
     }
 }
 
-// Helper: Add footer image (full width on first page, half width on others)
-function addFooter(pdf, footerImg, pageWidth, footerHeight, pageHeight, isFirstPage) {
-    if (isFirstPage) {
-        pdf.addImage(footerImg, 'PNG', 0, pageHeight - footerHeight, pageWidth, footerHeight);
+function addFooter(pdf, img, pageWidth, fHeight, pageHeight, isFirst) {
+    if (isFirst) {
+        pdf.addImage(img, 'PNG', 0, pageHeight - fHeight, pageWidth, fHeight);
     } else {
-        const halfWidth = pageWidth * 0.5;
-        const xOffset = (pageWidth - halfWidth) / 2;
-        const scaledHeight = footerHeight * (halfWidth / pageWidth);
-        pdf.addImage(footerImg, 'PNG', xOffset, pageHeight - scaledHeight - 5, halfWidth, scaledHeight);
+        const halfW = pageWidth * 0.6;
+        const x = (pageWidth - halfW) / 2;
+        const scaledH = fHeight * (halfW / pageWidth);
+        pdf.addImage(img, 'PNG', x, pageHeight - scaledH - 6, halfW, scaledH);
     }
 }
 
@@ -507,7 +505,7 @@ window.generatePDF = async () => {
         return;
     }
 
-    topToast.fire({ text: 'Generating PDF...' });
+    topToast.fire({ text: 'Generating professional report...' });
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -517,12 +515,10 @@ window.generatePDF = async () => {
 
     const { headerImg, footerImg, headerHeight, footerHeight } = await captureHeaderFooter(template);
 
-    // Page 1: full header
     let y = addHeader(pdf, headerImg, pageWidth, headerHeight, true) + 8;
 
-    // Client info
     pdf.setFontSize(12);
-    pdf.setTextColor("#000000");
+    pdf.setTextColor("#0f172a");
     pdf.setFont("Noto Sans Malayalam", "normal");
     pdf.text(`Name: ${name}`, margin, y);
     pdf.text(`Star: ${star}`, margin + 80, y);
@@ -540,31 +536,23 @@ window.generatePDF = async () => {
     if (consultations.length > 0) {
         pdf.setFontSize(14);
         pdf.setFont("Helvetica", "bold");
+        pdf.setTextColor("#1a5e2a");
         pdf.text("Consultation History", margin, y);
         y += 8;
 
-        const tableData = consultations.map(c => [
-            c.date,
-            c.problem || '-',
-            c.solution || '-'
-        ]);
+        const tableData = consultations.map(c => [c.date, c.problem || '-', c.solution || '-']);
 
         pdf.autoTable({
             startY: y,
             head: [['Date', 'Problem', 'Solution']],
             body: tableData,
             margin: { left: margin, right: margin },
-            styles: { fontSize: 10, cellPadding: 3, font: 'Noto Sans Malayalam' },
-            headStyles: { fillColor: "#2E7D32", textColor: "#FFFFFF" },
-            columnStyles: { 0: { cellWidth: 35 }, 1: { cellWidth: 65 }, 2: { cellWidth: 65 } },
+            styles: { fontSize: 10, cellPadding: 4, font: 'Noto Sans Malayalam', textColor: '#1e293b' },
+            headStyles: { fillColor: '#1a5e2a', textColor: '#ffffff', fontStyle: 'bold' },
+            columnStyles: { 0: { cellWidth: 38 }, 1: { cellWidth: 66 }, 2: { cellWidth: 66 } },
             didDrawPage: (data) => {
-                const pageNumber = pdf.internal.getCurrentPageInfo().pageNumber;
-                const isFirst = (pageNumber === 1);
-                // Redraw header on new pages
-                if (!isFirst) {
-                    addHeader(pdf, headerImg, pageWidth, headerHeight, false);
-                }
-                // Footer drawn separately after all pages
+                const pageNum = pdf.internal.getCurrentPageInfo().pageNumber;
+                if (pageNum > 1) addHeader(pdf, headerImg, pageWidth, headerHeight, false);
             }
         });
     } else {
@@ -572,7 +560,6 @@ window.generatePDF = async () => {
         pdf.text("No consultations recorded.", margin, y);
     }
 
-    // Add footer to all pages
     const totalPages = pdf.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
         pdf.setPage(i);
@@ -591,7 +578,7 @@ window.generatePrescriptionPDF = async () => {
     const place = document.getElementById('prescPlace').value || '';
     const rasi = document.getElementById('prescRasi').value || '';
     const udhaya = document.getElementById('prescUdhaya').value || '';
-    const body = document.getElementById('prescBody').value || '';
+    const body = document.getElementById('prescBody').value.trim();
     const currentDate = new Date().toLocaleDateString('en-IN');
 
     if (!name && !body) {
@@ -599,7 +586,7 @@ window.generatePrescriptionPDF = async () => {
         return;
     }
 
-    topToast.fire({ text: 'Generating PDF...' });
+    topToast.fire({ text: 'Generating prescription PDF...' });
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -610,9 +597,8 @@ window.generatePrescriptionPDF = async () => {
     const { headerImg, footerImg, headerHeight, footerHeight } = await captureHeaderFooter(template);
 
     let y = addHeader(pdf, headerImg, pageWidth, headerHeight, true) + 8;
-
     pdf.setFontSize(12);
-    pdf.setTextColor("#000000");
+    pdf.setTextColor("#0f172a");
     pdf.setFont("Noto Sans Malayalam", "normal");
     pdf.text(`Name: ${name}`, margin, y);
     pdf.text(`Date: ${currentDate}`, margin + 80, y);
@@ -627,18 +613,16 @@ window.generatePrescriptionPDF = async () => {
     pdf.setFontSize(11);
     pdf.setFont("Noto Sans Malayalam", "normal");
     const lines = pdf.splitTextToSize(body, pageWidth - 2 * margin);
-    const lineHeight = 6;
+    const lineH = 6.5;
     const maxY = pageHeight - footerHeight - 15;
 
-    let pageNumber = 1;
     for (let i = 0; i < lines.length; i++) {
-        if (y + lineHeight > maxY) {
+        if (y + lineH > maxY) {
             pdf.addPage();
-            pageNumber++;
-            y = addHeader(pdf, headerImg, pageWidth, headerHeight, false) + 8;
+            y = addHeader(pdf, headerImg, pageWidth, headerHeight, false) + 10;
         }
         pdf.text(lines[i], margin, y);
-        y += lineHeight;
+        y += lineH;
     }
 
     const totalPages = pdf.internal.getNumberOfPages();
@@ -648,7 +632,7 @@ window.generatePrescriptionPDF = async () => {
     }
 
     pdf.save(`${name}_Prescription.pdf`);
-    topToast.fire({ text: 'Downloaded successfully!' });
+    topToast.fire({ text: 'PDF ready!' });
 };
 
 // --- SHARE PRESCRIPTION PDF (Multi-page + sharing) ---
@@ -659,7 +643,7 @@ window.sharePrescriptionPDF = async () => {
     const place = document.getElementById('prescPlace').value || '';
     const rasi = document.getElementById('prescRasi').value || '';
     const udhaya = document.getElementById('prescUdhaya').value || '';
-    const body = document.getElementById('prescBody').value || '';
+    const body = document.getElementById('prescBody').value.trim();
     const currentDate = new Date().toLocaleDateString('en-IN');
 
     if (!name && !body) {
@@ -678,9 +662,8 @@ window.sharePrescriptionPDF = async () => {
     const { headerImg, footerImg, headerHeight, footerHeight } = await captureHeaderFooter(template);
 
     let y = addHeader(pdf, headerImg, pageWidth, headerHeight, true) + 8;
-
     pdf.setFontSize(12);
-    pdf.setTextColor("#000000");
+    pdf.setTextColor("#0f172a");
     pdf.setFont("Noto Sans Malayalam", "normal");
     pdf.text(`Name: ${name}`, margin, y);
     pdf.text(`Date: ${currentDate}`, margin + 80, y);
@@ -693,19 +676,18 @@ window.sharePrescriptionPDF = async () => {
     y += 15;
 
     pdf.setFontSize(11);
+    pdf.setFont("Noto Sans Malayalam", "normal");
     const lines = pdf.splitTextToSize(body, pageWidth - 2 * margin);
-    const lineHeight = 6;
+    const lineH = 6.5;
     const maxY = pageHeight - footerHeight - 15;
 
-    let pageNumber = 1;
     for (let i = 0; i < lines.length; i++) {
-        if (y + lineHeight > maxY) {
+        if (y + lineH > maxY) {
             pdf.addPage();
-            pageNumber++;
-            y = addHeader(pdf, headerImg, pageWidth, headerHeight, false) + 8;
+            y = addHeader(pdf, headerImg, pageWidth, headerHeight, false) + 10;
         }
         pdf.text(lines[i], margin, y);
-        y += lineHeight;
+        y += lineH;
     }
 
     const totalPages = pdf.internal.getNumberOfPages();
@@ -737,8 +719,9 @@ window.sharePrescriptionPDF = async () => {
     }
 };
 
-// --- REMAINING UTILITIES (unchanged) ---
+// --- OTHER UTILITIES ---
 searchInput.oninput = () => updateList();
+
 function calculateAge() {
     const dobInput = document.getElementById('dob').value;
     if (!dobInput) return;
@@ -756,6 +739,7 @@ async function deleteCurrentClient() {
         if (result.isConfirmed) { await db.clients.delete(parseInt(id)); closeForm(); await updateList(); topToast.fire({ text: 'Deleted' }); }
     });
 }
+
 async function deleteCurrentPrescClient() {
     const id = document.getElementById('prescClientId').value;
     if (!id) return;

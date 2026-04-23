@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ml">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pratnya Astro Manager</title>
     <link rel="apple-touch-icon" href="logo.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,217 +11,435 @@
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Malayalam font for PDF rendering -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Professional fonts: Malayalam + elegant serif for headings -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;500;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
     
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <style>
-        .letterhead-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px; font-family: 'Arial', sans-serif; }
-        .letterhead-left { text-align: left; color: #333; }
-        .contact-link { text-decoration: none; color: inherit; cursor: pointer; }
-        .watermark { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); opacity: 0.08; z-index: 0; pointer-events: none; }
-        .letterhead-footer { position: absolute; bottom: 30px; left: 40px; right: 40px; text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; font-size: 16px; }
-        .footer-text { font-family: 'Brush Script MT', cursive; font-size: 22px; }
-        .global-template-selector { display: flex; align-items: center; gap: 8px; margin-right: 10px; }
-        .global-template-selector select { padding: 6px 10px; border-radius: 20px; border: 1px solid #2E7D32; background: white; font-size: 14px; font-weight: 500; color: #2E7D32; cursor: pointer; }
+        /* Global styles */
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Noto Sans Malayalam', 'Segoe UI', sans-serif; 
+            background-color: #f8fafc; 
+            margin: 0; 
+            padding-bottom: 80px; 
+        }
+        header { 
+            background: white; 
+            padding: 12px 20px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            border-bottom: 1px solid rgba(26,94,42,0.12);
+        }
+        .logo { max-height: 48px; width: auto; }
+        .container { padding: 20px 16px; max-width: 650px; margin: auto; }
+        
+        /* Buttons */
+        button { 
+            border: none; 
+            border-radius: 40px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            transition: all 0.2s; 
+            font-family: inherit;
+        }
+        .btn-new { 
+            width: 100%; 
+            padding: 16px; 
+            background: #1a5e2a; 
+            color: white; 
+            font-size: 16px; 
+            box-shadow: 0 8px 16px rgba(26,94,42,0.15);
+        }
+        .btn-prescription {
+            background: #b45309;
+            color: white;
+            box-shadow: 0 8px 16px rgba(180,83,9,0.15);
+        }
+        .btn-new:active { transform: scale(0.98); }
+        
+        /* Search & List */
+        .search-box input { 
+            width: 100%; 
+            padding: 16px 20px; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 40px; 
+            outline: none; 
+            background: white;
+            font-size: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+        }
+        .client-item { 
+            background: white; 
+            padding: 18px 20px; 
+            border-radius: 20px; 
+            margin-top: 12px; 
+            box-shadow: 0 6px 14px rgba(0,0,0,0.02); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border: 1px solid rgba(0,0,0,0.02);
+            transition: all 0.15s;
+        }
+        .client-item:active { background: #f9fafb; }
+        .client-info h4 { margin: 0 0 4px; color: #0f172a; font-weight: 700; font-size: 16px; }
+        .client-info p { margin: 0; color: #475569; font-size: 13px; }
+        .actions { display: flex; gap: 10px; align-items: center; }
+        .btn-view { 
+            background: #eef2ff; 
+            color: #1e4bd2; 
+            padding: 10px 16px; 
+            border-radius: 40px; 
+            font-size: 13px; 
+            font-weight: 600;
+        }
+        .btn-wa {
+            background: #25D366;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 40px;
+            font-size: 15px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .dual-history-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        .history-container {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .history-item {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            border: 1px solid #f1f5f9;
+        }
+        
+        /* Modal */
+        .modal { 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: #f8fafc; 
+            z-index: 2000; 
+            display: flex; 
+            flex-direction: column;
+        }
+        .hidden { display: none; }
+        .modal-content { 
+            background: #f8fafc; 
+            width: 100%; height: 100%; max-height: 100vh;
+            display: flex; 
+            flex-direction: column;
+        }
+        .modal-header { 
+            background: white; 
+            padding: 20px 24px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+            border-bottom: 1px solid #edf2f7;
+        }
+        .btn-close { background: transparent; font-size: 24px; color: #64748b; }
+        
+        /* Forms */
+        #clientForm, #prescriptionForm { 
+            padding: 24px; 
+            overflow-y: auto; 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .form-grid { 
+            display: grid; 
+            gap: 16px; 
+            grid-template-columns: 1fr; 
+        }
+        input, textarea { 
+            width: 100%; 
+            padding: 16px; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 18px; 
+            font-family: inherit; 
+            background: white;
+            font-size: 15px;
+        }
+        textarea { min-height: 120px; resize: vertical; }
+        
+        .form-actions { 
+            position: sticky; 
+            bottom: 0; 
+            background: #f8fafc; 
+            padding: 20px 0 0; 
+            margin-top: 10px;
+            display: flex; 
+            gap: 12px; 
+            justify-content: space-between;
+        }
+        .form-actions button {
+            flex: 1;
+            padding: 16px;
+            border-radius: 40px;
+            font-weight: 700;
+        }
+
+        .mini-toolbar {
+            display: inline-flex;
+            gap: 8px;
+            margin-left: 10px;
+        }
+        .mini-toolbar span {
+            background: #eef2ff;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            cursor: pointer;
+            color: #1e4bd2;
+        }
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid #b45309;
+            color: #b45309;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 13px;
+        }
+
+        /* Template selector */
+        .global-template-selector select {
+            padding: 10px 18px;
+            border-radius: 40px;
+            border: 1px solid #1a5e2a;
+            background: white;
+            font-weight: 600;
+            color: #1a5e2a;
+            font-family: inherit;
+        }
+        
+        /* Responsive */
+        @media (min-width: 640px) {
+            .form-grid { grid-template-columns: 1fr 1fr; }
+            .dual-history-grid { grid-template-columns: 1fr 1fr; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- License Screen -->
-    <div id="licenseScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; box-sizing: border-box;">
-        <img src="logo.png" style="width: 130px; margin-bottom: 20px;">
-        <h2 style="margin: 0; font-size: 24px;">Pratnya Astro Manager</h2>
-        <p style="color: #aaa; margin: 5px 0 25px 0;">Premium Subscription Required</p>
-        <div style="margin-top: 25px; width: 90%; max-width: 450px;">
-            <input type="text" id="licenseKeyInput" placeholder="Enter License Key" style="width: 100%; padding: 15px; border: none; border-radius: 8px; text-align: center; margin-bottom: 12px; font-size: 16px; box-sizing: border-box;">
-            <button onclick="activateLicense()" style="width: 100%; padding: 15px; background: #2196F3; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">Activate App</button>
+    <!-- License Screen (unchanged) -->
+    <div id="licenseScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a1c1a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px;">
+        <img src="logo.png" style="width: 140px; margin-bottom: 28px;">
+        <h2 style="margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">Pratnya Astro</h2>
+        <p style="opacity: 0.7; margin: 10px 0 36px; font-size: 16px;">Premium Subscription Required</p>
+        <div style="width: 90%; max-width: 420px;">
+            <input type="text" id="licenseKeyInput" placeholder="Enter License Key" style="width: 100%; padding: 18px 20px; border: none; border-radius: 40px; text-align: center; font-size: 16px; outline: none;">
+            <button onclick="activateLicense()" style="width: 100%; margin-top: 18px; padding: 18px; background: #1a5e2a; color: white; border: none; border-radius: 40px; font-weight: 700; font-size: 17px;">Activate Now</button>
         </div>
-        <p id="licenseError" style="color: #ff5252; font-size: 14px; margin-top: 15px; display: none;">Invalid License Key</p>
+        <p id="licenseError" style="color: #ff8a8a; font-size: 14px; margin-top: 24px; display: none;">Invalid License Key</p>
     </div>
 
     <!-- Main Header -->
-    <header style="position: sticky; top: 0; z-index: 100; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-        <img src="logo.png" alt="Pratnya Astro" class="logo" style="margin-left: 10px;">
-        <div style="display: flex; align-items: center; gap: 15px;">
+    <header>
+        <img src="logo.png" alt="Pratnya" class="logo">
+        <div style="display: flex; align-items: center; gap: 8px;">
             <div class="global-template-selector">
                 <select id="globalTemplateSelect">
                     <option value="ck">CK Saji Panicker</option>
                     <option value="pratnya">Pratnya</option>
                 </select>
             </div>
-            <div id="updateIcon" onclick="showUpdateInfo()" style="display: none; cursor: pointer; margin-right: 10px;">
+            <div id="updateIcon" onclick="showUpdateInfo()" style="display: none; cursor: pointer; margin-left: 8px;">
                 <span style="font-size: 24px;">🔔</span>
-                <span style="position: absolute; top: 5px; right: 5px; width: 10px; height: 10px; background: red; border-radius: 50%;"></span>
+                <span style="position: absolute; width: 10px; height: 10px; background: red; border-radius: 50%; margin-left: -6px;"></span>
             </div>
         </div>
     </header>
 
     <div class="container">
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <button onclick="showForm()" class="btn-new" style="flex: 1; margin-bottom: 0;">+ New Client</button>
-            <button onclick="showPrescriptionForm()" class="btn-prescription" style="flex: 1; background: #FF9800; color: white;">Prescription</button>
+        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <button onclick="showForm()" class="btn-new" style="flex: 1;">➕ New Client</button>
+            <button onclick="showPrescriptionForm()" class="btn-new btn-prescription" style="flex: 1;">📋 Prescription</button>
         </div>
 
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="🔍 Search Client or Prescription..." autocomplete="off">
+            <input type="text" id="searchInput" placeholder="🔍 Search by name, star or phone...">
         </div>
 
         <div id="clientList" class="client-list"></div>
+    </div>
 
-        <!-- Client Form Modal -->
-        <div id="clientFormModal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 id="formTitle">Client Details</h3>
-                    <button onclick="closeForm()" class="btn-close">✖</button>
-                </div>
-                
-                <form id="clientForm">
-                    <input type="hidden" id="clientId">
-                    <div class="form-grid">
-                        <input type="text" id="name" placeholder="Name *" required>
-                        <input type="text" id="star" placeholder="Star (Nakshatram)">
-                        <div style="position: relative;">
-                            <label style="font-size: 12px; color: #666; position: absolute; top: -8px; left: 10px; background: white; padding: 0 4px;">Date of Birth</label>
-                            <input type="date" id="dob" onchange="calculateAge()">
-                        </div>
-                        <input type="number" id="age" placeholder="Age (Auto-calculated)">
-                        <div style="position: relative;">
-                            <label style="font-size: 12px; color: #666; position: absolute; top: -8px; left: 10px; background: white; padding: 0 4px;">Time of Birth</label>
-                            <input type="time" id="birthTime">
-                        </div>
-                        <input type="text" id="place" placeholder="Place">
-                        <input type="text" id="phone" placeholder="Phone">
-                        <input type="text" id="profession" placeholder="Profession">
-                    </div>
-
-                    <div id="historySection" class="dual-history-grid" style="margin-top: 20px;">
-                        <div>
-                            <h4 style="color: #1976D2;">Consultations</h4>
-                            <div id="historyList" class="history-container"></div>
-                        </div>
-                        <div>
-                            <h4 style="color: #E65100;">Prescriptions</h4>
-                            <div id="clientPrescList" class="history-container"></div>
-                        </div>
-                    </div>
-
-                    <div class="new-consultation" style="display: flex; flex-direction: column; flex: 1; margin-top: 15px;">
-                        <h4>➕ Add New Consultation</h4>
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                            <label>Case History (Problems):</label>
-                            <div class="mini-toolbar">
-                                <span onclick="undoText('currentProblem')">Undo</span>
-                                <span onclick="clearText('currentProblem')">Clear</span>
-                            </div>
-                        </div>
-                        <textarea id="currentProblem" rows="3" placeholder="Enter problems here..."></textarea>
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 5px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <label style="color: #2E7D32; font-weight: bold; margin: 0;">Astrological Solution:</label>
-                                <div class="mini-toolbar">
-                                    <span onclick="undoText('currentSolution')">Undo</span>
-                                    <span onclick="clearText('currentSolution')">Clear</span>
-                                </div>
-                            </div>
-                            <button type="button" onclick="transferToPrescription()" class="btn-ghost">Open as Prescription</button>
-                        </div>
-                        <textarea id="currentSolution" style="flex: 1; min-height: 200px; border: 1px solid #ddd; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5; resize: vertical;" placeholder="Write solution here..."></textarea>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" style="background-color: #2E7D32; color: white; font-weight: bold;">Save</button>
-                        <button type="button" onclick="generatePDF()" style="background-color: #1976D2; color: white; font-weight: bold;">PDF</button>
-                        <button type="button" onclick="deleteCurrentClient()" style="background-color: #D32F2F; color: white; font-weight: bold;">Delete</button>
-                    </div>
-                </form>
+    <!-- ========== CLIENT FORM MODAL ========== -->
+    <div id="clientFormModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="formTitle" style="margin:0; font-weight:700;">Client Details</h3>
+                <button onclick="closeForm()" class="btn-close">✖</button>
             </div>
-        </div>
-
-        <!-- Prescription Modal -->
-        <div id="prescriptionModal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header" style="background: #FFF3E0;">
-                    <h3 style="color: #E65100;">Prescription Details</h3>
-                    <button onclick="closePrescriptionForm()" class="btn-close">✖</button>
+            
+            <form id="clientForm">
+                <input type="hidden" id="clientId">
+                <div class="form-grid">
+                    <input type="text" id="name" placeholder="Full Name *" required>
+                    <input type="text" id="star" placeholder="Star (Nakshatram)">
+                    <div style="position: relative;">
+                        <label style="font-size: 13px; color: #475569; position: absolute; top: -10px; left: 16px; background: #f8fafc; padding: 0 6px;">Date of Birth</label>
+                        <input type="date" id="dob" onchange="calculateAge()">
+                    </div>
+                    <input type="number" id="age" placeholder="Age (Auto)">
+                    <div style="position: relative;">
+                        <label style="font-size: 13px; color: #475569; position: absolute; top: -10px; left: 16px; background: #f8fafc; padding: 0 6px;">Time of Birth</label>
+                        <input type="time" id="birthTime">
+                    </div>
+                    <input type="text" id="place" placeholder="Place">
+                    <input type="text" id="phone" placeholder="Phone Number">
+                    <input type="text" id="profession" placeholder="Profession">
                 </div>
-                
-                <form id="prescriptionForm" style="padding: 20px; flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding-bottom: 0;">
-                    <input type="hidden" id="prescClientId">
+
+                <div id="historySection" class="dual-history-grid" style="margin-top: 28px;">
+                    <div>
+                        <h4 style="color: #1e4bd2; margin-bottom: 12px;">📋 Consultations</h4>
+                        <div id="historyList" class="history-container"></div>
+                    </div>
+                    <div>
+                        <h4 style="color: #b45309; margin-bottom: 12px;">📄 Prescriptions</h4>
+                        <div id="clientPrescList" class="history-container"></div>
+                    </div>
+                </div>
+
+                <div class="new-consultation" style="margin-top: 24px;">
+                    <h4 style="display: flex; justify-content: space-between;">
+                        <span>➕ New Consultation</span>
+                        <button type="button" onclick="transferToPrescription()" class="btn-ghost">Open as Prescription</button>
+                    </h4>
                     
-                    <div class="form-grid">
-                        <input type="text" id="prescName" placeholder="Name *" required>
-                        <input type="text" id="prescPhone" placeholder="Phone (for WA)">
-                        <input type="text" id="prescStar" placeholder="Star">
-                        <input type="text" id="prescPlace" placeholder="Place">
-                        <input type="text" id="prescRasi" placeholder="Rasi">
-                        <input type="text" id="prescUdhaya" placeholder="Udhaya Rasi">
-                    </div>
-
-                    <div id="prescHistorySection" style="margin-top: 20px;">
-                        <h4 style="color: #E65100;">Previous Prescriptions</h4>
-                        <div id="prescHistoryList" class="history-container"></div>
-                    </div>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 5px;">
-                        <h4 style="margin: 0;">➕ Write New Prescription:</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0 4px;">
+                        <label style="font-weight:600;">Case History (Problems):</label>
                         <div class="mini-toolbar">
-                            <span onclick="undoText('prescBody')">Undo</span>
-                            <span onclick="clearText('prescBody')">Clear</span>
+                            <span onclick="undoText('currentProblem')">↩️ Undo</span>
+                            <span onclick="clearText('currentProblem')">🗑️ Clear</span>
                         </div>
                     </div>
-                    <textarea id="prescBody" style="flex: 1; min-height: 250px; border: 1px solid #ccc; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5;" placeholder="Write full prescription here..."></textarea>
-
-                    <div class="form-actions" style="background: #FFF3E0;">
-                        <button type="button" onclick="savePrescription()" style="background-color: #4CAF50; color: white; font-weight: bold;">Save</button>
-                        <button type="button" onclick="generatePrescriptionPDF()" style="background-color: #FF9800; color: white; font-weight: bold;">PDF</button>
-                        <button type="button" onclick="sharePrescriptionPDF()" style="background-color: #25D366; color: white; font-weight: bold;"><i class="fab fa-whatsapp"></i> Share</button>
-                        <button type="button" onclick="deleteCurrentPrescClient()" style="background-color: #D32F2F; color: white; font-weight: bold;">Delete</button>
+                    <textarea id="currentProblem" rows="3" placeholder="Enter problems here..."></textarea>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0 4px;">
+                        <label style="font-weight:600; color: #1a5e2a;">Astrological Solution:</label>
+                        <div class="mini-toolbar">
+                            <span onclick="undoText('currentSolution')">↩️ Undo</span>
+                            <span onclick="clearText('currentSolution')">🗑️ Clear</span>
+                        </div>
                     </div>
-                </form>
-            </div>
+                    <textarea id="currentSolution" style="min-height: 180px;" placeholder="Write solution here..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" style="background: #1a5e2a; color: white;">💾 Save</button>
+                    <button type="button" onclick="generatePDF()" style="background: #1e4bd2; color: white;">📄 PDF</button>
+                    <button type="button" onclick="deleteCurrentClient()" style="background: #b91c1c; color: white;">🗑️ Delete</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Hidden header/footer templates for PDF capture -->
-    <div id="headerCK" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 30px 40px 20px; box-sizing: border-box; font-family: 'Noto Sans Malayalam', 'Arial', sans-serif;">
-        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #2E7D32; padding-bottom: 15px;">
+    <!-- ========== PRESCRIPTION MODAL ========== -->
+    <div id="prescriptionModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #fffbeb; border-bottom-color: #fde68a;">
+                <h3 style="color: #92400e; margin:0; font-weight:700;">Prescription</h3>
+                <button onclick="closePrescriptionForm()" class="btn-close">✖</button>
+            </div>
+            
+            <form id="prescriptionForm" style="padding: 24px;">
+                <input type="hidden" id="prescClientId">
+                
+                <div class="form-grid">
+                    <input type="text" id="prescName" placeholder="Full Name *" required>
+                    <input type="text" id="prescPhone" placeholder="Phone (for WhatsApp)">
+                    <input type="text" id="prescStar" placeholder="Star">
+                    <input type="text" id="prescPlace" placeholder="Place">
+                    <input type="text" id="prescRasi" placeholder="Rasi">
+                    <input type="text" id="prescUdhaya" placeholder="Udhaya Rasi">
+                </div>
+
+                <div style="margin: 24px 0;">
+                    <h4 style="color: #92400e; margin-bottom: 12px;">📋 Previous Prescriptions</h4>
+                    <div id="prescHistoryList" class="history-container"></div>
+                </div>
+
+                <div style="margin-top: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="font-weight:700;">➕ New Prescription:</label>
+                        <div class="mini-toolbar">
+                            <span onclick="undoText('prescBody')">↩️ Undo</span>
+                            <span onclick="clearText('prescBody')">🗑️ Clear</span>
+                        </div>
+                    </div>
+                    <textarea id="prescBody" style="min-height: 220px;" placeholder="Write full prescription here..."></textarea>
+                </div>
+
+                <div class="form-actions" style="margin-top: 24px;">
+                    <button type="button" onclick="savePrescription()" style="background: #1a5e2a; color: white;">💾 Save</button>
+                    <button type="button" onclick="generatePrescriptionPDF()" style="background: #b45309; color: white;">📄 PDF</button>
+                    <button type="button" onclick="sharePrescriptionPDF()" style="background: #25D366; color: white;">📤 Share</button>
+                    <button type="button" onclick="deleteCurrentPrescClient()" style="background: #b91c1c; color: white;">🗑️ Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== HIDDEN PROFESSIONAL PDF HEADERS (for html2canvas) ========== -->
+    <!-- CK Template -->
+    <div id="pdfHeaderCK" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 28px 40px 20px; box-sizing: border-box; font-family: 'Noto Sans Malayalam', 'Playfair Display', serif;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #1a5e2a; padding-bottom: 16px;">
             <div>
-                <p style="color: #2E7D32; font-family: 'Georgia', serif; font-style: italic; font-size: 16px; margin:0;">Astrologer</p>
-                <h2 style="color: #2E7D32; font-size: 26px; margin:0;">C.K. Saji Panicker</h2>
-                <p style="color: #2E7D32; font-style: italic; font-size: 14px; margin:5px 0 0;">Chathangottupuram, Kalarikkal<br>Wandoor-Malappuram<br>Kerala : 679 328</p>
+                <p style="color: #1a5e2a; font-family: 'Playfair Display', serif; font-style: italic; font-size: 18px; margin:0;">Astrologer</p>
+                <h2 style="color: #1a5e2a; font-size: 32px; margin:4px 0 0; font-weight: 600;">C.K. Saji Panicker</h2>
+                <div style="color: #1a5e2a; font-size: 15px; margin:8px 0 0; line-height:1.4;">
+                    Chathangottupuram, Kalarikkal<br>
+                    Wandoor-Malappuram, Kerala 679328
+                </div>
             </div>
             <div style="text-align: right;">
-                <p style="color: #2E7D32; font-style: italic; font-size: 16px; margin:0;">Consultation</p>
-                <p style="color: #2E7D32; font-size: 14px; margin:2px 0;">Online: <strong>9207 773 880</strong></p>
-                <p style="color: #2E7D32; font-size: 14px; margin:2px 0;">Office: <strong>7034 600 880</strong></p>
+                <p style="color: #1a5e2a; font-family: 'Playfair Display', serif; font-style: italic; font-size: 18px; margin:0;">Consultation</p>
+                <p style="color: #1a5e2a; font-size: 15px; margin:6px 0;">📞 9207 773 880</p>
+                <p style="color: #1a5e2a; font-size: 15px; margin:0;">📞 7034 600 880</p>
             </div>
         </div>
     </div>
-    <div id="footerCK" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 10px 40px; box-sizing: border-box; text-align: center; border-top: 1px solid #2E7D32; font-family: 'Noto Sans Malayalam', 'Arial', sans-serif;">
-        <span style="font-family: 'Brush Script MT', cursive; font-size: 22px; color: #2E7D32;">Fix your appointment through the call</span><br>
-        <span style="font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; color: #2E7D32;">www.pratnya.in</span>
+    <div id="pdfFooterCK" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 16px 40px; box-sizing: border-box; text-align: center; border-top: 1px solid #1a5e2a; font-family: 'Noto Sans Malayalam', sans-serif;">
+        <p style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 22px; color: #1a5e2a; margin:0;">Fix your appointment through the call</p>
+        <p style="font-weight: 600; margin:6px 0 0; color:#1a5e2a;">www.pratnya.in</p>
     </div>
 
-    <div id="headerPratnya" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 20px 40px; box-sizing: border-box; text-align: center; border-bottom: 2px solid #2E7D32; font-family: 'Noto Sans Malayalam', 'Arial', sans-serif;">
+    <!-- Pratnya Template -->
+    <div id="pdfHeaderPratnya" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 24px 40px; box-sizing: border-box; text-align: center; border-bottom: 2px solid #1a5e2a; font-family: 'Noto Sans Malayalam', sans-serif;">
         <img src="logo.png" style="height: 70px;">
     </div>
-    <div id="footerPratnya" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 10px 40px; box-sizing: border-box; text-align: center; border-top: 1px solid #2E7D32; font-family: 'Noto Sans Malayalam', 'Arial', sans-serif;">
-        <span style="font-family: 'Brush Script MT', cursive; font-size: 22px; color: #2E7D32;">Fix your appointment through the call</span><br>
-        <span style="font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; color: #2E7D32;">www.pratnya.in</span>
+    <div id="pdfFooterPratnya" style="position: fixed; top: -9999px; left: -9999px; width: 595px; background: white; padding: 16px 40px; box-sizing: border-box; text-align: center; border-top: 1px solid #1a5e2a; font-family: 'Noto Sans Malayalam', sans-serif;">
+        <p style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 22px; color: #1a5e2a; margin:0;">Fix your appointment through the call</p>
+        <p style="font-weight: 600; margin:6px 0 0; color:#1a5e2a;">www.pratnya.in</p>
     </div>
 
     <script src="app.js" defer></script>
     <script>
         // Service Worker Update Handling
-        const LATEST_CHANGES = "Multi-page PDF with proper headers and Malayalam support";
+        const LATEST_CHANGES = "Professional multi-page PDF with Malayalam support";
         let newWorker = null;
 
         if ('serviceWorker' in navigator) {
