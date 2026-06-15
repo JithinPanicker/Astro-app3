@@ -1,4 +1,4 @@
-const CACHE_NAME = "astro-manager-v65"; // Increment on each deploy
+const CACHE_NAME = "astro-manager-v66"; // Increment on each deploy
 
 const ASSETS_TO_CACHE = [
     "./",
@@ -7,6 +7,7 @@ const ASSETS_TO_CACHE = [
     "./app.js",
     "./logo.png",
     "./manifest.json",
+    "/jathaka-chercha.html",
     "https://unpkg.com/dexie/dist/dexie.js",
     "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
     "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js",

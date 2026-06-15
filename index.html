@@ -59,9 +59,11 @@
     </header>
 
     <div class="container">
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <button onclick="showForm()" class="btn-new" style="flex: 1; margin-bottom: 0;">+ New Client</button>
-            <button onclick="showPrescriptionForm()" class="btn-prescription" style="flex: 1; background: #FF9800; color: white;">Prescription</button>
+        <!-- THREE BUTTON ROW: New Client, Prescription, Jathaka Cherchha -->
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+            <button onclick="showForm()" class="btn-new" style="flex: 1; min-width: 120px; margin-bottom: 0;">+ New Client</button>
+            <button onclick="showPrescriptionForm()" class="btn-prescription" style="flex: 1; min-width: 120px; background: #FF9800; color: white; border: none; border-radius: 6px; padding: 15px; font-size: 16px; font-weight: 600; cursor: pointer;">Prescription</button>
+            <button onclick="location.href='jathaka-chercha.html'" class="btn-new" style="flex: 1; min-width: 120px; background: #6A1B9A; color: white; border: none; border-radius: 6px; padding: 15px; font-size: 16px; font-weight: 600; cursor: pointer;">Jathaka Cherchha</button>
         </div>
 
         <div class="search-box">
@@ -186,8 +188,6 @@
             </div>
         </div>
     </div>
-
-    <!-- PDF templates are now built dynamically by the multi-page engine in app.js -->
 
     <script src="app.js" defer></script>
     <script>
