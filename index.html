@@ -1,276 +1,495 @@
+Here is the completely rewritten, fully responsive HTML code.
+
+I have updated the layout to ensure it looks excellent on mobile devices, tablets, and desktop screens. It seamlessly adapts to the screen size while maintaining the exact A4 layout needed for printing. I have also precisely matched the header and footer from your highlighted image, incorporated `logo.png` as the watermark and the footer logo, and added a sleek SVG map pin for the email line.
+
+Save the following code as `index.html`:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pratnya Astro Manager</title>
-    <link rel="apple-touch-icon" href="logo.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Responsive Astrologer Consultation Form</title>
     
-    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap" rel="stylesheet">
+    
     <style>
-        .letterhead-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2E7D32; padding-bottom: 20px; margin-bottom: 30px; font-family: 'Arial', sans-serif; }
-        .letterhead-left { text-align: left; color: #333; }
-        .contact-link { text-decoration: none; color: inherit; cursor: pointer; }
-        .watermark { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); opacity: 0.08; z-index: 0; pointer-events: none; }
-        .letterhead-footer { position: absolute; bottom: 30px; left: 40px; right: 40px; text-align: center; border-top: 1px solid #2E7D32; padding-top: 15px; color: #2E7D32; font-size: 16px; }
-        .footer-text { font-family: 'Brush Script MT', cursive; font-size: 22px; }
-        .global-template-selector { display: flex; align-items: center; gap: 8px; margin-right: 10px; }
-        .global-template-selector select { padding: 6px 10px; border-radius: 20px; border: 1px solid #2E7D32; background: white; font-size: 14px; font-weight: 500; color: #2E7D32; cursor: pointer; }
+        :root {
+            --text-main: #333;
+            --text-light: #555;
+            --ink-color: #1a3c8a;
+            --border-color: #999;
+            --grid-border: #222;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #e0e5ec;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 10px;
+            color: var(--text-main);
+        }
+
+        /* --- Main Document Container --- */
+        .document-wrapper {
+            background-color: white;
+            width: 100%;
+            max-width: 210mm; /* A4 Width */
+            min-height: 297mm; /* A4 Height */
+            padding: 5% 6%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Watermark Setup */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 60%;
+            background-image: url('logo.png'); /* Reads from your local directory */
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: contain;
+            opacity: 0.08; /* Faint appearance */
+            pointer-events: none; /* Prevents it from blocking clicks */
+            z-index: 0;
+        }
+
+        /* Content needs to sit above watermark */
+        .content-layer {
+            position: relative;
+            z-index: 1;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Header Styling --- */
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .header-left, .header-right {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .header-right {
+            text-align: right;
+        }
+
+        .header p {
+            margin: 2px 0;
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        .astrologer-title {
+            font-size: 12px !important;
+            margin-bottom: 0px !important;
+        }
+
+        .astrologer-name {
+            font-size: 20px !important;
+            font-weight: bold;
+            color: #111 !important;
+            margin-bottom: 4px !important;
+        }
+
+        .phone-numbers {
+            font-size: 15px !important;
+            font-weight: bold;
+            color: #111 !important;
+            margin-bottom: 4px !important;
+        }
+
+        .email-line {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 5px;
+        }
+
+        /* Inline SVG for Map Pin */
+        .map-icon {
+            width: 14px;
+            height: 14px;
+            fill: #555;
+        }
+
+        /* --- Date Section --- */
+        .date-section {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+            gap: 8px;
+        }
+
+        /* --- Form Inputs (Handwritten style) --- */
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: flex-end;
+            margin-bottom: 15px;
+            font-size: 15px;
+            width: 100%;
+        }
+
+        .form-row label {
+            white-space: nowrap;
+            margin-right: 10px;
+            font-weight: 500;
+        }
+
+        .input-line {
+            flex-grow: 1;
+            border: none;
+            border-bottom: 1px dotted var(--border-color);
+            background: transparent;
+            font-family: 'Caveat', cursive, sans-serif;
+            font-size: 22px;
+            color: var(--ink-color);
+            outline: none;
+            padding: 0 5px;
+            min-width: 50px; /* Prevents collapsing on mobile */
+        }
+
+        /* Multiline DOB Fix */
+        .dob-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        /* --- Astrology Charts Grid --- */
+        .charts-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .chart-wrapper {
+            flex: 1;
+            min-width: 0; /* Prevents flex blowout */
+        }
+
+        .chart-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            background: rgba(255, 255, 255, 0.6); /* Slight background to stand out over watermark */
+        }
+
+        .chart-table td {
+            border: 1px solid var(--grid-border);
+            aspect-ratio: 1 / 1; /* Keeps cells perfectly square */
+            vertical-align: top;
+            padding: 4px;
+            position: relative;
+        }
+
+        .chart-center {
+            text-align: center !important;
+            vertical-align: middle !important;
+            font-size: 16px;
+            color: #444;
+            letter-spacing: 1px;
+            background-color: transparent;
+        }
+
+        .editable-cell {
+            width: 100%;
+            height: 100%;
+            outline: none;
+            font-family: 'Caveat', cursive, sans-serif;
+            font-size: 20px;
+            color: var(--ink-color);
+            line-height: 1.1;
+            overflow: hidden;
+        }
+
+        /* --- Footer Styling --- */
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+            margin-top: auto; /* Pushes footer to the bottom */
+            font-size: 12px;
+            color: var(--text-light);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .footer-logo img {
+            height: 40px; /* Adjust based on your logo.png dimensions */
+            width: auto;
+            object-fit: contain;
+        }
+
+        .footer-center {
+            text-align: center;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .footer-right {
+            text-align: right;
+        }
+
+        /* --- Action Buttons --- */
+        .controls {
+            margin-top: 25px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background 0.3s, transform 0.1s;
+        }
+
+        .btn:hover {
+            background-color: #218838;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* --- Responsive Queries (Tablet & Mobile) --- */
+        @media screen and (max-width: 768px) {
+            .document-wrapper {
+                padding: 15px;
+            }
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            .header-right {
+                text-align: center;
+            }
+            .email-line {
+                justify-content: center;
+            }
+            .charts-container {
+                flex-direction: column;
+                gap: 30px;
+            }
+            .chart-table td {
+                aspect-ratio: auto;
+                height: 60px; /* Fixed height for mobile instead of aspect ratio */
+            }
+            .footer {
+                flex-direction: column;
+                text-align: center;
+            }
+            .footer-right {
+                text-align: center;
+            }
+        }
+
+        /* --- Print Specific Styles --- */
+        @media print {
+            body {
+                background: white;
+                margin: 0;
+                padding: 0;
+            }
+            .document-wrapper {
+                box-shadow: none;
+                width: 100%;
+                max-width: none;
+                padding: 10mm;
+            }
+            .controls {
+                display: none;
+            }
+            .input-line::placeholder {
+                color: transparent;
+            }
+            /* Force background graphics to print (for watermark) */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <!-- License Screen -->
-    <div id="licenseScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; box-sizing: border-box;">
-        <img src="logo.png" style="width: 130px; margin-bottom: 20px;">
-        <h2 style="margin: 0; font-size: 24px;">Pratnya Astro Manager</h2>
-        <p style="color: #aaa; margin: 5px 0 25px 0;">Premium Subscription Required</p>
-        <div style="margin-top: 25px; width: 90%; max-width: 450px;">
-            <input type="text" id="licenseKeyInput" placeholder="Enter License Key" style="width: 100%; padding: 15px; border: none; border-radius: 8px; text-align: center; margin-bottom: 12px; font-size: 16px; box-sizing: border-box;">
-            <button onclick="activateLicense()" style="width: 100%; padding: 15px; background: #2196F3; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">Activate App</button>
-        </div>
-        <p id="licenseError" style="color: #ff5252; font-size: 14px; margin-top: 15px; display: none;">Invalid License Key</p>
-    </div>
+    <div class="document-wrapper" id="printArea">
+        <div class="watermark"></div>
 
-    <!-- Main Header -->
-    <header style="position: sticky; top: 0; z-index: 100; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-        <img src="logo.png" alt="Pratnya Astro" class="logo" style="margin-left: 10px;">
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <div class="global-template-selector">
-                <select id="globalTemplateSelect">
-                    <option value="ck">CK Saji Panicker</option>
-                    <option value="pratnya">Pratnya</option>
-                </select>
+        <div class="content-layer">
+            
+            <div class="header">
+                <div class="header-left">
+                    <p class="astrologer-title">Astrologer</p>
+                    <p class="astrologer-name">CK Saji Panicker</p>
+                    <p>Chathangotupuram Kalarikkal,</p>
+                    <p>Cherucode, Wandoor 679 328.</p>
+                </div>
+                <div class="header-right">
+                    <p class="phone-numbers">9495 141 880 | 7034 600 880</p>
+                    <div class="email-line">
+                        <svg class="map-icon" viewBox="0 0 24 24">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                        <p style="margin:0; color:#444;">sajipanickerck@gmail.com</p>
+                    </div>
+                    <p>Bangalore | Coorg | Tiruppur | Kerala |</p>
+                    <p>(HQ) Cherucode |</p>
+                </div>
             </div>
-            <div id="updateIcon" onclick="showUpdateInfo()" style="display: none; cursor: pointer; margin-right: 10px;">
-                <span style="font-size: 24px;">🔔</span>
-                <span style="position: absolute; top: 5px; right: 5px; width: 10px; height: 10px; background: red; border-radius: 50%;"></span>
+
+            <div class="date-section">
+                <span>Date:</span>
+                <input type="text" class="input-line" style="width: 130px; text-align: center;" value="06 | 05 | 23">
             </div>
-        </div>
-    </header>
 
-    <div class="container">
-        <!-- THREE BUTTON ROW: New Client, Prescription, Jathaka Cherchha -->
-        <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
-            <button onclick="showForm()" class="btn-new" style="flex: 1; min-width: 120px; margin-bottom: 0;">+ New Client</button>
-            <button onclick="showPrescriptionForm()" class="btn-prescription" style="flex: 1; min-width: 120px; background: #FF9800; color: white; border: none; border-radius: 6px; padding: 15px; font-size: 16px; font-weight: 600; cursor: pointer;">Prescription</button>
-            <button onclick="location.href='jathaka-chercha.html'" class="btn-new" style="flex: 1; min-width: 120px; background: #6A1B9A; color: white; border: none; border-radius: 6px; padding: 15px; font-size: 16px; font-weight: 600; cursor: pointer;">Jathaka Cherchha</button>
-        </div>
-
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="🔍 Search Client or Prescription..." autocomplete="off">
-        </div>
-
-        <div id="clientList" class="client-list"></div>
-
-        <!-- Client Form Modal -->
-        <div id="clientFormModal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 id="formTitle">Client Details</h3>
-                    <button onclick="closeForm()" class="btn-close">✖</button>
+            <div class="form-section">
+                <div class="form-row">
+                    <label>Name:</label>
+                    <input type="text" class="input-line" value="ശ്രീലക്ഷ്മി % അനിത">
+                </div>
+                <div class="form-row">
+                    <label>Star:</label>
+                    <input type="text" class="input-line" value="ചിത്തിര നക്ഷത്രം">
                 </div>
                 
-                <form id="clientForm">
-                    <input type="hidden" id="clientId">
-                    <div class="form-grid">
-                        <input type="text" id="name" placeholder="Name *" required>
-                        <input type="text" id="star" placeholder="Star (Nakshatram)">
-                        <div style="position: relative;">
-                            <label style="font-size: 12px; color: #666; position: absolute; top: -8px; left: 10px; background: white; padding: 0 4px;">Date of Birth</label>
-                            <input type="date" id="dob" onchange="calculateAge()">
-                        </div>
-                        <input type="number" id="age" placeholder="Age (Auto-calculated)">
-                        <div style="position: relative;">
-                            <label style="font-size: 12px; color: #666; position: absolute; top: -8px; left: 10px; background: white; padding: 0 4px;">Time of Birth</label>
-                            <input type="time" id="birthTime">
-                        </div>
-                        <input type="text" id="place" placeholder="Place">
-                        <input type="text" id="phone" placeholder="Phone">
-                        <input type="text" id="profession" placeholder="Profession">
+                <div class="dob-group">
+                    <div class="form-row" style="margin-bottom: 5px;">
+                        <label>Date Of Birth:</label>
+                        <input type="text" class="input-line" value="1996 ഒക്ടോബർ മാസം 12-ാം തീയതി രാത്രി ജനനം">
                     </div>
-
-                    <div id="historySection" class="dual-history-grid" style="margin-top: 20px;">
-                        <div>
-                            <h4 style="color: #1976D2;">Consultations</h4>
-                            <div id="historyList" class="history-container"></div>
-                        </div>
-                        <div>
-                            <h4 style="color: #E65100;">Prescriptions</h4>
-                            <div id="clientPrescList" class="history-container"></div>
-                        </div>
+                    <div class="form-row">
+                        <input type="text" class="input-line" value="1172-ാം മാണ്ട് കന്നി മാസം 26-ാം തീയതി">
                     </div>
-
-                    <div class="new-consultation" style="display: flex; flex-direction: column; flex: 1; margin-top: 15px;">
-                        <h4>➕ Add New Consultation</h4>
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                            <label>Case History (Problems):</label>
-                            <div class="mini-toolbar">
-                                <span onclick="undoText('currentProblem')">Undo</span>
-                                <span onclick="clearText('currentProblem')">Clear</span>
-                            </div>
-                        </div>
-                        <textarea id="currentProblem" rows="3" placeholder="Enter problems here..."></textarea>
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 5px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <label style="color: #2E7D32; font-weight: bold; margin: 0;">Astrological Solution:</label>
-                                <div class="mini-toolbar">
-                                    <span onclick="undoText('currentSolution')">Undo</span>
-                                    <span onclick="clearText('currentSolution')">Clear</span>
-                                </div>
-                            </div>
-                            <button type="button" onclick="transferToPrescription()" class="btn-ghost">Open as Prescription</button>
-                        </div>
-                        <textarea id="currentSolution" style="flex: 1; min-height: 200px; border: 1px solid #ddd; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5; resize: vertical;" placeholder="Write solution here..."></textarea>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" style="background-color: #2E7D32; color: white; font-weight: bold;">Save</button>
-                        <button type="button" onclick="generatePDF()" style="background-color: #1976D2; color: white; font-weight: bold;">PDF</button>
-                        <button type="button" onclick="deleteCurrentClient()" style="background-color: #D32F2F; color: white; font-weight: bold;">Delete</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Prescription Modal -->
-        <div id="prescriptionModal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header" style="background: #FFF3E0;">
-                    <h3 style="color: #E65100;">Prescription Details</h3>
-                    <button onclick="closePrescriptionForm()" class="btn-close">✖</button>
                 </div>
-                
-                <form id="prescriptionForm" style="padding: 20px; flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding-bottom: 0;">
-                    <input type="hidden" id="prescClientId">
-                    
-                    <div class="form-grid">
-                        <input type="text" id="prescName" placeholder="Name *" required>
-                        <input type="text" id="prescPhone" placeholder="Phone (for WA)">
-                        <input type="text" id="prescStar" placeholder="Star">
-                        <input type="text" id="prescPlace" placeholder="Place">
-                        <input type="text" id="prescRasi" placeholder="Rasi">
-                        <input type="text" id="prescUdhaya" placeholder="Udhaya Rasi">
-                    </div>
 
-                    <div id="prescHistorySection" style="margin-top: 20px;">
-                        <h4 style="color: #E65100;">Previous Prescriptions</h4>
-                        <div id="prescHistoryList" class="history-container"></div>
-                    </div>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 5px;">
-                        <h4 style="margin: 0;">➕ Write New Prescription:</h4>
-                        <div class="mini-toolbar">
-                            <span onclick="undoText('prescBody')">Undo</span>
-                            <span onclick="clearText('prescBody')">Clear</span>
-                        </div>
-                    </div>
-                    <textarea id="prescBody" style="flex: 1; min-height: 250px; border: 1px solid #ccc; border-radius: 5px; padding: 15px; font-size: 16px; line-height: 1.5;" placeholder="Write full prescription here..."></textarea>
-
-                    <div class="form-actions" style="background: #FFF3E0;">
-                        <button type="button" onclick="savePrescription()" style="background-color: #4CAF50; color: white; font-weight: bold;">Save</button>
-                        <button type="button" onclick="generatePrescriptionPDF()" style="background-color: #FF9800; color: white; font-weight: bold;">PDF</button>
-                        <button type="button" onclick="sharePrescriptionPDF()" style="background-color: #25D366; color: white; font-weight: bold;"><i class="fab fa-whatsapp"></i> Share</button>
-                        <button type="button" onclick="deleteCurrentPrescClient()" style="background-color: #D32F2F; color: white; font-weight: bold;">Delete</button>
-                    </div>
-                </form>
+                <div class="form-row">
+                    <label>Time:</label>
+                    <input type="text" class="input-line" value="12.20 AM ന്">
+                </div>
+                <div class="form-row">
+                    <label>Nakshathra Dhasha:</label>
+                    <input type="text" class="input-line" value="04 - 04 - 27 - 36 കുജ ദശ">
+                </div>
             </div>
+
+            <div class="charts-container">
+                <div class="chart-wrapper">
+                    <table class="chart-table">
+                        <tr>
+                            <td><div class="editable-cell" contenteditable="true">മ<br>ശി</div></td>
+                            <td><div class="editable-cell" contenteditable="true"></div></td>
+                            <td><div class="editable-cell" contenteditable="true">ല<br>മാ</div></td>
+                            <td><div class="editable-cell" contenteditable="true"></div></td>
+                        </tr>
+                        <tr>
+                            <td><div class="editable-cell" contenteditable="true"></div></td>
+                            <td colspan="2" rowspan="2" class="chart-center">Grahanila</td>
+                            <td><div class="editable-cell" contenteditable="true">കു</div></td>
+                        </tr>
+                        <tr>
+                            <td><div class="editable-cell" contenteditable="true"></div></td>
+                            <td><div class="editable-cell" contenteditable="true">ശു</div></td>
+                        </tr>
+                        <tr>
+                            <td><div class="editable-cell" contenteditable="true">ഗു</div></td>
+                            <td><div class="editable-cell" contenteditable="true"></div></td>
+                            <td><div class="editable-cell" contenteditable="true"></div></td>
+                            <td><div class="editable-cell" contenteditable="true">ര ച<br>ബു സ</div></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="chart-wrapper">
+                    <table class="chart-table">
+                        <tr>
+                            <td><div class="editable-cell" contenteditable="true">കു</div></td>
+                            <td><div class="editable-cell" contenteditable="true"></div></td>
+                            <td><div class="editable-cell" contenteditable="true">തു<br>മാ</div></td>
+                            <td><div class="editable-cell" contenteditable="true">ല</div></td>
+                        </tr>
+                        <tr>
+                            <td><div class="editable-cell" contenteditable="true"></div></td>
+                            <td colspan="2" rowspan="2" class="chart-center">Navamshakam</td>
+                            <td><div class="editable-cell" contenteditable="true">ര ഗു<br>ശു</div></td>
+                        </tr>
+                        <tr>
+                            <td><div class="editable-cell" contenteditable="true">ശി</div></td>
+                            <td><div class="editable-cell" contenteditable="true">ച<br>മ</div></td>
+                        </tr>
+                        <tr>
+                            <td><div class="editable-cell" contenteditable="true"></div></td>
+                            <td><div class="editable-cell" contenteditable="true"></div></td>
+                            <td><div class="editable-cell" contenteditable="true"></div></td>
+                            <td><div class="editable-cell" contenteditable="true"></div></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="footer">
+                <div class="footer-logo">
+                    <img src="logo.png" alt="Pratnya Logo">
+                </div>
+                <div class="footer-center">
+                    വരുന്നതിനുമുമ്പ് വിളിച്ചു ബുക്ക് ചെയ്യുക<br>
+                    Consulting Time : 10 AM - 6 PM
+                </div>
+                <div class="footer-right">
+                    www.pratnya.com<br>
+                    Astro@pratnya.com
+                </div>
+            </div>
+            
         </div>
     </div>
 
-    <script src="app.js" defer></script>
-    <script>
-        // Service Worker Update Handling
-        const LATEST_CHANGES = "Fixed PDF generation and WhatsApp share";
-        let newWorker = null;
+    <div class="controls">
+        <button class="btn" onclick="window.print()">🖨️ Generate PDF / Print</button>
+    </div>
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').then(registration => {
-                if (registration.waiting) {
-                    newWorker = registration.waiting;
-                    showNotificationIcon();
-                }
-                registration.onupdatefound = () => {
-                    const installingWorker = registration.installing;
-                    installingWorker.onstatechange = () => {
-                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            newWorker = installingWorker;
-                            showNotificationIcon();
-                        }
-                    };
-                };
-            });
-
-            let refreshing = false;
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (!refreshing) {
-                    refreshing = true;
-                    window.location.reload();
-                }
-            });
-        }
-
-        function showNotificationIcon() {
-            document.getElementById('updateIcon').style.display = 'block';
-        }
-
-        function showUpdateInfo() {
-            Swal.fire({
-                title: '🚀 Update Available!',
-                html: `What's New:<br><b>${LATEST_CHANGES}</b>`,
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonText: 'Update Now'
-            }).then((result) => {
-                if (result.isConfirmed) performUpdate();
-            });
-        }
-
-        function performUpdate() {
-            if (!newWorker) {
-                window.location.reload();
-                return;
-            }
-            newWorker.postMessage({ type: 'SKIP_WAITING' });
-        }
-
-        // License System
-        checkLicense();
-        function checkLicense() {
-            const expiry = localStorage.getItem('pratnya_license_expiry');
-            const lockScreen = document.getElementById('licenseScreen');
-            if (!expiry || new Date() > new Date(expiry)) {
-                lockScreen.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-            } else {
-                lockScreen.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-        }
-
-        window.activateLicense = function() {
-            const input = document.getElementById('licenseKeyInput').value.trim();
-            try {
-                const decoded = atob(input);
-                const parts = decoded.split('|');
-                if (parts[0] !== "PRATNYA-SECRET") throw new Error("Invalid Key");
-                localStorage.setItem('pratnya_license_expiry', parts[1]);
-                location.reload();
-            } catch (e) {
-                document.getElementById('licenseError').style.display = 'block';
-            }
-        };
-    </script>
 </body>
 </html>
+
+```
