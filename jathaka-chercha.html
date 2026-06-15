@@ -2,411 +2,388 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Jathaka Cherchha | CK Saji Panicker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astrology Chart PDF Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap" rel="stylesheet">
+    
     <style>
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
 
         body {
-            background: #f5efe7;
-            font-family: 'Segoe UI', 'Roboto', 'Noto Sans', 'Merriweather', serif;
-            padding: 2rem 1.5rem;
-            color: #2c2418;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            font-family: Arial, sans-serif;
+            background-color: #525659; /* Dark background like a PDF viewer */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        /* Hide the print button when printing */
-        @media print {
-            .print-button,
-            .back-button {
-                display: none !important;
-            }
-            body {
-                padding: 0;
-                background: white;
-            }
-            .page-container {
-                box-shadow: none;
-                border-radius: 0;
-                padding: 1.5rem;
-            }
+        /* The Main A4 Page Container */
+        .page {
+            background-color: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm 20mm;
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
+            position: relative;
+            color: #333;
         }
 
-        .page-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: #fffef7;
-            border-radius: 32px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 0 6px 12px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            padding: 2rem 2rem 2.5rem;
-        }
-
-        .astrologer-header {
+        /* Faint Watermark in the center */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.04);
             text-align: center;
-            border-bottom: 2px solid #e9d6b0;
-            padding-bottom: 1.5rem;
-            margin-bottom: 1.5rem;
+            line-height: 1;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Header Section */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #999;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .header-left p, .header-right p {
+            margin: 3px 0;
+            font-size: 14px;
         }
 
         .astrologer-name {
-            font-size: 2.2rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: #a1612d;
-            text-transform: uppercase;
-            margin-bottom: 0.5rem;
+            font-size: 18px;
+            font-weight: bold;
+            color: #222;
         }
 
-        .address-details {
-            font-size: 0.95rem;
-            color: #5b4b34;
-            background: #fcf6e8;
-            display: inline-block;
-            padding: 0.4rem 1rem;
-            border-radius: 40px;
-            margin-top: 6px;
-        }
-
-        .contact-row {
-            margin-top: 12px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1rem;
-            font-weight: 500;
-            font-size: 0.95rem;
-            color: #2a241b;
-        }
-
-        .contact-row span {
-            background: #f0e5d4;
-            padding: 4px 12px;
-            border-radius: 30px;
-        }
-
-        .email-location {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: #7a5b3a;
-            font-style: italic;
-        }
-
-        .date-box {
-            margin: 1rem 0 1.2rem;
+        .header-right {
             text-align: right;
-            font-weight: 500;
-            font-size: 1.1rem;
-            border-top: 1px dashed #e2cfaa;
-            padding-top: 1rem;
-            color: #4a3722;
         }
 
-        .section-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            border-left: 6px solid #c3894b;
-            padding-left: 1rem;
-            margin: 1.5rem 0 1rem 0;
-            color: #4a2e1a;
+        .phone-numbers {
+            font-size: 16px;
+            font-weight: bold;
         }
 
-        .details-table {
+        /* Date Section */
+        .date-section {
+            text-align: right;
+            margin-bottom: 20px;
+            font-size: 15px;
+            color: #555;
+        }
+
+        /* User Input Forms */
+        .form-section {
+            position: relative;
+            z-index: 2;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: flex-end;
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #444;
+        }
+
+        .form-row label {
+            white-space: nowrap;
+            margin-right: 10px;
+        }
+
+        /* Handwriting styling for inputs */
+        .handwritten-input {
+            flex-grow: 1;
+            border: none;
+            border-bottom: 1px dotted #888;
+            background: transparent;
+            font-family: 'Caveat', cursive, sans-serif;
+            font-size: 22px;
+            color: #1a3c8a; /* Blue pen ink color */
+            outline: none;
+            padding: 0 5px;
+        }
+
+        .dob-multiline {
+            margin-bottom: 15px;
+        }
+
+        .dob-multiline input {
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        /* Astrology Charts Grid Section */
+        .charts-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .chart-box {
+            width: 48%;
+        }
+
+        .kundli-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
-            background: white;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            border-radius: 20px;
-            overflow: hidden;
+            table-layout: fixed;
         }
 
-        .details-table th {
-            background: #e9d9c2;
-            color: #3e2a1c;
-            font-weight: 600;
-            padding: 12px 8px;
-            border: 1px solid #dcccaa;
-            text-align: center;
-            font-size: 0.85rem;
+        .kundli-table td {
+            border: 1px solid #333;
+            height: 75px;
+            vertical-align: top;
+            padding: 5px;
         }
 
-        .details-table td {
-            border: 1px solid #eadbbc;
-            padding: 8px 6px;
-            text-align: center;
-            background-color: #fefcf7;
+        .center-box {
+            text-align: center !important;
+            vertical-align: middle !important;
+            font-size: 18px;
+            font-weight: normal;
+            color: #555;
+            background-color: #fafafa;
         }
 
-        .details-table input {
+        /* Editable cells inside the chart */
+        .cell-content {
             width: 100%;
-            min-width: 100px;
-            padding: 8px 6px;
-            border: 1px solid #e2cfaa;
-            border-radius: 14px;
-            font-size: 0.8rem;
-            background: white;
-            transition: 0.2s;
-            font-family: inherit;
-            text-align: center;
-        }
-
-        .details-table input:focus {
-            border-color: #c3894b;
+            height: 100%;
             outline: none;
-            box-shadow: 0 0 0 2px rgba(195, 137, 75, 0.2);
+            font-family: 'Caveat', cursive, sans-serif;
+            font-size: 20px;
+            color: #1a3c8a; /* Blue pen ink color */
+            line-height: 1.2;
         }
 
-        .grid-wrapper {
-            margin: 2rem 0 2rem;
-            background: #fffbf2;
-            border-radius: 28px;
-            padding: 1rem 0.8rem;
-            border: 1px solid #f0e2ce;
-        }
-
-        .number-grid {
-            display: grid;
-            grid-template-columns: repeat(20, minmax(42px, 1fr));
-            gap: 6px 4px;
-            max-height: 520px;
-            overflow-y: auto;
-            padding: 12px 6px;
-            background: #fffcf5;
-            border-radius: 24px;
-        }
-
-        .num-cell {
-            background: #fef7ea;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 0.75rem;
-            font-weight: 500;
-            padding: 8px 2px;
-            color: #2e241b;
-            border: 1px solid #eddbbc;
-            font-family: monospace;
-        }
-
-        .letter-boxes-area {
-            margin-top: 2rem;
-            background: #faf3e6;
-            border-radius: 32px;
-            padding: 1.5rem 1.8rem;
-        }
-
-        .boxes-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #8b5a2e;
-            text-align: center;
-            margin-bottom: 1.2rem;
-        }
-
-        .two-boxes {
+        /* Footer Section */
+        .footer {
             display: flex;
-            flex-wrap: wrap;
-            gap: 2rem;
-            justify-content: center;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #999;
+            padding-top: 15px;
+            margin-top: 40px;
+            font-size: 13px;
+            color: #555;
         }
 
-        .letter-box {
-            flex: 1;
-            min-width: 240px;
-            background: white;
-            border-radius: 28px;
-            padding: 1.2rem 1rem;
-            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
-            border: 1px solid #eedbba;
-        }
-
-        .letter-box label {
-            font-weight: 700;
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 1.1rem;
-            color: #b46f3a;
-            letter-spacing: 1px;
-        }
-
-        .letter-box textarea {
-            width: 100%;
-            padding: 14px 16px;
-            font-size: 1rem;
-            border: 2px solid #e9d2b0;
-            border-radius: 24px;
-            background: #fffdf9;
-            resize: vertical;
-            font-family: 'Segoe UI', 'Courier New', monospace;
-            font-weight: 500;
-            color: #2a2418;
-        }
-
-        .letter-hint {
-            font-size: 0.7rem;
-            color: #9c7c58;
-            margin-top: 8px;
-            text-align: center;
-        }
-
-        .footer-note {
-            margin-top: 2rem;
-            text-align: center;
-            font-size: 0.7rem;
-            color: #b2906a;
-            border-top: 1px solid #eedfc8;
-            padding-top: 1.2rem;
-        }
-
-        .print-button {
-            background: #2E7D32;
-            color: white;
-            border: none;
-            padding: 12px 28px;
-            font-size: 1rem;
+        .footer-logo {
             font-weight: bold;
-            border-radius: 40px;
-            cursor: pointer;
-            margin-bottom: 1rem;
-            display: block;
-            margin-left: auto;
-            transition: 0.2s;
+            font-size: 18px;
+            color: #4CAF50;
         }
-        .print-button:hover { background: #1B5E20; }
+        
+        .footer-logo span {
+            display: block;
+            font-size: 10px;
+            color: #777;
+            font-weight: normal;
+            letter-spacing: 2px;
+        }
 
-        .back-button {
-            background: #455A64;
+        .footer-center {
+            text-align: center;
+        }
+
+        .footer-right {
+            text-align: right;
+        }
+
+        /* Print Button Actions */
+        .action-container {
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+
+        .print-btn {
+            background-color: #007bff;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
             cursor: pointer;
-            margin-right: 1rem;
-            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: 0.3s;
         }
-        .back-button:hover { background: #37474F; }
 
-        @media (max-width: 780px) {
-            body { padding: 1rem; }
-            .page-container { padding: 1.2rem; }
-            .number-grid { grid-template-columns: repeat(10, minmax(38px, 1fr)); }
-            .astrologer-name { font-size: 1.6rem; }
+        .print-btn:hover {
+            background-color: #0056b3;
         }
-        @media (max-width: 540px) {
-            .number-grid { grid-template-columns: repeat(8, minmax(36px, 1fr)); }
+
+        /* CSS Specific to PDF Generation (Printing) */
+        @media print {
+            body {
+                background-color: white;
+                margin: 0;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                width: 100%;
+                margin: 0;
+                padding: 10mm;
+            }
+            .action-container {
+                display: none; /* Hides the button in the PDF */
+            }
+            .handwritten-input::placeholder {
+                color: transparent;
+            }
+            /* Ensures background colors and styling remain in PDF */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Top button row: Back + Print -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <button class="back-button" onclick="history.back()">← Back</button>
-        <button class="print-button" onclick="window.print()">🖨️ Print / PDF</button>
-    </div>
 
-    <div class="page-container">
-        <div class="astrologer-header">
-            <div class="astrologer-name">✨ Astrologer CK Saji Panicker ✨</div>
-            <div class="address-details">
-                Chathangotupuram Kalarikkal, Cherucode, Wandoor 679 328.
+    <div class="page" id="documentToPrint">
+        <div class="watermark">pratnya<br><span style="font-size: 40px;">ASTRO SOLUTIONS</span></div>
+
+        <div class="header">
+            <div class="header-left">
+                <p>Astrologer</p>
+                <p class="astrologer-name">CK Saji Panicker</p>
+                <p>Chathangotupuram Kalarikkal,</p>
+                <p>Cherucode, Wandoor 679 328.</p>
             </div>
-            <div class="contact-row">
-                <span>📞 9495 141 880</span>
-                <span>📞 7034 600 880</span>
-                <span>✉️ sajipanickerck@gmail.com</span>
-            </div>
-            <div class="email-location">
-                Bangalore | Coorg | Tirupur | Kerala | (PK) Chencode
+            <div class="header-right">
+                <p class="phone-numbers">9495 141 880 | 7034 600 880</p>
+                <p>sajipanickerck@gmail.com</p>
+                <p>Bangalore | Coorg | Tiruppur | Kerala |</p>
+                <p>(HQ) Cherucode |</p>
             </div>
         </div>
 
-        <!-- Date: dynamically set to today -->
-        <div class="date-box" id="dateBox"></div>
+        <div class="date-section">
+            Date: <input type="text" class="handwritten-input" style="width: 120px;" value="06 | 05 | 23">
+        </div>
 
-        <div class="persons-section">
-            <div class="section-title">🌟 Panchanga & Client Details (8 Entries)</div>
-            <div style="overflow-x: auto;">
-                <table class="details-table">
-                    <thead>
-                        <tr>
-                            <th>#</th><th>Name</th><th>Star (Nakshathra)</th><th>Date of Birth</th><th>Time</th><th>Nakshatra Dasha</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
+        <div class="form-section">
+            <div class="form-row">
+                <label>Name:</label>
+                <input type="text" class="handwritten-input" value="ശ്രീലക്ഷ്മി % അനിത">
+            </div>
+            <div class="form-row">
+                <label>Star:</label>
+                <input type="text" class="handwritten-input" value="ചിത്തിര നക്ഷത്രം">
+            </div>
+            
+            <div class="dob-multiline">
+                <div class="form-row">
+                    <label>Date Of Birth:</label>
+                    <input type="text" class="handwritten-input" value="1996 ഒക്ടോബർ മാസം 12-ാം തീയതി രാത്രി ജനനം">
+                </div>
+                <div class="form-row">
+                    <input type="text" class="handwritten-input" value="1172-ാം മാണ്ട് കന്നി മാസം 26-ാം തീയതി">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label>Time:</label>
+                <input type="text" class="handwritten-input" value="12.20 AM ന്">
+            </div>
+            <div class="form-row">
+                <label>Nakshathra Dhasha:</label>
+                <input type="text" class="handwritten-input" value="04 - 04 - 27 - 36 കുജ ദശ">
+            </div>
+        </div>
+
+        <div class="charts-container">
+            
+            <div class="chart-box">
+                <table class="kundli-table">
+                    <tr>
+                        <td><div class="cell-content" contenteditable="true">മ<br>ശി</div></td>
+                        <td><div class="cell-content" contenteditable="true"></div></td>
+                        <td><div class="cell-content" contenteditable="true">ല<br>മാ</div></td>
+                        <td><div class="cell-content" contenteditable="true"></div></td>
+                    </tr>
+                    <tr>
+                        <td><div class="cell-content" contenteditable="true"></div></td>
+                        <td colspan="2" rowspan="2" class="center-box">Grahanila</td>
+                        <td><div class="cell-content" contenteditable="true">കു</div></td>
+                    </tr>
+                    <tr>
+                        <td><div class="cell-content" contenteditable="true"></div></td>
+                        <td><div class="cell-content" contenteditable="true">ശു</div></td>
+                    </tr>
+                    <tr>
+                        <td><div class="cell-content" contenteditable="true">ഗു</div></td>
+                        <td><div class="cell-content" contenteditable="true"></div></td>
+                        <td><div class="cell-content" contenteditable="true"></div></td>
+                        <td><div class="cell-content" contenteditable="true">ര ച<br>ബു സ</div></td>
+                    </tr>
                 </table>
             </div>
-        </div>
 
-        <div class="grid-wrapper">
-            <div class="section-title" style="margin-top: 0;">🔢 Divine Number Grid (1 – 940)</div>
-            <div class="number-grid" id="dynamicNumberGrid"></div>
-        </div>
-
-        <div class="letter-boxes-area">
-            <div class="boxes-title">📜 Write your sacred letters 📜</div>
-            <div class="two-boxes">
-                <div class="letter-box">
-                    <label>✍️ Box One · Letter Space</label>
-                    <textarea rows="4" placeholder="Write letters, mantras, or divine words here ..."></textarea>
-                    <div class="letter-hint">✧ dedicate your letters ✧</div>
-                </div>
-                <div class="letter-box">
-                    <label>✍️ Box Two · Letter Canvas</label>
-                    <textarea rows="4" placeholder="Second sacred box — write any letters, messages ..."></textarea>
-                    <div class="letter-hint">✧ letter energy flows here ✧</div>
-                </div>
+            <div class="chart-box">
+                <table class="kundli-table">
+                    <tr>
+                        <td><div class="cell-content" contenteditable="true">കു</div></td>
+                        <td><div class="cell-content" contenteditable="true"></div></td>
+                        <td><div class="cell-content" contenteditable="true">തു<br>മാ</div></td>
+                        <td><div class="cell-content" contenteditable="true">ല</div></td>
+                    </tr>
+                    <tr>
+                        <td><div class="cell-content" contenteditable="true"></div></td>
+                        <td colspan="2" rowspan="2" class="center-box">Navamshakam</td>
+                        <td><div class="cell-content" contenteditable="true">ര ഗു<br>ശു</div></td>
+                    </tr>
+                    <tr>
+                        <td><div class="cell-content" contenteditable="true">ശി</div></td>
+                        <td><div class="cell-content" contenteditable="true">ച<br>മ</div></td>
+                    </tr>
+                    <tr>
+                        <td><div class="cell-content" contenteditable="true"></div></td>
+                        <td><div class="cell-content" contenteditable="true"></div></td>
+                        <td><div class="cell-content" contenteditable="true"></div></td>
+                        <td><div class="cell-content" contenteditable="true"></div></td>
+                    </tr>
+                </table>
             </div>
+
         </div>
 
-        <div class="footer-note">
-            ⚡ Astrological reference | Nakshatra Dasha & Panchanga | © CK Saji Panicker
+        <div class="footer">
+            <div class="footer-logo">
+                pratnya
+                <span>ASTRO SOLUTIONS</span>
+            </div>
+            <div class="footer-center">
+                വരുന്നതിനുമുമ്പ് വിളിച്ചു ബുക്ക് ചെയ്യുക<br>
+                Consulting Time : 10 AM - 6 PM
+            </div>
+            <div class="footer-right">
+                www.pratnya.com<br>
+                Astro@pratnya.com
+            </div>
         </div>
     </div>
 
-    <script>
-        // 1. Set today's date in the date box
-        (function setDate() {
-            const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const yy = String(today.getFullYear()).slice(-2);
-            document.getElementById('dateBox').textContent = `📅 Date: ${dd} | ${mm} | ${yy}`;
-        })();
+    <div class="action-container">
+        <button class="print-btn" onclick="window.print()">🖨️ Print to PDF</button>
+    </div>
 
-        // 2. Build 8 table rows with default "1172-20" DOB as in the original
-        (function buildTable() {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            for (let i = 1; i <= 8; i++) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${i}</td>
-                    <td><input type="text" placeholder="Name"></td>
-                    <td><input type="text" placeholder="Star"></td>
-                    <td><input type="text" value="1172-20"></td>
-                    <td><input type="text" placeholder="Time"></td>
-                    <td><input type="text" placeholder="Nakshathra Dhasha"></td>
-                `;
-                tbody.appendChild(row);
-            }
-        })();
-
-        // 3. Build the 1-940 number grid
-        (function buildGrid() {
-            const container = document.getElementById('dynamicNumberGrid');
-            container.innerHTML = '';
-            for (let i = 1; i <= 940; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'num-cell';
-                cell.textContent = i;
-                container.appendChild(cell);
-            }
-        })();
-    </script>
 </body>
 </html>
