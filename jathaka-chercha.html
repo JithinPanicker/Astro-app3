@@ -3,103 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Astrologer Form</title>
+    <title>Astrologer Chart Form</title>
     <style>
+        /* Reset and Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: 'Courier New', Courier, monospace;
+            background-color: #f4f4f4;
             display: flex;
             justify-content: center;
-            background-color: #f0f0f0;
-            padding: 20px;
+            padding: 40px 20px;
+            font-family: 'Courier New', Courier, monospace;
         }
 
+        /* Main Paper Sheet */
         .paper {
-            background-color: white;
+            background-color: #ffffff;
             width: 750px;
-            padding: 30px;
-            border: 1px solid #ccc;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            box-sizing: border-box;
+            padding: 35px;
+            border: 1px solid #cccccc;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+            margin: 0 auto;
         }
 
-        /* Header Layout */
+        /* Header Section */
         .header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 30px;
-            border-bottom: 2px solid black;
+            align-items: flex-end;
+            border-bottom: 2px solid #000000;
             padding-bottom: 15px;
+            margin-bottom: 25px;
         }
 
         .header-left {
-            font-size: 14px;
-            line-height: 1.4;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .header-left strong {
+            font-weight: 700;
         }
 
         .header-right {
             text-align: right;
-            font-size: 13px;
-            line-height: 1.4;
+            font-size: 14px;
+            line-height: 1.5;
         }
 
         .header-right strong {
             font-size: 16px;
         }
 
-        /* Form Inputs (Lines) */
-        .form-row {
-            margin-bottom: 15px;
-            font-size: 18px;
+        /* Form Rows */
+        .row {
             display: flex;
             align-items: center;
-            flex-wrap: wrap;
+            margin-bottom: 15px;
+            font-size: 18px;
         }
 
-        .form-label {
+        .row-label {
             font-weight: bold;
             margin-right: 10px;
             white-space: nowrap;
         }
 
-        .text-box-line {
+        .inline-input {
             border: none;
-            border-bottom: 1px solid black;
+            border-bottom: 1px solid #000000;
             outline: none;
+            background: transparent;
             padding: 0 5px;
             font-size: 18px;
             font-family: inherit;
-            background: transparent;
-            flex-grow: 1;
+            flex: 1;
             min-width: 100px;
+            color: #333;
         }
 
-        .text-box-line.short {
-            flex-grow: 0;
-            min-width: 40px;
-            width: auto;
+        .inline-input:focus {
+            border-bottom: 2px solid #555;
+        }
+
+        .dob-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .dob-input {
+            width: 60px;
+            border: none;
+            border-bottom: 1px solid #000;
+            outline: none;
+            background: transparent;
+            font-size: 18px;
+            font-family: inherit;
             text-align: center;
         }
 
-        .text-box-line.dob {
-            flex-grow: 0;
-            width: 80px;
-            margin-right: 5px;
-        }
+        .dob-input.short { width: 35px; }
+        .dob-input.long { width: 80px; }
 
-        .dob-block {
+        .row-column {
             display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            align-items: flex-end;
-            margin-top: 5px;
-            margin-left: 15px;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-bottom: 15px;
         }
 
-        /* Tables / Charts */
+        /* Charts / Grids Section */
         .charts-container {
             display: flex;
             justify-content: space-around;
-            margin: 40px 0;
+            margin: 45px 0;
+            gap: 20px;
+        }
+
+        .grid-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .grid-container {
@@ -116,55 +148,70 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 0;
             position: relative;
         }
 
+        /* The Input Fields Inside the Grid */
         .grid-cell input {
             width: 100%;
             height: 100%;
             border: none;
             outline: none;
             text-align: center;
-            font-size: 16px;
+            font-size: 20px;
             font-family: inherit;
-            box-sizing: border-box;
-            padding: 0;
             background: transparent;
+            padding: 0;
+            margin: 0;
         }
 
+        .grid-cell input:focus {
+            background-color: #fbfbfb;
+        }
+
+        /* The Title in the Center Grid */
         .grid-title {
             font-weight: bold;
-            font-size: 20px;
+            font-size: 18px;
             text-align: center;
-            color: #333;
+            color: #222;
+            padding: 5px;
             width: 100%;
         }
 
-        /* Footer */
+        /* Footer Section */
         .footer {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
             margin-top: 40px;
-            border-top: 1px solid #ccc;
-            padding-top: 20px;
+            border-top: 1px solid #cccccc;
+            padding-top: 25px;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
         }
 
         .footer-logo img {
             height: 50px;
             width: auto;
+            display: block;
         }
 
         .footer-text {
             text-align: right;
-            font-size: 12px;
+            font-size: 14px;
             line-height: 1.6;
         }
 
+        /* Print CSS */
         @media print {
-            body { background: white; }
-            .paper { box-shadow: none; border: none; width: 100%; }
-            .text-box-line, .grid-cell input { border: 1px dotted #ccc; }
+            body { background-color: white; }
+            .paper { width: 100%; padding: 0; box-shadow: none; border: none; }
+            .inline-input, .dob-input, .grid-cell input { border-bottom: 1px dashed #999; }
         }
     </style>
 </head>
@@ -188,76 +235,86 @@
         </div>
 
         <!-- Date -->
-        <div class="form-row">
-            <span class="form-label">Date:</span>
-            <input type="text" class="text-box-line" style="min-width: 120px; max-width: 200px;">
+        <div class="row">
+            <span class="row-label">Date:</span>
+            <input type="text" class="inline-input" style="max-width: 250px;">
         </div>
 
-        <!-- Form Fields -->
-        <div class="form-row">
-            <span class="form-label">Name:</span>
-            <input type="text" class="text-box-line">
+        <!-- Form Inputs -->
+        <div class="row">
+            <span class="row-label">Name:</span>
+            <input type="text" class="inline-input">
         </div>
 
-        <div class="form-row">
-            <span class="form-label">Star:</span>
-            <input type="text" class="text-box-line">
+        <div class="row">
+            <span class="row-label">Star:</span>
+            <input type="text" class="inline-input">
         </div>
 
-        <div class="form-row" style="flex-direction: column; align-items: flex-start;">
-            <span class="form-label" style="margin-bottom: 5px;">Date Of Birth:</span>
-            <div class="dob-block">
-                <input type="text" class="text-box-line dob" style="width: 50px;">
-                <input type="text" class="text-box-line dob" style="width: 70px;">
-                <input type="text" class="text-box-line dob" style="width: 60px;">
-                <input type="text" class="text-box-line dob" style="width: 40px;">
-                <input type="text" class="text-box-line dob" style="width: 60px;">
-                <input type="text" class="text-box-line dob" style="width: 50px;">
-                <br>
-                <input type="text" class="text-box-line dob" style="width: 60px; margin-top: 5px;">
-                <input type="text" class="text-box-line dob" style="width: 60px; margin-top: 5px;">
-                <input type="text" class="text-box-line dob" style="width: 50px; margin-top: 5px;">
-                <input type="text" class="text-box-line dob" style="width: 40px; margin-top: 5px;">
+        <div class="row-column">
+            <span class="row-label" style="margin-bottom: 5px;">Date Of Birth:</span>
+            <div class="dob-wrapper">
+                <input type="text" class="dob-input long" placeholder="Day">
+                <input type="text" class="dob-input" placeholder="Mon">
+                <input type="text" class="dob-input long" placeholder="Year">
+                <input type="text" class="dob-input short" placeholder="H">
+                <input type="text" class="dob-input short" placeholder="M">
+                <span style="font-size: 14px; margin: 0 5px;">AM/PM</span>
+                
+                <div style="width: 100%; margin-top: 8px; display: flex; gap: 8px; align-items: center; margin-left: -10px;">
+                    <input type="text" class="dob-input short" placeholder="H">
+                    <input type="text" class="dob-input short" placeholder="M">
+                    <input type="text" class="dob-input long" placeholder="AM/PM">
+                    <input type="text" class="dob-input" placeholder="Zone/Place">
+                </div>
             </div>
         </div>
 
-        <div class="form-row">
-            <span class="form-label">Time:</span>
-            <input type="text" class="text-box-line" style="max-width: 200px;">
+        <div class="row">
+            <span class="row-label">Time:</span>
+            <input type="text" class="inline-input" style="max-width: 250px;">
         </div>
 
-        <div class="form-row">
-            <span class="form-label">Nakshatra Dasha:</span>
-            <input type="text" class="text-box-line">
+        <div class="row">
+            <span class="row-label">Nakshatra Dasha:</span>
+            <input type="text" class="inline-input">
         </div>
 
-        <!-- Charts -->
+        <!-- Astrological Charts -->
         <div class="charts-container">
             
             <!-- Grahanila Chart -->
-            <div class="grid-container">
-                <div class="grid-cell"><input type="text"></div>
-                <div class="grid-cell"><input type="text"></div>
-                <div class="grid-cell"><input type="text"></div>
-                <div class="grid-cell"><input type="text"></div>
-                <div class="grid-cell"><div class="grid-title">Grahanila</div></div>
-                <div class="grid-cell"><input type="text"></div>
-                <div class="grid-cell"><input type="text"></div>
-                <div class="grid-cell"><input type="text"></div>
-                <div class="grid-cell"><input type="text"></div>
+            <div class="grid-wrapper">
+                <div class="grid-container">
+                    <div class="grid-cell"><input type="text"></div> <!-- Top Left -->
+                    <div class="grid-cell"><input type="text"></div> <!-- Top Center -->
+                    <div class="grid-cell"><input type="text"></div> <!-- Top Right -->
+                    
+                    <div class="grid-cell"><input type="text"></div> <!-- Mid Left -->
+                    <div class="grid-cell"><div class="grid-title">Grahanila</div></div> <!-- Center -->
+                    <div class="grid-cell"><input type="text"></div> <!-- Mid Right -->
+                    
+                    <div class="grid-cell"><input type="text"></div> <!-- Bot Left -->
+                    <div class="grid-cell"><input type="text"></div> <!-- Bot Center -->
+                    <div class="grid-cell"><input type="text"></div> <!-- Bot Right -->
+                </div>
             </div>
 
             <!-- Navamshakam Chart -->
-            <div class="grid-container">
-                <div class="grid-cell"><input type="text"></div>
-                <div class="grid-cell"><input type="text"></div>
-                <div class="grid-cell"><input type="text"></div>
-                <div class="grid-cell"><input type="text"></div>
-                <div class="grid-cell"><div class="grid-title">Navamshakam</div></div>
-                <div class="grid-cell"><input type="text"></div>
-                <div class="grid-cell"><input type="text"></div>
-                <div class="grid-cell"><input type="text"></div>
-                <div class="grid-cell"><input type="text"></div>
+            <div class="grid-wrapper">
+                <div class="grid-container">
+                    <div class="grid-cell"><input type="text"></div> <!-- Top Left -->
+                    <div class="grid-cell"><input type="text"></div> <!-- Top Center -->
+                    <div class="grid-cell"><input type="text"></div> <!-- Top Right -->
+                    
+                    <div class="grid-cell"><input type="text"></div> <!-- Mid Left -->
+                    <div class="grid-cell"><div class="grid-title">Navamshakam</div></div> <!-- Center -->
+                    <div class="grid-cell"><input type="text"></div> <!-- Mid Right -->
+                    
+                    <div class="grid-cell"><input type="text"></div> <!-- Bot Left -->
+                    <div class="grid-cell"><input type="text"></div> <!-- Bot Center -->
+                    <div class="grid-cell"><input type="text"></div> <!-- Bot Right -->
+                </div>
             </div>
 
         </div>
@@ -265,7 +322,7 @@
         <!-- Footer -->
         <div class="footer">
             <div class="footer-logo">
-                <img src="logo.png" alt="pratnya Logo">
+                <img src="logo.png" alt="Pratnya Logo">
             </div>
             <div class="footer-text">
                 Consulting Time : 10 AM - 6 PM<br>
